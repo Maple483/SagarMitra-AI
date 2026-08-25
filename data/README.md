@@ -1,4 +1,30 @@
-Intl. Maritime Boundary: https://www.marineregions.org/downloads.php 
-World EEZ v12 (2023-10-25, 122 MB) > Low res > eez_v12_lowres.gpkg
-Features required: TERRITORY1, SOVEREIGN, ISO_TER1, GEONAME, AREA_KM2, POL_TYPE, geometry
-Package required: geopandas
+# International Maritime Boundary
+**Source:** [Marine Regions](https://www.marineregions.org/downloads.php)
+
+## Dataset
+
+- **Dataset:** World EEZ v12
+- **Date:** 2023-10-25
+- **Size:** 122 MB
+- **Format:** GeoPackage (`.gpkg`)
+- **File:** `eez_v12_lowres.gpkg`
+- **Resolution:** Low
+
+## Required Features
+
+The following fields are required for the project:
+
+- `TERRITORY1`
+- `SOVEREIGN`
+- `ISO_TER1`
+- `GEONAME`
+- `AREA_KM2`
+- `POL_TYPE`
+- `geometry`
+
+## Required Package
+
+Install GeoPandas using:
+
+```bash
+pip install geopandas
