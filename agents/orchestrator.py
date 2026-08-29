@@ -423,15 +423,16 @@ def router_node(state: AgentState):
             intents = ["informational"]
         else:
             intents = []
-            if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain"]):
-                intents.append("weather_info")
-            if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch"]):
-                intents.append("pfz_search")
-            if any(g in msg for g in ["border", "imbl", "restricted", "mpa", "naval"]):
-                intents.append("border_check")
-                
-            if not intents:
-                intents = ["general_safety"]
+            if query_text.strip():
+                if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain"]):
+                    intents.append("weather_info")
+                if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch"]):
+                    intents.append("pfz_search")
+                if any(g in msg for g in ["border", "imbl", "restricted", "mpa", "naval"]):
+                    intents.append("border_check")
+                    
+                if not intents:
+                    intents = ["general_safety"]
                 
     # Deterministic mapping: derive agents in code rather than letting LLM decide independently
     agents = derive_required_agents(intents, messages[-1].content)

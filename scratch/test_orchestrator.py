@@ -249,9 +249,9 @@ async def test_conversational_workflow():
     # Test Case 6: Tamil Coordinate Term Fallback Parsing (Scenario 10)
     from agents.orchestrator import robust_coordinate_parser
     print("\n[Case 6] Running: Tamil coordinate term parsing checks")
-    tamil_text = "அட்சரேகை 13.08 N தீர்க்கரேகை 80.27 E"
+    tamil_text = "\u0b85\u0b9f\u0bcd\u0b9a\u0bb0\u0bc7\u0b95\u0bc8 13.08 N \u0ba4\u0bc0\u0bb0\u0bcd\u0b95\u0bcd\u0b95\u0bb0\u0bc7\u0b95\u0bc8 80.27 E"
     parsed = robust_coordinate_parser(tamil_text)
-    print(f" - Text: '{tamil_text}' -> Parsed Coordinates: {parsed}")
+    print(f" - Tamil text parsing coordinates: {parsed}")
     if parsed and parsed.get("lat") == 13.08:
         print("   -> [PASS] Tamil coordinate tokens resolved successfully.")
     else:

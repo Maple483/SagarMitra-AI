@@ -23,3 +23,15 @@ ENV/
 *.njsproj
 *.sln
 *.sw?
+
+# Planning, Design, and Documentation files
+*_plan.md
+implementation_plan.md
+implementation_plan.pdf
+implementation_plan_*.md
+walkthrough.md
+*.jpg
+*.png
+*.pdf
+*.html
+
