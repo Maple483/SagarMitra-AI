@@ -8,6 +8,10 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depe
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Import models
 from backend.models import User, Vessel, TelemetryLog, Geofence, ProactiveAlertLog
@@ -69,10 +73,10 @@ class TextQueryRequest(BaseModel):
 # 3. Authentication & Security Policy Contracts
 # ==========================================
 
-# Mock security key constants
-SMS_GATEWAY_API_KEY = "sih_gateway_secure_key_123"
-JWT_SECRET_KEY = "sagarmitra_super_jwt_secret"
-JWT_ALGORITHM = "HS256"
+# Security key configurations (loaded from environment)
+SMS_GATEWAY_API_KEY = os.getenv("SMS_GATEWAY_API_KEY", "sih_gateway_secure_key_123")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "sagarmitra_super_jwt_secret")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 # Mock Redis Store
 class MockRedisStore:
