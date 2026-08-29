@@ -216,12 +216,46 @@ async def test_conversational_workflow():
     try:
         result = await agent_brain.ainvoke(initial_state_4, config=config_4)
         print(f"Graph Status  : SUCCESS")
-        print(f"Decided Risk  : {result.get('final_risk_level')}")
-        print(f"Query Intents : {result.get('query_intents')}")
         print(f"Consensus Output: {result.get('consensus_advice')}")
-        print(" -> [PASS] Location-Required bypass validated successfully.")
+        if "GPS coordinates are required" in result.get('consensus_advice', ''):
+            print(" -> [PASS] Location-Required bypass validated successfully.")
+        else:
+            print(" -> [FAIL] Expected insufficient location warning but got incorrect output.")
     except Exception as e:
         print(f" -> [FAIL] Location-Required bypass failed: {str(e)}")
+
+    # Test Case 5: Insufficient Intent Router Bypass (Scenario 7)
+    initial_state_5 = {
+        "messages": [HumanMessage(content="Unrecognized random text query.")],
+        "vessel_id": "test_vessel_5",
+        "request_type": "query"
+    }
+    config_5 = {"configurable": {"thread_id": "conv_test_session_5"}}
+    print("\n[Case 5] Running: Insufficient Intent validation router bypass")
+    try:
+        # In mock offline modes, general_safety is derived if query doesn't match informational keyword,
+        # but if query is completely empty, it routes appropriately. We pass empty text to trigger insufficient intent:
+        initial_state_5["messages"] = [HumanMessage(content="")]
+        result = await agent_brain.ainvoke(initial_state_5, config=config_5)
+        print(f"Graph Status  : SUCCESS")
+        print(f"Consensus Output: {result.get('consensus_advice')}")
+        if "couldn't identify the specific safety query" in result.get('consensus_advice', ''):
+            print(" -> [PASS] Insufficient Intent bypass validated successfully.")
+        else:
+            print(" -> [FAIL] Expected insufficient intent warning but got incorrect output.")
+    except Exception as e:
+        print(f" -> [FAIL] Insufficient Intent bypass failed: {str(e)}")
+
+    # Test Case 6: Tamil Coordinate Term Fallback Parsing (Scenario 10)
+    from agents.orchestrator import robust_coordinate_parser
+    print("\n[Case 6] Running: Tamil coordinate term parsing checks")
+    tamil_text = "அட்சரேகை 13.08 N தீர்க்கரேகை 80.27 E"
+    parsed = robust_coordinate_parser(tamil_text)
+    print(f" - Text: '{tamil_text}' -> Parsed Coordinates: {parsed}")
+    if parsed and parsed.get("lat") == 13.08:
+        print("   -> [PASS] Tamil coordinate tokens resolved successfully.")
+    else:
+        print("   -> [FAIL] Failed to resolve coordinates from Tamil string.")
 
 if __name__ == "__main__":
     test_safety_engine_accuracy()

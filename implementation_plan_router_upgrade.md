@@ -1,44 +1,51 @@
-# Implementation Plan: State Machine Coordinator (Concurrency & Router Schema)
+# Implementation Plan: State Machine Coordinator (Production Grade Concurrency & Validation)
 
-This document specifies the technical design, edge graph configurations, and testing strategies for the upgraded **State Machine Coordinator** in SagarMitra AI, resolving concurrency race conditions, temporal ambiguities, and fallback parsing vulnerabilities.
+This document specifies the technical design, edge graph configurations, and testing strategies for the upgraded **State Machine Coordinator** in SagarMitra AI, resolving temporal ambiguities, race conditions, validation fallbacks, and coordinate parser formatting blindspots.
 
 ---
 
 ## 1. Goal Description
 
-Establish a robust, high-performance State Machine Coordinator that executes API fetches concurrently in Python (avoiding graph race conditions), parses complex temporal ranges, maps intents deterministically, and validates coordinate token contexts.
+Establish a production-grade concurrency router that enforces schema-validated inputs, manages temporal conflicts authoritatively, resolves multilingual coordinate formats, and routes requests safely using explicit response statuses.
 
 ---
 
 ## 2. Technical Architecture & Component Flow
 
-To prevent LangGraph double-trigger race conditions and state-merging overwrite conflicts, we replace parallel graph fan-out branches with a single **`Fetch Agent Data`** node that runs the data tools concurrently using `asyncio.gather`.
-
 ```
 User Query (e.g. Tamil text) 
-     ↓ [Bhashini translation]
-English Query 
      ↓
-Conversational History + New Query (with temporal range)
+┌─────────────────────────────────────────────────────────────┐
+│              Multilingual Coordinate Parsing                 │
+│  - Parses raw coordinate pairs (lat, lon) and card directions│
+│    in English / Tamil prior to translation/routing          │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+English Translated Query (via Bhashini)
+     ↓
+Conversational History + New Query
      ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                   Query Router Node                         │
-│  - Extracts intents, target coordinates, and time ranges     │
-│  - Evaluates Location Availability & Intent Constraints     │
+│  - Extracts intents, coordinates, and datetime ranges       │
+│  - Enforces Pydantic datetime validation for ISO-8601       │
+│  - Maps intents deterministically to data agents            │
 └────────────────────────────┬────────────────────────────────┘
                              │
-                             ├──────────────────────────┐
-                             │ (Data Required)          │ (Bypass: Informational / No Coords)
+                             ├──────────────────────────┐ (Bypass: Informational / Insufficient data)
+                             │ (Data Required)          │ (State: response_status set accordingly)
                              ▼                          ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Fetch Agent Data Node                      │
-│  - Runs weather, ocean, geofence concurrently in Python    │
-│  - Enforces a 5.0s execution timeout per tool               │
+│  - Concurrently queries weather, ocean, and geofence        │
+│  - Custom timeouts: 2.0s geofence, 6.0s weather/ocean APIs  │
 └────────────────────────────┬────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│             Safety rules & Pathfinder Routing               │
+│                 Safety Rules & Consensus                    │
+│  - Resolves decisions or prints insufficient data alerts    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -46,26 +53,27 @@ Conversational History + New Query (with temporal range)
 
 ## 3. Component Details
 
-### A. Pydantic Structured Output Schema
-The LLM router is bound to a strict validation schema with Literal Enums and structured time ranges:
+### A. Pydantic Structured Output Schema (Strict Validation)
+By using `datetime` objects in Pydantic, the model automatically enforces valid ISO-8601 formats, rejecting descriptions like `"tomorrow morningish"` during schema parse steps.
 
 ```python
 from pydantic import BaseModel, Field
+from datetime import datetime
 from typing import List, Dict, Optional, Literal
 
 class QueryAnalysis(BaseModel):
-    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "safety_check"]] = Field(
+    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "general_safety", "fishing_safety"]] = Field(
         description="The categorized intents of the query."
     )
     extracted_coords: Optional[Dict[str, float]] = Field(
         default=None,
         description="GPS coordinates explicitly mentioned as {'lat': float, 'lon': float} or None"
     )
-    target_time_start: Optional[str] = Field(
+    target_time_start: Optional[datetime] = Field(
         default=None,
         description="ISO 8601 format start time/date or None"
     )
-    target_time_end: Optional[str] = Field(
+    target_time_end: Optional[datetime] = Field(
         default=None,
         description="ISO 8601 format end time/date or None"
     )
@@ -75,89 +83,72 @@ class QueryAnalysis(BaseModel):
     )
 ```
 
-### B. Deterministic Intent-to-Agent Mapping
-Instead of trusting the LLM to output dependent representations, the router deterministically maps intents to execution agents in code:
+### B. Deterministic Mapping & Resolution
+Instead of relying on LLM selection for required agents, we map them in code based on validated intents:
 
-```python
-def derive_required_agents(intents: List[str], query_text: str) -> List[str]:
-    agents = set()
-    for intent in intents:
-        if intent == "weather_info":
-            agents.add("weather")
-        elif intent == "pfz_search":
-            agents.add("ocean")
-        elif intent == "border_check":
-            agents.add("geofence")
-        elif intent == "safety_check":
-            agents.add("weather")
-            agents.add("geofence")
-            # If query explicitly contains fish/productivity keywords
-            if any(k in query_text.lower() for k in ["fish", "pfz", "chlorophyll", "catch"]):
-                agents.add("ocean")
-    return list(agents)
-```
+*   `weather_info` $\to$ `["weather"]`
+*   `pfz_search` $\to$ `["ocean"]`
+*   `border_check` $\to$ `["geofence"]`
+*   `general_safety` $\to$ `["weather", "geofence"]`
+*   `fishing_safety` $\to$ `["weather", "ocean", "geofence"]`
 
-### C. Concurrency without Race Conditions (`asyncio.gather`)
-The graph runs linearly, preventing LangGraph multi-trigger bugs:
+---
 
-```python
-# Sequential Graph Layout
-workflow.set_entry_point("initialize")
-workflow.add_edge("initialize", "router")
+## 4. Concurrency & Timeout Specifications
 
-def route_from_router(state: AgentState) -> Literal["fetch_data", "consensus"]:
-    # 1. Informational bypass checks (only bypass if no data agents are required)
-    if not state.get("required_agents") and "informational" in state.get("query_intents", []):
-        return "consensus"
-        
-    # 2. Location availability check (bypass if location is required but completely unavailable)
-    location_required = "safety_check" in state["query_intents"] or "border_check" in state["query_intents"]
-    if location_required and not state.get("vessel_coords"):
-        return "consensus" # Bypasses to consensus to return "Coordinates required"
-        
-    return "fetch_data"
+Inside `fetch_data_node`, tasks are executed concurrently in a mapped structure:
 
-workflow.add_conditional_edges("router", route_from_router, {
-    "fetch_data": "fetch_data",
-    "consensus": "consensus"
-})
-
-workflow.add_edge("fetch_data", "safety_rules")
-```
-
-Inside the `fetch_data_node`, we run fetches concurrently with a **5-second timeout** per API call:
 ```python
 async def fetch_data_node(state: AgentState) -> Dict[str, Any]:
     reqs = state.get("required_agents", [])
-    tasks = []
+    task_map = {}
     
+    # Custom timeout parameters
     if "weather" in reqs:
-        tasks.append(asyncio.wait_for(fetch_weather_report(state), timeout=5.0))
+        task_map["weather"] = asyncio.wait_for(fetch_weather_report(state), timeout=6.0)
     if "ocean" in reqs:
-        tasks.append(asyncio.wait_for(fetch_ocean_report(state), timeout=5.0))
+        task_map["ocean"] = asyncio.wait_for(fetch_ocean_report(state), timeout=6.0)
     if "geofence" in reqs:
-        tasks.append(asyncio.wait_for(fetch_geofence_report(state), timeout=5.0))
+        task_map["geofence"] = asyncio.wait_for(fetch_geofence_report(state), timeout=2.0)
         
-    # Gather tasks concurrently
+    if not task_map:
+        return {}
+        
+    keys = list(task_map.keys())
+    tasks = list(task_map.values())
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    # Merge results and handle timeout errors gracefully
+    
+    updates = {}
+    for key, res in zip(keys, results):
+        if isinstance(res, Exception):
+            # Log failure reason explicitly for downstream Safety evaluation
+            updates[f"{key}_report"] = {
+                "data": {},
+                "status": "failed",
+                "data_mode": "unavailable",
+                "error": str(res)
+            }
+            updates["agent_status"] = {**updates.get("agent_status", {}), key: "FAILED"}
+        else:
+            updates.update(res)
+    return updates
 ```
 
 ---
 
-## 4. Robust Parser & Fallbacks
+## 5. Explicit Graph Response Statuses
 
-To resolve coordinate extraction ambiguities, the fallback text parser enforces:
-1.  **Coordinate Context Checks:** Discards pairs of numbers unless preceded by geographical tokens like `LAT`, `LON`, `GPS`, `COORDS`, `POSITION`, or followed by cardinal orientation tags (`N`, `S`, `E`, `W`). This prevents mistaking wind speeds and wave swells for GPS coords.
-2.  **Range Validation:** Latitude must lie in $[-90.0, 90.0]$ and Longitude in $[-180.0, 180.0]$.
+To ensure the Consensus Explainer never hallucinates, we define:
+`response_status: Optional[Literal["SUCCESS", "INSUFFICIENT_LOCATION", "INSUFFICIENT_INTENT"]]`
+
+*   If spatial agents are required but no coordinates exist in `vessel_coords` or `target_coords`: Set `response_status = "INSUFFICIENT_LOCATION"` and bypass to `consensus`.
+*   If no query intents are successfully matched or derived: Set `response_status = "INSUFFICIENT_INTENT"` and bypass to `consensus`.
 
 ---
 
-## 5. Verification & Testing
+## 6. Multilingual Robust Fallback Coordinates Parser
 
-Our updated test suite (`scratch/test_orchestrator.py`) includes 7 cases covering:
-*   Safety vectors (weather storms, geofence breaches, safe fishing).
-*   API failures and timeouts.
-*   **Informational bypass** query routes.
-*   **Vague time constraint** resolution.
-*   **Text token parsing fallback robustness** under malformed inputs.
+Supports decimal cardinal patterns and regional translations before the English Bhashini boundary:
+*   Matches: `"13.08 N, 80.27 E"`, `"Position: 12.34 84.56"`, `"12.54, 74.32"` (Google maps raw pastes).
+*   Matches Tamil cardinal/position markers: `"அட்சரேகை 13.08 தீர்க்கரேகை 80.27"`
+*   Restricts numbers to valid global coordinate ranges to filter out wind/swell speed metrics.

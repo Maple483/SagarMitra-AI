@@ -34,6 +34,7 @@ class AgentState(TypedDict):
     # Intent-Based Routing variables (Compound intents supported)
     query_intents: List[str]                   # ["pfz_search", "border_check", "weather_info"]
     required_agents: List[str]                 # ["weather", "ocean", "geofence"]
+    response_status: Optional[str]             # "SUCCESS" / "INSUFFICIENT_LOCATION" / "INSUFFICIENT_INTENT"
     
     # Execution Status Tracker (replaces brittle "is not None" checks)
     # Allowed states: "NOT_REQUIRED", "RUNNING", "SUCCESS", "FAILED"
@@ -75,6 +76,7 @@ def initialize_request_state(state: AgentState) -> Dict[str, Any]:
         "target_time_start": None,
         "target_time_end": None,
         "relative_time_expr": None,
+        "response_status": None,
         "agent_status": {
             "weather": "NOT_REQUIRED",
             "ocean": "NOT_REQUIRED",
@@ -279,20 +281,19 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
 import re
 
 # Pydantic model for structured router outputs
-# Pydantic model for structured router outputs
 class QueryAnalysis(BaseModel):
-    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "safety_check"]] = Field(
+    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "general_safety", "fishing_safety"]] = Field(
         description="The categorized intents of the query."
     )
     extracted_coords: Optional[Dict[str, float]] = Field(
         default=None,
         description="GPS coordinates explicitly mentioned as {'lat': float, 'lon': float} or None"
     )
-    target_time_start: Optional[str] = Field(
+    target_time_start: Optional[datetime] = Field(
         default=None,
         description="ISO 8601 format start time/date or None"
     )
-    target_time_end: Optional[str] = Field(
+    target_time_end: Optional[datetime] = Field(
         default=None,
         description="ISO 8601 format end time/date or None"
     )
@@ -305,8 +306,8 @@ def robust_coordinate_parser(text: str) -> Optional[Dict[str, float]]:
     """
     Robustly parses coordinates in decimal or cardinal formats (e.g. 13.08 N, 80.27 E)
     from translated Indic natural language inputs. Enforces context check (requires
-    explicit geolocation tokens or cardinal labels N/S/E/W or raw comma-separated floats)
-    to prevent mistaking wind or swell speeds for coordinates.
+    explicit geolocation tokens or cardinal labels N/S/E/W or raw comma-separated floats
+    or regional terms அட்சரேகை/தீர்க்கரேகை) to prevent mistaking wind or swell speeds for coordinates.
     """
     text_clean = text.upper().replace("°", "").replace("'", "")
     
@@ -336,8 +337,8 @@ def robust_coordinate_parser(text: str) -> Optional[Dict[str, float]]:
         if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
             return {"lat": lat, "lon": lon}
 
-    # 3. Match float pairs with explicit geographic context tags
-    geo_tokens = ["LAT", "LON", "GPS", "COORDS", "POSITION", "COORDINATE"]
+    # 3. Match float pairs with explicit geographic context tags (supporting Tamil translations too)
+    geo_tokens = ["LAT", "LON", "GPS", "COORDS", "POSITION", "COORDINATE", "அட்சரேகை", "தீர்க்கரேகை"]
     if any(tok in text_clean for tok in geo_tokens):
         pattern_floats = re.compile(
             r"\b(-?\d+\.\d+)\b[^\d.-]*\b(-?\d+\.\d+)\b"
@@ -361,6 +362,7 @@ def router_node(state: AgentState):
         return {
             "query_intents": ["informational"],
             "required_agents": [],
+            "response_status": "INSUFFICIENT_INTENT",
             "agent_status": {"weather": "NOT_REQUIRED", "ocean": "NOT_REQUIRED", "geofence": "NOT_REQUIRED", "routing": "NOT_REQUIRED"}
         }
 
@@ -378,9 +380,10 @@ def router_node(state: AgentState):
             "- 'pfz_search': Potential Fishing Zones, SST gradients, chlorophyll maps, catches.\n"
             "- 'border_check': Borders, IMBL, restricted marine areas, protected waters.\n"
             "- 'informational': Greetings, help, standard information requests.\n"
-            "- 'safety_check': General safety evaluation combining weather and border metrics.\n\n"
+            "- 'general_safety': General safety check combining weather and border checks.\n"
+            "- 'fishing_safety': Fishing-specific safety combining weather, ocean state, and border checks.\n\n"
             "If coordinates are explicitly mentioned, parse them as {'lat': float, 'lon': float}.\n"
-            "If target times are requested (e.g. tomorrow, next week), extract the relative_time_expr, target_time_start, or target_time_end."
+            "If target times are requested (e.g. tomorrow, next week), extract relative_time_expr or absolute start/end datetimes."
         )),
         *messages
     ])
@@ -391,7 +394,7 @@ def router_node(state: AgentState):
     coords = None
     
     try:
-        # Structured output parser enforcing Literal Enum constraints
+        # Structured output parser enforcing strict validation constraints
         llm = ChatOpenAI(temperature=0.0).with_structured_output(QueryAnalysis)
         chain = prompt | llm
         analysis = chain.invoke({})
@@ -400,6 +403,11 @@ def router_node(state: AgentState):
         target_time_start = analysis.target_time_start
         target_time_end = analysis.target_time_end
         relative_time_expr = analysis.relative_time_expr
+        
+        # Temporal resolution conflict check: absolute range overrides relative
+        if target_time_start or target_time_end:
+            relative_time_expr = None
+            
     except Exception:
         # Fallback to local deterministic keyword and context parsing
         query_text = messages[-1].content
@@ -423,7 +431,7 @@ def router_node(state: AgentState):
                 intents.append("border_check")
                 
             if not intents:
-                intents = ["safety_check"]
+                intents = ["general_safety"]
                 
     # Deterministic mapping: derive agents in code rather than letting LLM decide independently
     agents = derive_required_agents(intents, messages[-1].content)
@@ -435,13 +443,22 @@ def router_node(state: AgentState):
             status[default_a] = "NOT_REQUIRED"
             
     # Set coordinates if resolved
+    has_location = coords or state.get("vessel_coords") or state.get("target_coords")
+    response_status = "SUCCESS"
+    
+    if not intents:
+        response_status = "INSUFFICIENT_INTENT"
+    elif len(agents) > 0 and not has_location:
+        response_status = "INSUFFICIENT_LOCATION"
+        
     update_data = {
         "query_intents": intents,
         "required_agents": agents,
         "agent_status": {**status, "routing": "NOT_REQUIRED"},
-        "target_time_start": target_time_start,
-        "target_time_end": target_time_end,
-        "relative_time_expr": relative_time_expr
+        "target_time_start": target_time_start.isoformat() if target_time_start else None,
+        "target_time_end": target_time_end.isoformat() if target_time_end else None,
+        "relative_time_expr": relative_time_expr,
+        "response_status": response_status
     }
     if coords:
         update_data["vessel_coords"] = coords
@@ -456,6 +473,13 @@ def derive_required_agents(intents: List[str], query_text: str) -> List[str]:
         elif intent == "pfz_search":
             agents.add("ocean")
         elif intent == "border_check":
+            agents.add("geofence")
+        elif intent == "general_safety":
+            agents.add("weather")
+            agents.add("geofence")
+        elif intent == "fishing_safety":
+            agents.add("weather")
+            agents.add("ocean")
             agents.add("geofence")
         elif intent == "safety_check":
             agents.add("weather")
@@ -594,6 +618,23 @@ def routing_node(state: AgentState):
         }
 
 def consensus_explainer_node(state: AgentState):
+    status = state.get("response_status")
+    
+    # 1. Deterministic Interventions for Validation Failures (Prevents LLM Hallucinations)
+    if status == "INSUFFICIENT_LOCATION":
+        advice = "Error: GPS coordinates are required to perform safety and geofence checks. Please provide your location (e.g. 13.08 N, 80.27 E) or ensure your vessel tracker is active."
+        return {
+            "consensus_advice": advice,
+            "messages": [AIMessage(content=advice)]
+        }
+        
+    if status == "INSUFFICIENT_INTENT":
+        advice = "I couldn't identify the specific safety query. Please ask a clearer question about weather conditions, borders, or fishing safety."
+        return {
+            "consensus_advice": advice,
+            "messages": [AIMessage(content=advice)]
+        }
+
     # Retrieve safety and routing decisions from the state
     final_risk = state.get("final_risk_level", "SAFE")
     overrides = "; ".join(state.get("override_reasons", [])) or "None"
@@ -690,18 +731,15 @@ workflow.add_edge("initialize", "router")
 
 # Router conditional fan-out
 def route_from_router(state: AgentState) -> Literal["fetch_data", "consensus"]:
-    # 1. Informational bypass checks (only bypass if no execution agents are required)
-    if not state.get("required_agents") and "informational" in state.get("query_intents", []):
+    status = state.get("response_status", "SUCCESS")
+    if status in ["INSUFFICIENT_INTENT", "INSUFFICIENT_LOCATION"]:
         return "consensus"
         
-    # 2. Location availability check (bypass if location is required but completely unavailable)
-    location_required = "safety_check" in state["query_intents"] or "border_check" in state["query_intents"]
-    has_location = state.get("vessel_coords") or state.get("target_coords")
-    if location_required and not has_location:
-        # Set a trace indicating coordinates were missing for safety evaluations
-        state["consensus_advice"] = "Coordinates are required to perform safety and geofence evaluations. Please provide a valid location."
+    reqs = state.get("required_agents", [])
+    if not reqs:
         return "consensus"
         
+    return "fetch_data"
     return "fetch_data"
 
 workflow.add_conditional_edges(
