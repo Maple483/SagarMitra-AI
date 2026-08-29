@@ -3,7 +3,7 @@ import time
 import asyncio
 from datetime import datetime
 from typing import TypedDict, List, Dict, Any, Optional, Annotated, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -116,9 +116,13 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
     
     # 1. Evaluate Geofence Report
     near_border = False
-    if state.get("geofence_report") and state["geofence_report"].get("status") == "success":
+    g_rep_success = False
+    in_restricted = False
+    if state.get("geofence_report") and state["geofence_report"].get("status") == "success" and state["geofence_report"].get("data"):
         geo = state["geofence_report"]["data"]
-        dist = geo["distance_to_boundary_meters"]
+        dist = geo.get("distance_to_boundary_meters", 99999.0)
+        in_restricted = geo.get("in_restricted_zone", False)
+        g_rep_success = True
         evidence.append({
             "source": "geofence",
             "metric": "distance_to_boundary",
@@ -126,7 +130,7 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             "unit": "meters",
             "timestamp": state["geofence_report"].get("timestamp", "")
         })
-        if geo["in_restricted_zone"]:
+        if in_restricted:
             risk_level = "CRITICAL"
             override_reasons.append("Boundary breach: vessel is inside a restricted zone.")
         elif dist < 2000.0:
@@ -139,7 +143,7 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
     weather_warning_requires_route = False
     if state.get("weather_report"):
         w_rep = state["weather_report"]
-        if w_rep.get("status") != "success":
+        if w_rep.get("status") != "success" or not w_rep.get("data"):
             # API failure / degraded mode: immediately raise warning, do not rely on 0.0 values!
             if risk_level != "CRITICAL":
                 risk_level = "WARNING"
@@ -149,30 +153,32 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             evidence.append({
                 "source": "weather",
                 "metric": "swell_height",
-                "value": w["swell_height"],
+                "value": w.get("swell_height", 0.0),
                 "unit": "meters",
                 "timestamp": w_rep.get("timestamp", "")
             })
             evidence.append({
                 "source": "weather",
                 "metric": "wind_speed",
-                "value": w["wind_speed"],
+                "value": w.get("wind_speed", 0.0),
                 "unit": "km/h",
                 "timestamp": w_rep.get("timestamp", "")
             })
             
-            if w["swell_height"] > 3.0 or w["wind_speed"] > 45.0:
+            swell = w.get("swell_height", 0.0)
+            wind = w.get("wind_speed", 0.0)
+            if swell > 3.0 or wind > 45.0:
                 risk_level = "CRITICAL"
                 override_reasons.append("Severe weather conditions: high swells/winds exceed safety limits.")
                 weather_warning_requires_route = True
-            elif w["swell_height"] > 2.2 or w["wind_speed"] > 35.0:
+            elif swell > 2.2 or wind > 35.0:
                 if risk_level != "CRITICAL":
                     risk_level = "WARNING"
                 override_reasons.append("Caution: elevated swells/winds detected.")
                 weather_warning_requires_route = True
 
     # 3. Check for Conflicts (e.g. Favorable fish vs Warnings)
-    if state.get("ocean_report") and state["ocean_report"].get("status") == "success":
+    if state.get("ocean_report") and state["ocean_report"].get("status") == "success" and state["ocean_report"].get("data"):
         o = state["ocean_report"]["data"]
         if o.get("sst_gradient_front") and risk_level in ["WARNING", "CRITICAL"]:
             conflicts.append({
@@ -193,7 +199,7 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
     routing_action = "no_routing"
     if has_coords:
         if risk_level == "CRITICAL":
-            if state.get("geofence_report") and state["geofence_report"]["data"]["in_restricted_zone"]:
+            if g_rep_success and in_restricted:
                 routing_action = "exit_zone"
             else:
                 routing_action = "return_to_safe"
@@ -230,25 +236,25 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
         w_rep = state["weather_report"]
         agent_assessments["weather"] = {
             "recommendation": "UNSAFE" if weather_warning_requires_route else "SAFE",
-            "confidence": 0.90 if w_rep.get("status") == "success" else 0.0,
+            "confidence": 0.90 if w_rep.get("status") == "success" and w_rep.get("data") else 0.0,
             "reason": "; ".join(override_reasons) if weather_warning_requires_route else "Weather conditions normal.",
             "source": w_rep.get("source", "Unknown")
         }
-    if state.get("geofence_report"):
+    if state.get("geofence_report") and state["geofence_report"].get("status") == "success" and state["geofence_report"].get("data"):
         g_rep = state["geofence_report"]
         g_data = g_rep["data"]
         rec = "SAFE"
-        if g_data["in_restricted_zone"]:
+        if g_data.get("in_restricted_zone"):
             rec = "CRITICAL"
-        elif g_data["distance_to_boundary_meters"] < 2000.0:
+        elif g_data.get("distance_to_boundary_meters", 99999.0) < 2000.0:
             rec = "WARNING"
         agent_assessments["geofence"] = {
             "recommendation": rec,
             "confidence": 1.0,
-            "reason": f"Distance to border: {g_data['distance_to_boundary_meters']}m",
+            "reason": f"Distance to border: {g_data.get('distance_to_boundary_meters')}m",
             "source": "PostGIS"
         }
-    if state.get("ocean_report"):
+    if state.get("ocean_report") and state["ocean_report"].get("status") == "success" and state["ocean_report"].get("data"):
         o_rep = state["ocean_report"]
         o_data = o_rep["data"]
         rec = "FAVORABLE" if o_data.get("sst_gradient_front") else "NEUTRAL"
@@ -280,14 +286,18 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
 
 import re
 
+class Coordinates(BaseModel):
+    lat: float = Field(..., ge=-90.0, le=90.0)
+    lon: float = Field(..., ge=-180.0, le=180.0)
+
 # Pydantic model for structured router outputs
 class QueryAnalysis(BaseModel):
     query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "general_safety", "fishing_safety"]] = Field(
         description="The categorized intents of the query."
     )
-    extracted_coords: Optional[Dict[str, float]] = Field(
+    extracted_coords: Optional[Coordinates] = Field(
         default=None,
-        description="GPS coordinates explicitly mentioned as {'lat': float, 'lon': float} or None"
+        description="GPS coordinates explicitly mentioned as lat and lon or None"
     )
     target_time_start: Optional[datetime] = Field(
         default=None,
@@ -301,6 +311,17 @@ class QueryAnalysis(BaseModel):
         default=None,
         description="Relative time expression e.g. 'tomorrow', 'next week', '2 days later'"
     )
+    location_required: bool = Field(
+        default=False,
+        description="True if coordinates are required to answer this specific query, False if it is a general explanation"
+    )
+
+    @model_validator(mode="after")
+    def validate_time_range(self) -> 'QueryAnalysis':
+        if self.target_time_start and self.target_time_end:
+            if self.target_time_end < self.target_time_start:
+                raise ValueError("target_time_end must be greater than or equal to target_time_start")
+        return self
 
 def robust_coordinate_parser(text: str) -> Optional[Dict[str, float]]:
     """
@@ -368,13 +389,13 @@ def router_node(state: AgentState):
 
     # Dynamic date injection into the system prompt to prevent date hallucinations
     current_time_str = datetime.utcnow().isoformat()
+    pre_parsed_coords = robust_coordinate_parser(messages[-1].content)
     
     # 1. Run LLM Structured Router over conversational memory
     prompt = ChatPromptTemplate.from_messages([
         ("system", (
             "You are the Query Router for SagarMitra AI, a decision support assistant for Indian coastal fishermen.\n"
-            f"Current Server UTC time is: {current_time_str}Z.\n"
-            "Analyze the conversation history and the latest user query to extract the intent metadata.\n\n"
+            f"Current Server UTC time is: {current_time_str}Z. Use this datetime as reference to parse relative terms like 'tomorrow' or 'next week'.\n\n"
             "Available Intents (Must select from these exact Literals):\n"
             "- 'weather_info': Weather alerts, wind speeds, cyclones, swell waves.\n"
             "- 'pfz_search': Potential Fishing Zones, SST gradients, chlorophyll maps, catches.\n"
@@ -392,6 +413,7 @@ def router_node(state: AgentState):
     target_time_end = None
     relative_time_expr = None
     coords = None
+    location_required = False
     
     try:
         # Structured output parser enforcing strict validation constraints
@@ -399,10 +421,11 @@ def router_node(state: AgentState):
         chain = prompt | llm
         analysis = chain.invoke({})
         intents = analysis.query_intents
-        coords = analysis.extracted_coords
+        coords = analysis.extracted_coords or pre_parsed_coords
         target_time_start = analysis.target_time_start
         target_time_end = analysis.target_time_end
         relative_time_expr = analysis.relative_time_expr
+        location_required = analysis.location_required
         
         # Temporal resolution conflict check: absolute range overrides relative
         if target_time_start or target_time_end:
@@ -412,7 +435,7 @@ def router_node(state: AgentState):
         # Fallback to local deterministic keyword and context parsing
         query_text = messages[-1].content
         msg = query_text.lower()
-        coords = robust_coordinate_parser(query_text)
+        coords = pre_parsed_coords
         
         # Simple local time parsing check
         if "tomorrow" in msg:
@@ -421,6 +444,7 @@ def router_node(state: AgentState):
         informational_keywords = ["who are you", "what is", "about sagarmitra", "hello", "hi", "help"]
         if any(kw in msg for kw in informational_keywords):
             intents = ["informational"]
+            location_required = False
         else:
             intents = []
             if query_text.strip():
@@ -433,7 +457,15 @@ def router_node(state: AgentState):
                     
                 if not intents:
                     intents = ["general_safety"]
-                
+            
+            # Fallback check for location dependency
+            for intent in intents:
+                if intent in ["border_check", "general_safety", "fishing_safety"]:
+                    location_required = True
+                elif intent in ["weather_info", "pfz_search"]:
+                    if any(k in msg for k in ["here", "near", "at", "coords", "gps", "position", "current"]):
+                        location_required = True
+                        
     # Deterministic mapping: derive agents in code rather than letting LLM decide independently
     agents = derive_required_agents(intents, messages[-1].content)
                 
@@ -443,13 +475,21 @@ def router_node(state: AgentState):
         if default_a not in status:
             status[default_a] = "NOT_REQUIRED"
             
+    # Resolve Coordinates object to dict mapping
+    coords_dict = None
+    if coords:
+        if hasattr(coords, "lat") and hasattr(coords, "lon"):
+            coords_dict = {"lat": coords.lat, "lon": coords.lon}
+        elif isinstance(coords, dict):
+            coords_dict = coords
+            
     # Set coordinates if resolved
-    has_location = coords or state.get("vessel_coords") or state.get("target_coords")
+    has_location = coords_dict or state.get("vessel_coords") or state.get("target_coords")
     response_status = "SUCCESS"
     
     if not intents:
         response_status = "INSUFFICIENT_INTENT"
-    elif len(agents) > 0 and not has_location:
+    elif location_required and not has_location:
         response_status = "INSUFFICIENT_LOCATION"
         
     update_data = {
@@ -461,8 +501,8 @@ def router_node(state: AgentState):
         "relative_time_expr": relative_time_expr,
         "response_status": response_status
     }
-    if coords:
-        update_data["vessel_coords"] = coords
+    if coords_dict:
+        update_data["vessel_coords"] = coords_dict
         
     return update_data
 
@@ -501,8 +541,7 @@ async def fetch_weather_report(state: AgentState) -> Dict[str, Any]:
             "data_mode": "live",
             "timestamp": "2026-08-28T22:30:00Z",
             "status": "success"
-        },
-        "agent_status": {"weather": "SUCCESS"}
+        }
     }
 
 async def fetch_ocean_report(state: AgentState) -> Dict[str, Any]:
@@ -515,8 +554,7 @@ async def fetch_ocean_report(state: AgentState) -> Dict[str, Any]:
             "data_mode": "live",
             "timestamp": "2026-08-28T22:30:00Z",
             "status": "success"
-        },
-        "agent_status": {"ocean": "SUCCESS"}
+        }
     }
 
 async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
@@ -537,49 +575,90 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
             "timestamp": "2026-08-28T22:30:00Z",
             "status": "success"
         },
-        "agent_status": {"geofence": "SUCCESS"},
         "vessel_coords": coords
     }
 
 async def fetch_data_node(state: AgentState) -> Dict[str, Any]:
     """
     Executes required weather, ocean, and geofence data fetches concurrently in Python.
-    Enforces a strict 5.0 second timeout gate per tool to prevent hanging requests.
+    Enforces a strict 7.0 second overall deadline, and custom timeouts per tool.
     """
     reqs = state.get("required_agents", [])
     task_map = {}
     
+    # Initialize execution status map
+    status_map = {a: "RUNNING" for a in reqs}
+    for default_a in ["weather", "ocean", "geofence"]:
+        if default_a not in status_map:
+            status_map[default_a] = "NOT_REQUIRED"
+            
+    # Custom timeout parameters
     if "weather" in reqs:
-        task_map["weather"] = asyncio.wait_for(fetch_weather_report(state), timeout=5.0)
+        task_map["weather"] = fetch_weather_report(state)
     if "ocean" in reqs:
-        task_map["ocean"] = asyncio.wait_for(fetch_ocean_report(state), timeout=5.0)
+        task_map["ocean"] = fetch_ocean_report(state)
     if "geofence" in reqs:
-        task_map["geofence"] = asyncio.wait_for(fetch_geofence_report(state), timeout=5.0)
+        task_map["geofence"] = fetch_geofence_report(state)
         
     if not task_map:
-        return {}
+        return {"agent_status": status_map}
         
-    keys = list(task_map.keys())
-    tasks = list(task_map.values())
+    # Wrap tasks in asyncio.create_task to make them awaitable futures
+    # Enforce custom timeouts per tool using asyncio.wait_for inside the futures
+    futures = {}
+    if "weather" in task_map:
+        futures["weather"] = asyncio.create_task(asyncio.wait_for(task_map["weather"], timeout=6.0))
+    if "ocean" in task_map:
+        futures["ocean"] = asyncio.create_task(asyncio.wait_for(task_map["ocean"], timeout=6.0))
+    if "geofence" in task_map:
+        futures["geofence"] = asyncio.create_task(asyncio.wait_for(task_map["geofence"], timeout=2.0))
+        
+    # Enforce overall 7.0s request deadline using asyncio.wait
+    done, pending = await asyncio.wait(
+        futures.values(),
+        timeout=7.0
+    )
     
-    # Execute concurrently and safely handle errors
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Cancel any pending tasks
+    for task in pending:
+        task.cancel()
+        
+    results = []
+    keys = []
+    for key, fut in futures.items():
+        keys.append(key)
+        if fut in done:
+            try:
+                res = fut.result()
+                results.append(res)
+            except Exception as e:
+                results.append(e)
+        else:
+            results.append(asyncio.TimeoutError("Global Request Timeout (7.0s exceeded)"))
+            
+    updates = {"agent_status": status_map}
+    partial_failure = False
     
-    updates = {}
     for key, res in zip(keys, results):
         if isinstance(res, Exception):
             print(f"[Fetch Node] Tool {key} failed or timed out: {str(res)}")
-            # Degraded failsafe mode: mark status as FAILED to prevent hanging but allow safety check to continue
+            # Degraded failsafe mode: mark status as FAILED to prevent hanging
             updates[f"{key}_report"] = {
-                "data": {"wind_speed": 0.0, "swell_height": 0.0} if key == "weather" else {},
-                "status": "failed",
+                "status": "FAILED",
+                "data": None,
+                "error_code": "TIMEOUT",
                 "data_mode": "unavailable"
             }
-            updates["agent_status"] = {**updates.get("agent_status", {}), key: "FAILED"}
+            updates["agent_status"][key] = "FAILED"
+            partial_failure = True
         else:
             # Merge successfully retrieved report
             updates.update(res)
+            updates["agent_status"][key] = "SUCCESS"
             
+    if partial_failure:
+        updates["response_status"] = "PARTIAL_DATA"
+        
     return updates
 
 def safety_rules_node(state: AgentState):
@@ -651,6 +730,9 @@ def consensus_explainer_node(state: AgentState):
             modes.append(f"{report_name.split('_')[0]}: {report.get('data_mode', 'unknown')}")
     data_mode_summary = ", ".join(modes) if modes else "No external reports fetched."
     
+    if status == "PARTIAL_DATA":
+        data_mode_summary += " (Warning: Some external datasets failed or timed out)"
+        
     # Direct response informational check
     if "informational" in state.get("query_intents", []):
         prompt_template = ChatPromptTemplate.from_template(
@@ -702,6 +784,8 @@ def consensus_explainer_node(state: AgentState):
         except Exception:
             # Fallback formatting for local offline testing
             advice = f"[Offline Fallback State] Risk Level: {final_risk}. Action: {action}. Alert reasons: {overrides}. Confidence: {confidence}."
+            if status == "PARTIAL_DATA":
+                advice += " Warning: Weather or Ocean forecasts are partially offline."
             if action == "exit_zone":
                 advice += " Warning: Turn back immediately to exit restricted waters."
             elif action == "return_to_safe":
