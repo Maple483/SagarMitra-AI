@@ -740,7 +740,6 @@ def route_from_router(state: AgentState) -> Literal["fetch_data", "consensus"]:
         return "consensus"
         
     return "fetch_data"
-    return "fetch_data"
 
 workflow.add_conditional_edges(
     "router",
