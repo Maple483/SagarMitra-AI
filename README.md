@@ -9,3 +9,5 @@
     <br>uvicorn main:app --reload
 
 <br>run both step and keep them running!
+
+<br> add your own groq api key in main.py in orca-backend folder at line 25

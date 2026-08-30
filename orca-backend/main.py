@@ -22,7 +22,7 @@ app.add_middleware(
 )
 
 # Hardcoded API key for seamless hackathon execution
-GROQ_API_KEY = "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"
+GROQ_API_KEY = ""
 
 class QueryRequest(BaseModel):
     prompt: str
