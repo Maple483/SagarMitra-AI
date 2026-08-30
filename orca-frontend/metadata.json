@@ -1,0 +1,8 @@
+{
+  "name": "ORCA Marine Dashboard",
+  "description": "Interactive ocean map and maritime tracking dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
