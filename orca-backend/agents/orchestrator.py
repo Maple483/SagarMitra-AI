@@ -838,34 +838,41 @@ def consensus_explainer_node(state: AgentState):
     # Direct response informational check
     if "informational" in state.get("query_intents", []) and not has_safety:
         prompt_template = ChatPromptTemplate.from_template(
-            "You are SagarMitra AI, a multi-agent decision support assistant for Indian coastal fishermen. "
-            "Helpfully answer the following general question without invoking spatial datasets:\n"
+            "You are SagarMitra AI, a multi-agent decision support assistant for Indian coastal fishermen.\n"
+            "Helpfully answer the following general question without invoking spatial datasets.\n\n"
+            "Instructions:\n"
+            "1. Keep the response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
+            "2. Do NOT use emojis of any kind.\n"
+            "3. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "4. Do NOT use special unicode characters. Use standard ASCII spaces and letters only.\n\n"
             "Question: {query}"
         )
         
         # Use try/except in case OPENAI_API_KEY environment variable is not defined yet
         try:
+            print("[DEBUG] Executing Informational consensus explainer node...")
             llm = get_llm(temperature=0.2)
             chain = prompt_template | llm
             response = chain.invoke({"query": user_query})
             advice = response.content
+            print(f"[DEBUG] Informational explainer succeeded: '{advice}'")
         except Exception as e:
             print(f"[LLM ERROR] Informational consensus explainer failed: {e}")
             # High-fidelity keyword matching for general questions in offline mode
             q = user_query.lower()
             if "eez" in q:
-                advice = "An Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has special rights to explore and use marine resources. India's EEZ is an active monitoring zone but is safe for Indian vessels."
+                advice = "The Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has sovereign rights to explore and manage marine resources. India's EEZ is safe for Indian vessels."
             elif "imbl" in q or "sri lanka" in q:
-                advice = "The International Maritime Boundary Line (IMBL) marks the territorial border between neighboring nations (such as India and Sri Lanka). Crossing the IMBL without authorization is restricted and unsafe."
+                advice = "The International Maritime Boundary Line (IMBL) marks the territorial border between neighboring nations. Crossing the IMBL without authorization is restricted."
             elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["who are you", "what is", "about", "sagarmitra"]):
-                advice = "I am SagarMitra AI, a decision support assistant for Indian coastal fishermen. I analyze satellite parameter feeds (SST, chlorophyll) to find Potential Fishing Zones (PFZ) and monitor real-time weather and boundary geofences to keep you safe at sea."
-            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["how", "help", "guide", "prompts"]):
-                advice = "You can query me about safety, weather, or fish locations. Try asking: 'Is it safe near Goa tomorrow?', 'Are there any cyclone alerts in the region?', or 'Is this coordinate restricted?'. Be sure to provide coordinates (e.g. 15.42 N, 73.80 E) for spatial safety checks."
-            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["hello", "hi", "hey", "good morning", "good afternoon"]):
-                advice = "Hello! I am SagarMitra AI. I check marine weather advisories, geofenced borders, and Potential Fishing Zones (PFZ). Please provide your GPS coordinates to begin safety analysis."
+                advice = "I am SagarMitra AI, a decision support assistant for Indian coastal fishermen. I monitor weather, borders, and Potential Fishing Zones to keep you safe at sea."
+            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["help", "how to", "questions", "ask"]):
+                advice = "You can query me about safety, weather, or fish locations. Try asking: 'Is it safe near Goa tomorrow?' or 'Is this coordinate restricted?'."
+            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["hi", "hello", "hey", "greetings"]):
+                advice = "Hello! I am SagarMitra AI. I check marine weather advisories, geofenced borders, and Potential Fishing Zones. Please provide your GPS coordinates to begin safety analysis."
             else:
                 # Unrelated prompt handler
-                advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs). I cannot assist with unrelated general inquiries."
+                advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs)."
     else:
         # Structured Narrative Consensus Explanation
         prompt_template = ChatPromptTemplate.from_template(
@@ -882,8 +889,10 @@ def consensus_explainer_node(state: AgentState):
             "- Data Mode: {data_mode_summary}\n\n"
             "Instructions:\n"
             "1. Explain the safety decision clearly, referencing the risks (like proximity to borders, wind, or swells) if applicable.\n"
-            "2. Helpfully answer any general or specific questions they asked in their query (e.g. explaining what is EEZ, IMBL, or major fishing zones if they asked about them).\n"
-            "3. Keep the response under 4 sentences. Do NOT use markdown formatting like bold asterisks (**) or bullet points. Output a single, clean, readable paragraph."
+            "2. Keep the entire response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
+            "3. Do NOT use emojis of any kind.\n"
+            "4. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "5. Do NOT use special unicode characters. Use standard ASCII spaces and letters only."
         )
         
         try:
