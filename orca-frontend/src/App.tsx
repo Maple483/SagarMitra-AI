@@ -151,7 +151,7 @@ export default function App() {
         radius: 120000
       }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 4.5m swells</div>').addTo(wavesGrp);
 
-      window.L.circle([11.0, 78.0], {
+      window.L.circle([11.5, 81.5], {
         color: '#ef4444',
         fillColor: '#ef4444',
         fillOpacity: 0.2,
@@ -498,7 +498,7 @@ export default function App() {
     if (routes.length > 0) {
       contextStr += ` | Active Routes: ` + routes.map(r => `From ${r.vesselName} to ${r.distNm} NM away (ETA: ${r.time})`).join('; ');
     }
-    contextStr += ` | Map Hazards: High wave alert (4.5m swells) at Lat 16.0, Lng 71.0; High wave alert (3.2m swells) at Lat 11.0, Lng 78.0.]`;
+    contextStr += ` | Map Hazards: High wave alert (4.5m swells) at Lat 16.0, Lng 71.0; High wave alert (3.2m swells) at Lat 11.5, Lng 81.5.]`;
     
     const payloadText = queryText + contextStr;
 
