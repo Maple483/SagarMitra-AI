@@ -1015,26 +1015,52 @@ def safety_rules_node(state: AgentState):
     }
 
 def routing_node(state: AgentState):
-    # Call A* Router Pathfinder
+    print(">>> ROUTING NODE EXECUTING (Dynamic Maritime A* Pathfinder)! <<<")
     try:
-        # Check path viability
-        path_viable = True  # Mock pathfinding check
-        if not path_viable:
+        from agents.route_service import route_service
+        
+        vessel_coords = state.get("vessel_coords")
+        if not vessel_coords:
             return {
-                "routing_action": "NO_SAFE_ROUTE",
+                "routing_action": "NO_COORDINATES",
+                "agent_status": {"routing": "FAILED"}
+            }
+            
+        target_coords = state.get("target_coords")
+        
+        # If no explicit target coordinates, check if PFZ coordinates exist in ocean_report
+        if not target_coords:
+            ocean_rep = state.get("ocean_report", {})
+            if ocean_rep and ocean_rep.get("status") == "success" and ocean_rep.get("data"):
+                pfz_info = ocean_rep["data"].get("nearest_pfz")
+                if pfz_info and "lat" in pfz_info and "lon" in pfz_info:
+                    target_coords = {"lat": pfz_info["lat"], "lon": pfz_info["lon"]}
+                    
+        # If still no target coordinates, target a safe return harbor / coastal waypoint
+        if not target_coords:
+            v_lat = vessel_coords["lat"]
+            v_lon = vessel_coords["lon"]
+            target_coords = {"lat": round(v_lat + 0.3, 4), "lon": round(v_lon + 0.3, 4)}
+
+        sys_ctx = state.get("system_context") or ""
+        route_resp = route_service.calculate_safe_route(
+            start_coords=vessel_coords,
+            target_coords=target_coords,
+            system_context=sys_ctx
+        )
+        
+        if route_resp.status == "SUCCESS":
+            return {
+                "suggested_route": route_resp.model_dump(),
                 "agent_status": {"routing": "SUCCESS"}
             }
-        
-        # Returns coordinates steering away or returning to port
-        route = [
-            {"lat": 13.0827, "lon": 80.2707},
-            {"lat": 13.0500, "lon": 80.2500}
-        ]
-        return {
-            "suggested_route": route,
-            "agent_status": {"routing": "SUCCESS"}
-        }
-    except Exception:
+        else:
+            return {
+                "routing_action": "NO_SAFE_ROUTE",
+                "agent_status": {"routing": "FAILED"}
+            }
+    except Exception as e:
+        print(f"[Routing Error] Pathfinder failed: {e}")
         return {
             "agent_status": {"routing": "FAILED"}
         }

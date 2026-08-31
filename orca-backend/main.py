@@ -382,9 +382,12 @@ async def handle_chat_query(req: QueryRequest):
             consensus_advice = await mock_bhashini_translate(consensus_advice, "en", source_lang)
             print(f"[Bhashini] Translated advice: '{consensus_advice}'")
             
+        suggested_route = result.get("suggested_route")
+        
         return {
             "reply": consensus_advice,
-            "coordinates": extracted_coords
+            "coordinates": extracted_coords,
+            "route": suggested_route
         }
     except Exception as e:
         print(f"[DEBUG] Orchestrator execution error: {e}")

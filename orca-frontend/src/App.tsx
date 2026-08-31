@@ -229,15 +229,69 @@ export default function App() {
     routesLayerRef.current.clearLayers();
     
     routes.forEach(route => {
-      const polyline = window.L.polyline([route.start, route.end], {
-        color: '#10b981',
-        dashArray: '8, 8',
-        weight: 3,
-        opacity: 0.8
-      }).addTo(routesLayerRef.current);
-      
-      polyline.bindPopup(`<div class="font-bold text-emerald-600">Active Route</div>
-      <div class="text-xs text-slate-700 mt-1">From: ${route.vesselName}<br/>Distance: ${route.distNm} NM<br/>ETA: ${route.time}</div>`);
+      // If full multi-segment RouteResponse from backend
+      if (route.segments && route.segments.length > 0) {
+        route.segments.forEach((seg: any) => {
+          const color = seg.risk_level === 'HIGH' ? '#ef4444' : (seg.risk_level === 'MEDIUM' ? '#f59e0b' : '#10b981');
+          const polyline = window.L.polyline([
+            [seg.start_lat, seg.start_lon],
+            [seg.end_lat, seg.end_lon]
+          ], {
+            color: color,
+            weight: 4,
+            opacity: 0.9,
+            dashArray: seg.risk_level === 'HIGH' ? '6, 6' : undefined
+          }).addTo(routesLayerRef.current);
+
+          polyline.bindPopup(`
+            <div class="font-bold text-slate-800 text-sm">Safe Nautical Leg (${seg.risk_level} Risk)</div>
+            <div class="text-xs text-slate-600 mt-1">
+              <b>Leg Distance:</b> ${seg.distance_nm} NM<br/>
+              <b>Compass Bearing:</b> ${seg.bearing_deg}°<br/>
+              <b>Leg ETE:</b> ${seg.nominal_ete_hours} hrs (at 10 kts)<br/>
+              <b>Overall Route:</b> ${route.total_dist_nm} NM (Nominal ETE: ${route.nominal_ete_hours} hrs)
+            </div>
+          `);
+        });
+
+        // Place markers for Start, Waypoints, and Destination
+        if (route.waypoints) {
+          route.waypoints.forEach((wp: any, idx: number) => {
+            const isStart = idx === 0;
+            const isEnd = idx === route.waypoints.length - 1;
+            const markerColor = isStart ? '#10b981' : (isEnd ? '#06b6d4' : '#f59e0b');
+            
+            const icon = window.L.divIcon({
+              className: 'bg-transparent',
+              html: `<div class="flex items-center justify-center w-6 h-6 rounded-full text-white font-bold text-[10px] shadow-md border-2 border-white" style="background-color: ${markerColor}">
+                ${isStart ? 'S' : (isEnd ? 'D' : idx)}
+              </div>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12]
+            });
+
+            window.L.marker([wp.lat, wp.lon], { icon }).addTo(routesLayerRef.current)
+              .bindPopup(`
+                <div class="font-bold text-slate-800 text-xs">${wp.name}</div>
+                <div class="text-[11px] text-slate-600">
+                  Lat: ${wp.lat}, Lon: ${wp.lon}<br/>
+                  Cumulative Distance: ${wp.cumulative_distance_nm} NM
+                </div>
+              `);
+          });
+        }
+      } else if (route.start && route.end) {
+        // Fallback for simple 2-point routes
+        const polyline = window.L.polyline([route.start, route.end], {
+          color: '#10b981',
+          dashArray: '8, 8',
+          weight: 3,
+          opacity: 0.8
+        }).addTo(routesLayerRef.current);
+        
+        polyline.bindPopup(`<div class="font-bold text-emerald-600">Active Route</div>
+        <div class="text-xs text-slate-700 mt-1">From: ${route.vesselName || 'Vessel'}<br/>Distance: ${route.distNm || ''} NM<br/>ETA: ${route.time || ''}</div>`);
+      }
     });
   }, [routes]);
 
@@ -407,6 +461,10 @@ export default function App() {
       const data = await res.json();
       
       setMessages((prev) => [...prev, { role: 'system', content: data.reply }]);
+      
+      if (data.route && data.route.status === "SUCCESS") {
+        setRoutes([data.route]);
+      }
       
       if (data.coordinates && mapRef.current) {
         mapRef.current.flyTo([data.coordinates.lat, data.coordinates.lng], 9);
