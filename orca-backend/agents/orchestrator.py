@@ -844,7 +844,14 @@ def consensus_explainer_node(state: AgentState):
             response = chain.invoke({"query": user_query})
             advice = response.content
         except Exception:
-            advice = "Hello! I am SagarMitra AI. I can check weather advisories, geofenced borders, and identify fishing coordinates. Please provide your GPS coordinates to begin safety analysis."
+            # High-fidelity keyword matching for general questions in offline mode
+            q = user_query.lower()
+            if any(k in q for k in ["who are you", "what is", "about", "sagarmitra"]):
+                advice = "I am SagarMitra AI, a decision support assistant for Indian coastal fishermen. I analyze satellite parameter feeds (SST, chlorophyll) to find Potential Fishing Zones (PFZ) and monitor real-time weather and boundary geofences to keep you safe at sea."
+            elif any(k in q for k in ["how", "help", "guide", "prompts"]):
+                advice = "You can query me about safety, weather, or fish locations. Try asking: 'Is it safe near Goa tomorrow?', 'Are there any cyclone alerts in the region?', or 'Is this coordinate restricted?'. Be sure to provide coordinates (e.g. 15.42 N, 73.80 E) for spatial safety checks."
+            else:
+                advice = "Hello! I am SagarMitra AI. I check marine weather advisories, geofenced borders, and Potential Fishing Zones (PFZ). Please provide your GPS coordinates to begin safety analysis."
     else:
         # Structured Narrative Consensus Explanation
         prompt_template = ChatPromptTemplate.from_template(
@@ -877,14 +884,28 @@ def consensus_explainer_node(state: AgentState):
             })
             advice = response.content
         except Exception:
-            # Fallback formatting for local offline testing
-            advice = f"[Offline Fallback State] Risk Level: {final_risk}. Action: {action}. Alert reasons: {overrides}. Confidence: {confidence}."
+            # Fallback formatting for local offline testing (high fidelity natural language builder)
+            if final_risk == "CRITICAL":
+                if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
+                    advice = "Critical Boundary Warning: Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
+                elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
+                    advice = "Critical Weather Alert: Severe weather conditions (high swells or gale-force winds) detected in your area. Seek harbor or safe shelter immediately."
+                else:
+                    advice = f"Critical Warning: Safety limits have been exceeded. Primary cause: {overrides}."
+            elif final_risk == "WARNING":
+                if any(k in overrides.lower() for k in ["proximity", "border", "within 2km", "restricted"]):
+                    advice = "Boundary Proximity Warning: Your vessel is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
+                elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
+                    advice = "Weather Advisory: Elevated swells or strong winds detected in your area. Please navigate with caution."
+                else:
+                    advice = f"Safety Advisory: Elevated risk factors detected. Primary cause: {overrides}. Please monitor updates."
+            elif final_risk == "SAFE":
+                advice = "Safety Check: All environmental and spatial checks are normal. Weather is clear and your vessel is operating in safe, unrestricted waters. Have a safe voyage!"
+            else:
+                advice = "Data Advisory: Safety checks are currently degraded or offline due to partial data feeds. Please exercise caution at sea and monitor local marine radio broadcasts."
+                
             if status == "PARTIAL_DATA":
-                advice += " Warning: Weather or Ocean forecasts are partially offline."
-            if action == "exit_zone":
-                advice += " Warning: Turn back immediately to exit restricted waters."
-            elif action == "return_to_safe":
-                advice += " Warning: Storm conditions detected. Seek harbor."
+                advice += " (Warning: Some oceanographic or weather forecast feeds are currently offline)."
     
     return {
         "consensus_advice": advice,
