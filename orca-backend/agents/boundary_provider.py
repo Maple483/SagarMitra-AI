@@ -124,12 +124,26 @@ class MaritimeBoundaryProvider:
             (9.10, 79.35), (9.30, 79.70), (9.15, 79.75), (8.95, 79.40), (9.10, 79.35)
         ]
 
-        # 5. Lakshadweep Archipelago Atolls (Kavaratti, Agatti, Kadmat, Andrott)
-        lakshadweep_north_poly = [
-            (12.0, 71.8), (12.0, 72.8), (10.5, 73.0), (10.3, 72.0), (11.5, 71.6), (12.0, 71.8)
+        # 5. Lakshadweep Archipelago Comprehensive Atoll & Reef Barriers
+        # 5a. Northern & Central Atolls (Chetlat, Bitra, Kiltan, Kadmat, Amini, Agatti, Bangaram, Kavaratti)
+        lakshadweep_main_poly = [
+            (12.2, 71.7), (12.2, 73.2), (10.3, 73.2), (10.3, 71.7), (12.2, 71.7)
         ]
+        # 5b. Andrott Island (Eastern atoll)
+        andrott_poly = [
+            (11.0, 73.4), (11.0, 73.9), (10.6, 73.9), (10.6, 73.4), (11.0, 73.4)
+        ]
+        # 5c. Kalpeni & Cheriyam Atoll (Southeastern atoll facing Kerala)
+        kalpeni_poly = [
+            (10.3, 73.4), (10.3, 73.9), (9.8, 73.9), (9.8, 73.4), (10.3, 73.4)
+        ]
+        # 5d. Suheli Par Atoll & Reefs (Southwestern atoll)
+        suheli_poly = [
+            (10.3, 72.0), (10.3, 72.6), (9.8, 72.6), (9.8, 72.0), (10.3, 72.0)
+        ]
+        # 5e. Minicoy Atoll & Reef (Southernmost atoll)
         minicoy_poly = [
-            (8.4, 72.9), (8.4, 73.2), (8.1, 73.2), (8.1, 72.9), (8.4, 72.9)
+            (8.5, 72.8), (8.5, 73.3), (8.0, 73.3), (8.0, 72.8), (8.5, 72.8)
         ]
 
         # 6. Maldives Archipelago Atolls (Male, Ari, Nilandhe, Huvadhoo)
@@ -197,7 +211,13 @@ class MaritimeBoundaryProvider:
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, adams_bridge_poly):
                     self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, lakshadweep_north_poly):
+                elif self._point_in_polygon(lat, lon, lakshadweep_main_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, andrott_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, kalpeni_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, suheli_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, minicoy_poly):
                     self.static_impassable_mask[r, c] = True
