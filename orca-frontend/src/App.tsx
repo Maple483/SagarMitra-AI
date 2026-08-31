@@ -486,21 +486,22 @@ export default function App() {
     setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
   };
 
-  // Add Custom Marker
-  const handleAddCustomMarker = (e: React.FormEvent) => {
+  // Add Custom Marker with Dynamic A* Pathfinding
+  const handleAddCustomMarker = async (e: React.FormEvent) => {
     e.preventDefault();
     const lat = parseFloat(markerInput.lat);
     const lng = parseFloat(markerInput.lng);
     if (isNaN(lat) || isNaN(lng) || !markerInput.alias) return;
     
     const newMarkerId = Date.now().toString();
-    setCustomMarkers(prev => [...prev, { id: newMarkerId, lat, lng, alias: markerInput.alias }]);
+    const markerAlias = markerInput.alias;
+    setCustomMarkers(prev => [...prev, { id: newMarkerId, lat, lng, alias: markerAlias }]);
     setMarkerInput({ lat: '', lng: '', alias: '' });
     setShowAddMarker(false);
     setTempMarker(null);
     if (mapRef.current) mapRef.current.flyTo([lat, lng], 7);
 
-    // Auto-calculate route from nearest vessel
+    // Find nearest vessel
     const target = window.L.latLng(lat, lng);
     let nearestVessel = MOCK_VESSELS[0];
     let minDist = Infinity;
@@ -511,24 +512,39 @@ export default function App() {
         nearestVessel = v;
       }
     });
-    const distNm = minDist * 0.000539957;
-    const speed = parseInt(nearestVessel.speed) || 20;
-    const timeHrs = distNm / speed;
-    const timeFormatted = timeHrs > 24 ? `${(timeHrs/24).toFixed(1)} days` : `${Math.floor(timeHrs)}h ${Math.round((timeHrs%1)*60)}m`;
-    
-    setRoutes(prev => [...prev, {
-      id: newMarkerId,
-      start: [nearestVessel.lat, nearestVessel.lng],
-      end: [lat, lng],
-      vesselName: nearestVessel.name,
-      distNm: distNm.toFixed(1),
-      time: timeFormatted
-    }]);
-    
-    setMessages(prev => [...prev, {
-      role: 'system', 
-      content: `Route plotted from ${nearestVessel.name} to ${markerInput.alias}. Distance: ${distNm.toFixed(1)} NM. Estimated Time Enroute (ETE): ${timeFormatted} at ${speed} knots.`
-    }]);
+
+    const speed = parseInt(nearestVessel.speed) || 12;
+
+    try {
+      const res = await fetch("http://localhost:8000/api/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start_lat: nearestVessel.lat,
+          start_lon: nearestVessel.lng,
+          target_lat: lat,
+          target_lon: lng,
+          vessel_name: nearestVessel.name,
+          speed_knots: speed,
+          system_context: "Active Wave alert (4.5m swells) at Lat 16.0, Lng 71.0"
+        })
+      });
+      const routeData = await res.json();
+      if (routeData.status === "SUCCESS") {
+        setRoutes(prev => [...prev, { ...routeData, id: newMarkerId, vesselName: nearestVessel.name }]);
+        setMessages(prev => [...prev, {
+          role: 'system',
+          content: `Safe nautical route computed from ${nearestVessel.name} to ${markerAlias} avoiding obstacles. Total Distance: ${routeData.total_dist_nm} NM. Nominal ETE: ${routeData.nominal_ete_hours} hrs at ${speed} knots.`
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'system',
+          content: `Warning: Unable to resolve a safe route from ${nearestVessel.name} to ${markerAlias}: ${routeData.message || 'Path blocked by obstacles'}.`
+        }]);
+      }
+    } catch (err) {
+      console.error("Failed to compute A* route:", err);
+    }
   };
 
   const deleteCustomMarker = (id: string) => {

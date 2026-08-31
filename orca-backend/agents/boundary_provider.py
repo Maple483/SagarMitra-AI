@@ -124,6 +124,22 @@ class MaritimeBoundaryProvider:
             (9.10, 79.35), (9.30, 79.70), (9.15, 79.75), (8.95, 79.40), (9.10, 79.35)
         ]
 
+        # 5. Lakshadweep Archipelago Atolls (Kavaratti, Agatti, Kadmat, Andrott)
+        lakshadweep_north_poly = [
+            (12.0, 71.8), (12.0, 72.8), (10.5, 73.0), (10.3, 72.0), (11.5, 71.6), (12.0, 71.8)
+        ]
+        minicoy_poly = [
+            (8.4, 72.9), (8.4, 73.2), (8.1, 73.2), (8.1, 72.9), (8.4, 72.9)
+        ]
+
+        # 6. Maldives Archipelago Atolls (Male, Ari, Nilandhe, Huvadhoo)
+        maldives_north_poly = [
+            (7.2, 72.7), (7.2, 73.4), (3.0, 73.8), (3.0, 72.7), (7.2, 72.7)
+        ]
+        maldives_south_poly = [
+            (2.2, 72.7), (2.2, 73.8), (0.0, 73.6), (0.0, 72.7), (2.2, 72.7)
+        ]
+
         # Point in polygon rasterizer
         for r in range(self.num_rows):
             lat = float(self.lat_by_row[r])
@@ -136,6 +152,14 @@ class MaritimeBoundaryProvider:
                 elif self._point_in_polygon(lat, lon, goa_naval_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, adams_bridge_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, lakshadweep_north_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, minicoy_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, maldives_north_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, maldives_south_poly):
                     self.static_impassable_mask[r, c] = True
 
     def _point_in_polygon(self, x: float, y: float, poly: List[Tuple[float, float]]) -> bool:

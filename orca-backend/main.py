@@ -393,6 +393,26 @@ async def handle_chat_query(req: QueryRequest):
         print(f"[DEBUG] Orchestrator execution error: {e}")
         return {"reply": f"Backend Error: {str(e)}", "coordinates": None}
 
+class RouteCalculationRequest(BaseModel):
+    start_lat: float
+    start_lon: float
+    target_lat: float
+    target_lon: float
+    vessel_name: Optional[str] = "Vessel"
+    speed_knots: Optional[float] = 10.0
+    system_context: Optional[str] = None
+
+@app.post("/api/route")
+async def calculate_direct_route(req: RouteCalculationRequest):
+    """Direct A* nautical routing endpoint for custom markers, vessels, and waypoints."""
+    from agents.route_service import route_service
+    resp = route_service.calculate_safe_route(
+        start_coords={"lat": req.start_lat, "lon": req.start_lon},
+        target_coords={"lat": req.target_lat, "lon": req.target_lon},
+        system_context=req.system_context
+    )
+    return resp.model_dump()
+
 @app.post("/api/query")
 async def handle_conversational_query(
     payload: TextQueryRequest,
