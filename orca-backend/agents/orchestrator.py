@@ -663,23 +663,60 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
     lat = float(coords.get("lat", 13.08))
     lon = float(coords.get("lon", 80.27))
     
-    # India-Sri Lanka IMBL is on the East Coast (around Lon 79-80)
-    # West Coast (Goa/Mumbai/Gujarat) is around Lon 68-75
-    # Let's dynamically resolve the nearest boundary and distance to be spatially compliant
+    # Haversine distance helper
+    import math
+    def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        R = 6371000.0
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        d_phi = math.radians(lat2 - lat1)
+        d_lon = math.radians(lon2 - lon1)
+        a = math.sin(d_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lon / 2.0)**2
+        c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+        return R * c
+
+    in_restricted = False
     nearest_boundary = "India-Sri Lanka IMBL"
     distance = 1500.0
     
     if lon < 75.0:
         nearest_boundary = "Goa Naval Exercise Zone Boundary"
-        distance = 1500.0
-        
+        # Bounding box off Goa: Lat 15.0 to 16.0, Lon 72.0 to 73.5
+        # Check if inside Goa restricted naval area
+        if 15.0 <= lat <= 16.0 and 72.0 <= lon <= 73.5:
+            in_restricted = True
+            distance = 0.0
+        else:
+            # Calculate distance to boundary
+            # Closest longitude edge is 73.5, closest latitude edges are 15.0 and 16.0
+            closest_lat = max(15.0, min(lat, 16.0))
+            closest_lon = max(72.0, min(lon, 73.5))
+            distance = haversine_distance(lat, lon, closest_lat, closest_lon)
+    else:
+        # East Coast: segment from (9.0, 79.5) to (11.0, 80.3)
+        # Check if inside restricted boundary (e.g. east of IMBL)
+        line_lon = 79.5 + ((lat - 9.0) / (11.0 - 9.0)) * (80.3 - 79.5) if 9.0 <= lat <= 11.0 else 80.3
+        if lon > line_lon:
+            in_restricted = True
+            distance = 0.0
+        else:
+            min_dist = float('inf')
+            for i in range(11):
+                t = i / 10.0
+                seg_lat = 9.0 + t * (11.0 - 9.0)
+                seg_lon = 79.5 + t * (80.3 - 79.5)
+                d = haversine_distance(lat, lon, seg_lat, seg_lon)
+                if d < min_dist:
+                    min_dist = d
+            distance = min_dist
+            
     await asyncio.sleep(0.1)
     return {
         "geofence_report": {
             "data": {
-                "in_restricted_zone": False,
+                "in_restricted_zone": in_restricted,
                 "nearest_boundary": nearest_boundary,
-                "distance_to_boundary_meters": distance
+                "distance_to_boundary_meters": round(distance, 2)
             },
             "source": "PostGIS",
             "data_mode": "live",
