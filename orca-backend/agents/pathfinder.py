@@ -275,6 +275,15 @@ class MaritimeAStarPathfinder:
         # 4. Geodesic Line-of-Sight Cost-Integral Smoothing
         smoothed_coords, total_km = self._smooth_path_cost_integral(path, hazards, t0)
 
+        # Pinpoint Accuracy: Anchor to exact continuous user coordinates
+        if len(smoothed_coords) >= 2:
+            smoothed_coords[0] = (start_lat, start_lon)
+            smoothed_coords[-1] = (goal_lat, goal_lon)
+            total_km = sum(
+                haversine_km(smoothed_coords[k][0], smoothed_coords[k][1], smoothed_coords[k+1][0], smoothed_coords[k+1][1])
+                for k in range(len(smoothed_coords) - 1)
+            )
+
         return {
             "grid_path": path,
             "smoothed_coords": smoothed_coords,

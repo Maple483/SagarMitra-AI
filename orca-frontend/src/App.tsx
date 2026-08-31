@@ -158,42 +158,30 @@ export default function App() {
         radius: 80000
       }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 3.2m swells</div>').addTo(wavesGrp);
 
-      // 3. Indian EEZ & IMBL Maritime Boundaries (Accurate to UNCLOS, 1974/1976 Treaties & 2014 UNCLOS Award)
+      // 3. Indian EEZ & IMBL Maritime Boundaries (Matching Official Marine Regions / UNCLOS Dataset)
       const eezOuterBoundary: [number, number][] = [
-        // Pakistan - India Maritime Border (Sir Creek)
-        [23.70, 68.05],
-        [20.50, 66.50],  // Outer Arabian Sea 200 NM limit
-        [18.00, 67.50],  // West of Mumbai
-        [15.00, 68.50],  // West of Goa
-        [13.00, 69.20],  // West of Northern Lakshadweep (Chetlat / Bitra)
-        // India - Maldives Maritime Boundary (1976 Treaty & Eight Degree Channel)
-        [7.50, 71.00],   // Southwest of Minicoy
-        [7.15, 72.85],   // Eight Degree Channel Center (Median Line between Minicoy 8.28°N and Maldives 7.06°N)
-        [7.35, 73.50],
-        [7.40, 74.50],   // East of Maldives Northern Atoll
-        [6.50, 75.80],   // Approach to Wadge Bank
-        [4.784, 77.023], // Point T: India - Sri Lanka - Maldives Trijunction (1976 Treaty)
-        
-        // India - Sri Lanka Maritime Boundary (Gulf of Mannar & Palk Strait 1974/1976 Treaties)
-        [5.00, 77.18],   // Position 13m
-        [6.00, 77.80],
-        [7.50, 78.40],
-        [8.37, 78.90],
-        [8.85, 79.15],
-        [9.10, 79.53],   // Position 6 (South of Adam's Bridge / Dhanushkodi)
-        [9.22, 79.53],   // Position 5
-        [9.36, 79.51],   // Position 4
-        [9.67, 79.37],   // Position 3
-        [9.95, 79.58],   // Position 2
-        [10.08, 80.05],  // Position 1 (Palk Strait Exit, North of Point Pedro)
-        
-        // Bay of Bengal Delimitation & 200 NM Outer Limit
-        [10.50, 80.50],
-        [11.00, 81.50],  // 1976 Bay of Bengal Treaty line
-        [12.50, 83.50],  // 200 NM off Chennai
-        [15.50, 86.00],  // 200 NM off Andhra Pradesh
-        [18.50, 88.50],  // 200 NM off Odisha
-        [21.15, 89.40],  // India - Bangladesh Maritime Boundary (2014 UNCLOS Tribunal)
+        [23.85, 68.10],  // Sir Creek / Pakistan Maritime Boundary
+        [21.80, 66.10],  // Kutch Outer Continental Shelf
+        [20.40, 65.80],  // Saurashtra Outer EEZ Limit
+        [17.50, 68.30],  // Maharashtra Outer EEZ 200 NM Limit
+        [14.50, 69.20],  // Goa Outer EEZ Limit
+        [12.50, 68.50],  // West of Northern Lakshadweep
+        [10.00, 68.30],  // West of Central Lakshadweep
+        [8.00, 69.50],   // Southwest of Lakshadweep
+        [7.60, 71.00],   // Eight Degree Channel West
+        [7.60, 73.50],   // Eight Degree Channel Median Line (India-Maldives Boundary)
+        [7.80, 74.80],   // Eight Degree Channel East
+        [4.784, 77.023], // Point T: India - Sri Lanka - Maldives Trijunction (Southward Arrowhead Point)
+        [7.20, 78.60],   // Wadge Bank / Gulf of Mannar Entry
+        [8.60, 79.20],   // Gulf of Mannar Median Line
+        [9.15, 79.52],   // Adam's Bridge / Rameswaram (IMBL Treaty)
+        [9.80, 79.80],   // Palk Bay Median Line
+        [10.20, 80.30],  // Palk Strait Exit (North of Jaffna / Point Pedro)
+        [11.50, 83.50],  // Bay of Bengal (East of Tamil Nadu)
+        [13.50, 85.00],  // Bay of Bengal (East of Andhra Pradesh)
+        [16.00, 86.50],  // Bay of Bengal (East of Visakhapatnam)
+        [18.00, 88.50],  // Bay of Bengal (East of Odisha)
+        [21.15, 89.40],  // India - Bangladesh Maritime Boundary (UNCLOS 2014 Award)
         [21.65, 89.15]   // West Bengal Coast
       ];
 

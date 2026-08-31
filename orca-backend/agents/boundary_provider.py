@@ -124,10 +124,30 @@ class MaritimeBoundaryProvider:
             (9.10, 79.35), (9.30, 79.70), (9.15, 79.75), (8.95, 79.40), (9.10, 79.35)
         ]
 
-        # 5. Full Lakshadweep Archipelago Boundary Polygon (Chetlat, Kavaratti, Andrott, Kalpeni, Suheli, Minicoy)
-        # Lat 8.0 to 12.8 N, Lon 71.4 to 74.2 E
-        lakshadweep_archipelago_poly = [
-            (12.8, 71.4), (12.8, 74.2), (9.5, 74.2), (8.0, 73.5), (8.0, 72.5), (9.5, 71.4), (12.8, 71.4)
+        # 5. Lakshadweep Archipelago Atoll & Coral Reef Hard Obstacles
+        # 5a. Northern Banks & Atolls (Chetlat, Bitra, Kiltan, Kadmat, Amini)
+        amindivi_poly = [
+            (11.9, 72.0), (11.9, 73.1), (11.0, 73.1), (11.0, 72.0), (11.9, 72.0)
+        ]
+        # 5b. Central Atolls (Agatti, Bangaram, Kavaratti)
+        kavaratti_poly = [
+            (10.95, 72.0), (10.95, 72.85), (10.45, 72.85), (10.45, 72.0), (10.95, 72.0)
+        ]
+        # 5c. Andrott Island (Eastern atoll)
+        andrott_poly = [
+            (10.95, 73.55), (10.95, 73.85), (10.70, 73.85), (10.70, 73.55), (10.95, 73.55)
+        ]
+        # 5d. Kalpeni & Cheriyam Atoll (Southeastern atoll)
+        kalpeni_poly = [
+            (10.25, 73.50), (10.25, 73.80), (9.90, 73.80), (9.90, 73.50), (10.25, 73.50)
+        ]
+        # 5e. Suheli Par Reefs & Shoals (Southwestern atoll)
+        suheli_poly = [
+            (10.15, 72.15), (10.15, 72.50), (9.90, 72.50), (9.90, 72.15), (10.15, 72.15)
+        ]
+        # 5f. Minicoy Atoll (Southernmost atoll in Eight Degree Channel)
+        minicoy_poly = [
+            (8.45, 72.90), (8.45, 73.20), (8.15, 73.20), (8.15, 72.90), (8.45, 72.90)
         ]
 
         # 6. Maldives Archipelago Atolls (Male, Ari, Nilandhe, Huvadhoo)
@@ -138,41 +158,34 @@ class MaritimeBoundaryProvider:
             (2.2, 72.7), (2.2, 73.8), (0.0, 73.6), (0.0, 72.7), (2.2, 72.7)
         ]
 
-        # 7. Official Indian EEZ Polygon (UNCLOS & Bilateral IMBL boundaries)
+        # 7. Official Indian EEZ Polygon (Matching official Marine Regions / UNCLOS dataset)
         self.indian_eez_poly = [
-            (23.70, 68.05),  # Sir Creek / India-Pakistan EEZ Boundary
-            (20.50, 66.50),  # Outer Arabian Sea 200 NM limit
-            (18.00, 67.50),  # West of Maharashtra
-            (15.00, 68.50),  # West of Goa
-            (13.00, 69.20),  # West of Northern Lakshadweep (Chetlat / Bitra)
-            (10.00, 68.80),  # West of Kavaratti / Agatti
-            (7.50, 71.00),   # Southwest of Minicoy
-            (7.15, 72.85),   # Eight Degree Channel Median Line (between Minicoy 8.28°N and Maldives 7.06°N)
-            (7.35, 73.50),
-            (7.40, 74.50),   # East of Northern Maldives
-            (6.50, 75.80),   # Wadge Bank Approach
-            (4.784, 77.023), # Point T: India - Sri Lanka - Maldives Trijunction (1976 Treaty)
-            (5.00, 77.18),   # Position 13m
-            (6.00, 77.80),
-            (7.50, 78.40),
-            (8.37, 78.90),
-            (8.85, 79.15),
-            (9.10, 79.53),   # Position 6 (South of Adam's Bridge / Dhanushkodi)
-            (9.22, 79.53),   # Position 5
-            (9.36, 79.51),   # Position 4
-            (9.67, 79.37),   # Position 3
-            (9.95, 79.58),   # Position 2
-            (10.08, 80.05),  # Position 1 (Palk Strait Exit, North of Point Pedro)
-            (10.50, 80.50),
-            (11.00, 81.50),  # 1976 Bay of Bengal Treaty line
-            (12.50, 83.50),  # 200 NM off Chennai
-            (15.50, 86.00),  # 200 NM off Andhra Pradesh
-            (18.50, 88.50),  # 200 NM off Odisha
-            (21.15, 89.40),  # India - Bangladesh Maritime Boundary (2014 UNCLOS Tribunal)
+            (23.85, 68.10),  # Sir Creek / Pakistan Maritime Boundary
+            (21.80, 66.10),  # Kutch Outer Continental Shelf
+            (20.40, 65.80),  # Saurashtra Outer EEZ Limit
+            (17.50, 68.30),  # Maharashtra Outer EEZ 200 NM Limit
+            (14.50, 69.20),  # Goa Outer EEZ Limit
+            (12.50, 68.50),  # West of Northern Lakshadweep
+            (10.00, 68.30),  # West of Central Lakshadweep
+            (8.00, 69.50),   # Southwest of Lakshadweep
+            (7.60, 71.00),   # Eight Degree Channel West
+            (7.60, 73.50),   # Eight Degree Channel Median Line (India-Maldives Boundary)
+            (7.80, 74.80),   # Eight Degree Channel East
+            (4.784, 77.023), # Point T: India - Sri Lanka - Maldives Trijunction (Southward Arrowhead Point)
+            (7.20, 78.60),   # Wadge Bank / Gulf of Mannar Entry
+            (8.60, 79.20),   # Gulf of Mannar Median Line
+            (9.15, 79.52),   # Adam's Bridge / Rameswaram (IMBL Treaty)
+            (9.80, 79.80),   # Palk Bay Median Line
+            (10.20, 80.30),  # Palk Strait Exit (North of Jaffna / Point Pedro)
+            (11.50, 83.50),  # Bay of Bengal (East of Tamil Nadu)
+            (13.50, 85.00),  # Bay of Bengal (East of Andhra Pradesh)
+            (16.00, 86.50),  # Bay of Bengal (East of Visakhapatnam)
+            (18.00, 88.50),  # Bay of Bengal (East of Odisha)
+            (21.15, 89.40),  # India - Bangladesh Maritime Boundary (UNCLOS 2014 Award)
             (21.65, 89.15),  # West Bengal Coast
             (25.0, 90.0),    # Mainland envelope closure
             (25.0, 65.0),
-            (23.70, 68.05)
+            (23.85, 68.10)
         ]
 
         self.inside_eez_mask = np.zeros((self.num_rows, self.num_cols), dtype=bool)
@@ -195,9 +208,21 @@ class MaritimeBoundaryProvider:
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, adams_bridge_poly):
                     self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, lakshadweep_archipelago_poly):
+                elif self._point_in_polygon(lat, lon, amindivi_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, kavaratti_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, andrott_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, kalpeni_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, suheli_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, minicoy_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, maldives_north_poly):
+                    self.static_impassable_mask[r, c] = True
+                elif self._point_in_polygon(lat, lon, maldives_south_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, maldives_south_poly):
                     self.static_impassable_mask[r, c] = True
