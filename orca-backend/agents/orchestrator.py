@@ -275,6 +275,56 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             except Exception as ex:
                 print(f"[DEBUG] Error parsing map hazard: {ex}")
 
+    # 2c. Evaluate active IMD Cyclone Bulletins & Gale Envelopes
+    if has_coords:
+        lat = state["vessel_coords"]["lat"]
+        lon = state["vessel_coords"]["lon"]
+        try:
+            from agents.imd_cyclone_service import imd_cyclone_service
+            bulletins = imd_cyclone_service.get_active_cyclones()
+            
+            import math
+            def get_dist_km(lat1, lon1, lat2, lon2):
+                R = 6371.0
+                phi1, phi2 = math.radians(lat1), math.radians(lat2)
+                d_phi = math.radians(lat2 - lat1)
+                d_lon = math.radians(lon2 - lon1)
+                a = math.sin(d_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lon / 2.0)**2
+                return 2.0 * R * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+
+            def is_inside_poly(x, y, poly):
+                inside = False
+                n = len(poly)
+                p1x, p1y = poly[0]
+                for i in range(n + 1):
+                    p2x, p2y = poly[i % n]
+                    if x > min(p1x, p2x) and x <= max(p1x, p2x) and y <= max(p1y, p2y):
+                        if p1x != p2x:
+                            xints = (x - p1x) * (p2y - p1y) / (p2x - p1x) + p1y
+                        if p1y == p2y or y <= xints:
+                            inside = not inside
+                    p1x, p1y = p2x, p2y
+                return inside
+
+            for b in bulletins:
+                poly = b.get("gale_warning_polygon", [])
+                center_lat = b.get("center_lat", 0.0)
+                center_lon = b.get("center_lon", 0.0)
+                gale_r_km = b.get("gale_radius_km", 120.0)
+
+                inside_poly = is_inside_poly(lat, lon, [(p[0], p[1]) for p in poly]) if poly else False
+                dist_to_center = get_dist_km(lat, lon, center_lat, center_lon)
+
+                if inside_poly or dist_to_center <= gale_r_km:
+                    risk_level = "CRITICAL"
+                    override_reasons.append(
+                        f"IMD CYCLONE / GALE WARNING: Coordinates ({round(lat, 4)}°N, {round(lon, 4)}°E) are inside the active danger zone of {b['name']} ({b['intensity_category']}) with sustained gale winds of {b['max_sustained_winds_kmh']} km/h (gusts {b['max_gusts_kmh']} km/h) and severe wave swells. Total suspension of fishing operations advised."
+                    )
+                    weather_warning_requires_route = True
+                    break
+        except Exception as ex:
+            print(f"[DEBUG] Error checking cyclone alerts: {ex}")
+
     # 3. Check for Conflicts (e.g. Favorable fish vs Warnings)
     if state.get("ocean_report") and state["ocean_report"].get("status") == "success" and state["ocean_report"].get("data"):
         o = state["ocean_report"]["data"]
@@ -783,7 +833,7 @@ async def fetch_ocean_report(state: AgentState) -> Dict[str, Any]:
     }
 
 async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
-    # Dynamic geofence calculation to be compliant with actual spatial zones
+    # Dynamic geofence calculation using unified BoundaryProvider
     coords = state.get("vessel_coords")
     if not coords:
         coords = {"lat": 13.08, "lon": 80.27} # Port fallback
@@ -791,121 +841,88 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
     lat = float(coords.get("lat", 13.08))
     lon = float(coords.get("lon", 80.27))
     
-    # Haversine distance helper
     import math
     def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         R = 6371000.0
-        phi1 = math.radians(lat1)
-        phi2 = math.radians(lat2)
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
         d_phi = math.radians(lat2 - lat1)
         d_lon = math.radians(lon2 - lon1)
         a = math.sin(d_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lon / 2.0)**2
         c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
         return R * c
 
-    # Point-in-polygon helper using ray-casting
-    def is_inside_polygon(x: float, y: float, poly: list) -> bool:
-        inside = False
-        n = len(poly)
-        p1x, p1y = poly[0]
-        for i in range(n + 1):
-            p2x, p2y = poly[i % n]
-            if x > min(p1x, p2x):
-                if x <= max(p1x, p2x):
-                    if y <= max(p1y, p2y):
-                        if p1x != p2x:
-                            xints = (x - p1x) * (p2y - p1y) / (p2x - p1x) + p1y
-                        if p1y == p2y or y <= xints:
-                            inside = not inside
-            p1x, p1y = p2x, p2y
-        return inside
+    # 1. Use official boundary provider for EEZ containment
+    from agents.boundary_provider import boundary_provider
+    inside_eez = boundary_provider.is_inside_eez(lat, lon)
 
-    # EEZ polygon coordinates exactly matching App.tsx React UI
-    eez_poly = [
-        (23.0, 68.0), (20.0, 69.5), (16.0, 70.5), (12.0, 71.5), (8.0, 74.0), (6.0, 77.0),
-        (8.0, 80.0), (12.0, 81.5), (16.0, 84.0), (20.0, 88.0), (21.5, 87.5), (19.0, 85.0),
-        (16.0, 81.0), (13.0, 80.0), (10.0, 79.0), (8.0, 78.0), (8.0, 77.0), (10.0, 76.0),
-        (13.0, 74.0), (16.0, 73.0), (19.0, 72.0), (21.0, 70.0), (23.0, 68.0)
+    # 2. Pan-India Coastline Baseline (Gujarat to West Bengal)
+    indian_coastline = [
+        (23.7, 68.1), (22.5, 69.0), (21.5, 69.5), (20.9, 70.4), (21.0, 72.1), # Gujarat
+        (19.0, 72.8), (17.5, 73.2), (16.0, 73.5), (15.4, 73.8), # Maharashtra / Goa
+        (14.0, 74.3), (13.0, 74.8), (11.5, 75.6), (9.9, 76.2),   # Karnataka / Kerala
+        (8.1, 77.5),                                            # Kanyakumari
+        (9.1, 79.1), (10.0, 79.8), (11.5, 79.8), (13.1, 80.3),  # Tamil Nadu
+        (14.5, 80.1), (16.0, 81.5), (17.7, 83.3),               # Andhra Pradesh (Visakhapatnam)
+        (19.5, 85.5), (20.3, 86.7), (21.5, 87.5), (21.6, 88.2)  # Odisha / West Bengal
     ]
 
-    # 1. Calculate distance to India's West Coast baseline
-    baseline_pts = [
-        (13.0, 74.8), (14.0, 74.3), (14.8, 74.1), (15.48, 73.8),
-        (16.0, 73.6), (17.0, 73.3), (18.0, 73.0), (19.0, 72.8), (20.0, 72.7)
-    ]
     min_dist_to_coast = float('inf')
-    for pt in baseline_pts:
-        d = haversine_distance(lat, lon, pt[0], pt[1])
+    for clat, clon in indian_coastline:
+        d = haversine_distance(lat, lon, clat, clon)
         if d < min_dist_to_coast:
             min_dist_to_coast = d
 
-    # Calculate distance to outer EEZ boundary segments (West Coast segments)
-    eez_segments = [
-        ((23.0, 68.0), (20.0, 69.5)),
-        ((20.0, 69.5), (16.0, 70.5)),
-        ((16.0, 70.5), (12.0, 71.5)),
-        ((12.0, 71.5), (8.0, 74.0)),
-        ((8.0, 74.0), (6.0, 77.0))
-    ]
+    # 3. Distance to outer EEZ boundary line
+    eez_outer_pts = boundary_provider.indian_eez_poly
     min_dist_to_eez_line = float('inf')
-    for seg in eez_segments:
-        p1, p2 = seg[0], seg[1]
-        for i in range(11):
-            t = i / 10.0
-            seg_lat = p1[0] + t * (p2[0] - p1[0])
-            seg_lon = p1[1] + t * (p2[1] - p1[1])
-            d = haversine_distance(lat, lon, seg_lat, seg_lon)
+    for i in range(len(eez_outer_pts) - 1):
+        p1 = eez_outer_pts[i]
+        p2 = eez_outer_pts[i + 1]
+        for step in range(6):
+            t = step / 5.0
+            slat = p1[0] + t * (p2[0] - p1[0])
+            slon = p1[1] + t * (p2[1] - p1[1])
+            d = haversine_distance(lat, lon, slat, slon)
             if d < min_dist_to_eez_line:
                 min_dist_to_eez_line = d
 
-    # Official UNCLOS limits
     TERRITORIAL_LIMIT = 12 * 1852.0  # 12 Nautical Miles = 22.2 km
-
     inside_territorial = min_dist_to_coast <= TERRITORIAL_LIMIT
-    # A coordinate is inside the EEZ if it lies inside the outer polygon OR if it is within 200 NM (370.4 km) of the coastal baseline
-    inside_eez = is_inside_polygon(lat, lon, eez_poly) or inside_territorial or (min_dist_to_coast <= 200.0 * 1852.0)
-
     dist_to_territorial_boundary = abs(min_dist_to_coast - TERRITORIAL_LIMIT)
 
-    # 2. Calculate distance to restricted zones for safety rules
+    # 4. Check Restricted Operational Zones
     in_restricted = False
     dist_to_restricted = 99999.0
-    
-    if lon < 75.0:
-        # Bounding box off Goa: Lat 15.0 to 16.0, Lon 72.0 to 73.5
-        # Check if inside Goa restricted naval area
-        if 15.0 <= lat <= 16.0 and 72.0 <= lon <= 73.5:
-            in_restricted = True
-            dist_to_restricted = 0.0
-        else:
-            # Calculate distance to boundary of Goa Naval exercise zone
-            closest_lat = max(15.0, min(lat, 16.0))
-            closest_lon = max(72.0, min(lon, 73.5))
-            dist_to_restricted = haversine_distance(lat, lon, closest_lat, closest_lon)
-    else:
-        # East Coast: segment from (9.0, 79.5) to (11.0, 80.3)
-        # Check if inside restricted boundary (e.g. east of IMBL)
-        line_lon = 79.5 + ((lat - 9.0) / (11.0 - 9.0)) * (80.3 - 79.5) if 9.0 <= lat <= 11.0 else 80.3
-        if lon > line_lon:
-            in_restricted = True
-            dist_to_restricted = 0.0
-        else:
-            min_dist = float('inf')
-            for i in range(11):
-                t = i / 10.0
-                seg_lat = 9.0 + t * (11.0 - 9.0)
-                seg_lon = 79.5 + t * (80.3 - 79.5)
-                d = haversine_distance(lat, lon, seg_lat, seg_lon)
-                if d < min_dist:
-                    min_dist = d
-            dist_to_restricted = min_dist
+    nearest_boundary = "Indian Territorial Sea Limit"
 
-    await asyncio.sleep(0.1)
+    # 4a. Goa Naval Zone: Lat 15.0 to 16.0, Lon 72.0 to 73.5
+    if 15.0 <= lat <= 16.0 and 72.0 <= lon <= 73.5:
+        in_restricted = True
+        dist_to_restricted = 0.0
+        nearest_boundary = "Goa Naval Exercise Zone"
+    elif lon < 75.0:
+        nearest_boundary = "Goa Naval Exercise Zone Boundary"
+        closest_lat = max(15.0, min(lat, 16.0))
+        closest_lon = max(72.0, min(lon, 73.5))
+        dist_to_restricted = haversine_distance(lat, lon, closest_lat, closest_lon)
+
+    # 4b. India-Sri Lanka IMBL (Palk Strait & Gulf of Mannar: Lat 8.5 to 10.3 only)
+    if 8.5 <= lat <= 10.3 and 78.8 <= lon <= 80.4:
+        imbl_lon = 79.5 + ((lat - 9.0) / (10.2 - 9.0)) * (80.3 - 79.5)
+        if lon > imbl_lon:
+            in_restricted = True
+            dist_to_restricted = 0.0
+            nearest_boundary = "India-Sri Lanka IMBL (Sri Lankan Waters)"
+        else:
+            nearest_boundary = "India-Sri Lanka IMBL"
+            dist_to_restricted = haversine_distance(lat, lon, lat, imbl_lon)
+
+    await asyncio.sleep(0.05)
     return {
         "geofence_report": {
             "data": {
                 "in_restricted_zone": in_restricted,
-                "nearest_boundary": "Goa Naval Exercise Zone Boundary" if lon < 75.0 else "India-Sri Lanka IMBL",
+                "nearest_boundary": nearest_boundary,
                 "distance_to_boundary_meters": round(dist_to_restricted, 2),
                 "dist_to_territorial_sea_meters": round(dist_to_territorial_boundary, 2),
                 "dist_to_eez_boundary_meters": round(min_dist_to_eez_line, 2),
