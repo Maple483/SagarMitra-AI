@@ -376,7 +376,7 @@ class Coordinates(BaseModel):
 
 # Pydantic model for structured router outputs
 class QueryAnalysis(BaseModel):
-    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "general_safety", "fishing_safety"]] = Field(
+    query_intents: List[Literal["weather_info", "pfz_search", "border_check", "informational", "general_safety", "fishing_safety", "unrelated"]] = Field(
         description="The categorized intents of the query."
     )
     extracted_coords: Optional[Coordinates] = Field(
@@ -512,7 +512,8 @@ def router_node(state: AgentState):
             "- 'border_check': Borders, IMBL, restricted marine areas, protected waters.\n"
             "- 'informational': Greetings, help, standard information requests.\n"
             "- 'general_safety': General safety check combining weather and border checks.\n"
-            "- 'fishing_safety': Fishing-specific safety combining weather, ocean state, and border checks.\n\n"
+            "- 'fishing_safety': Fishing-specific safety combining weather, ocean state, and border checks.\n"
+            "- 'unrelated': General knowledge, random, or out-of-scope topics that do not pertain to marine safety, weather, or Potential Fishing Zones (such as wars, politics, cooking, sports, history, etc.).\n\n"
             "If coordinates are explicitly mentioned, parse them as {{'lat': float, 'lon': float}}.\n"
             "If target times are requested (e.g. tomorrow, next week), extract relative_time_expr or absolute start/end datetimes."
         )),
@@ -554,24 +555,28 @@ def router_node(state: AgentState):
             
         # 1. Classify intents using robust keyword checks
         intents = []
-        if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain", "storm", "waves", "forecast"]):
-            intents.append("weather_info")
-        if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch", "fishing", "productivity"]):
-            intents.append("pfz_search")
-            
-        # A border_check safety query requires both a safety trigger word and a location/zone context word
-        has_safety_trigger = any(t in msg for t in ["safe", "restricted", "danger", "warning", "check", "crossed", "breached", "violation", "alert", "steer"])
-        has_location_context = any(l in msg for l in ["border", "imbl", "eez", "boundary", "zone", "line", "c1", "goa", "mumbai", "chennai", "here", "current", "position", "coords", "gps", "near", "at"])
-        if has_safety_trigger and has_location_context:
-            intents.append("border_check")
-            
-        informational_keywords = ["who are you", "what is", "about", "hello", "hi", "help", "guide", "explain", "how to", "what can"]
-        if any(re.search(rf"\b{re.escape(kw)}\b", msg) for kw in informational_keywords) or "eez" in msg or "imbl" in msg:
-            intents.append("informational")
-            
-        # If the user query is completely out-of-scope (no match), classify as informational so we handle it gracefully
-        if not intents:
-            intents = ["informational"]
+        unrelated_keywords = ["war", "battle", "politics", "election", "president", "cooking", "recipe", "sports", "football", "cricket", "movie", "song", "history", "who won", "how to cook"]
+        if any(re.search(rf"\b{re.escape(k)}\b", msg) for k in unrelated_keywords):
+            intents.append("unrelated")
+        else:
+            if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain", "storm", "waves", "forecast"]):
+                intents.append("weather_info")
+            if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch", "fishing", "productivity"]):
+                intents.append("pfz_search")
+                
+            # A border_check safety query requires both a safety trigger word and a location/zone context word
+            has_safety_trigger = any(t in msg for t in ["safe", "restricted", "danger", "warning", "check", "crossed", "breached", "violation", "alert", "steer"])
+            has_location_context = any(l in msg for l in ["border", "imbl", "eez", "boundary", "zone", "line", "c1", "goa", "mumbai", "chennai", "here", "current", "position", "coords", "gps", "near", "at"])
+            if has_safety_trigger and has_location_context:
+                intents.append("border_check")
+                
+            informational_keywords = ["who are you", "what is", "about", "hello", "hi", "help", "guide", "explain", "how to", "what can"]
+            if any(re.search(rf"\b{re.escape(kw)}\b", msg) for kw in informational_keywords) or "eez" in msg or "imbl" in msg:
+                intents.append("informational")
+                
+            # If the user query is completely out-of-scope (no match), classify as informational so we handle it gracefully
+            if not intents:
+                intents = ["informational"]
             
         # 2. Determine location requirements based on active safety intents
         location_required = False
@@ -1019,6 +1024,13 @@ def consensus_explainer_node(state: AgentState):
     status = state.get("response_status")
     advice = ""
     
+    if "unrelated" in state.get("query_intents", []):
+        advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs)."
+        return {
+            "consensus_advice": advice,
+            "messages": [AIMessage(content=advice)]
+        }
+        
     # 1. Deterministic Interventions for Validation Failures (Prevents LLM Hallucinations)
     if status == "INSUFFICIENT_LOCATION":
         advice = "Error: GPS coordinates are required to perform safety and geofence checks. Please provide your location (e.g. 13.08 N, 80.27 E) or ensure your vessel tracker is active."
