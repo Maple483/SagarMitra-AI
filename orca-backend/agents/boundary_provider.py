@@ -124,28 +124,20 @@ class MaritimeBoundaryProvider:
             (9.10, 79.35), (9.30, 79.70), (9.15, 79.75), (8.95, 79.40), (9.10, 79.35)
         ]
 
-        # 5. Lakshadweep Archipelago Atoll & Coral Reef Hard Obstacles
-        # 5a. Northern Banks & Atolls (Chetlat, Bitra, Kiltan, Kadmat, Amini)
-        amindivi_poly = [
-            (11.9, 72.0), (11.9, 73.1), (11.0, 73.1), (11.0, 72.0), (11.9, 72.0)
+        # 5. Full Lakshadweep Island Territory (Matching OpenStreetMap Island Boundary)
+        # Lat 8.5 to 12.6 N, Lon 71.5 to 74.0 E
+        lakshadweep_zone_poly = [
+            (12.60, 71.50),  # Northwest (Bitra / Cora Divh)
+            (12.60, 73.50),  # Northeast (Chetlat / Kiltan)
+            (10.90, 74.00),  # East (Andrott Island)
+            (10.00, 73.90),  # Southeast (Kalpeni Island)
+            (8.60, 73.30),   # South (North of Nine Degree Channel)
+            (8.50, 72.70),   # Southwest
+            (10.00, 71.90),  # West (Suheli Par Reefs)
+            (11.00, 71.70),  # West (Agatti / Bangaram)
+            (12.60, 71.50)   # Close loop
         ]
-        # 5b. Central Atolls (Agatti, Bangaram, Kavaratti)
-        kavaratti_poly = [
-            (10.95, 72.0), (10.95, 72.85), (10.45, 72.85), (10.45, 72.0), (10.95, 72.0)
-        ]
-        # 5c. Andrott Island (Eastern atoll)
-        andrott_poly = [
-            (10.95, 73.55), (10.95, 73.85), (10.70, 73.85), (10.70, 73.55), (10.95, 73.55)
-        ]
-        # 5d. Kalpeni & Cheriyam Atoll (Southeastern atoll)
-        kalpeni_poly = [
-            (10.25, 73.50), (10.25, 73.80), (9.90, 73.80), (9.90, 73.50), (10.25, 73.50)
-        ]
-        # 5e. Suheli Par Reefs & Shoals (Southwestern atoll)
-        suheli_poly = [
-            (10.15, 72.15), (10.15, 72.50), (9.90, 72.50), (9.90, 72.15), (10.15, 72.15)
-        ]
-        # 5f. Minicoy Atoll (Southernmost atoll in Eight Degree Channel)
+        # Minicoy Island Atoll (in Eight Degree Channel)
         minicoy_poly = [
             (8.45, 72.90), (8.45, 73.20), (8.15, 73.20), (8.15, 72.90), (8.45, 72.90)
         ]
@@ -208,15 +200,7 @@ class MaritimeBoundaryProvider:
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, adams_bridge_poly):
                     self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, amindivi_poly):
-                    self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, kavaratti_poly):
-                    self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, andrott_poly):
-                    self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, kalpeni_poly):
-                    self.static_impassable_mask[r, c] = True
-                elif self._point_in_polygon(lat, lon, suheli_poly):
+                elif self._point_in_polygon(lat, lon, lakshadweep_zone_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, minicoy_poly):
                     self.static_impassable_mask[r, c] = True
