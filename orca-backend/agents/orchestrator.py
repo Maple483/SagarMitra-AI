@@ -162,6 +162,26 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             near_border = True
             override_reasons.append("Proximity warning: vessel within 2km of restricted border.")
 
+        # EEZ & Deep-Sea Safety Threshold Checks
+        inside_eez = geo.get("inside_eez", True)
+        dist_to_eez = geo.get("dist_to_eez_boundary_meters", 999999.0)
+        dist_to_coast = geo.get("distance_to_coast_meters", 0.0)
+
+        # 1. EEZ Breach (Outside Indian waters)
+        if not inside_eez:
+            risk_level = "CRITICAL"
+            override_reasons.append("EEZ breach: vessel is in international waters outside the Indian Exclusive Economic Zone.")
+        # 2. EEZ Outer Border Proximity (Within 30 NM = 55.56 km)
+        elif dist_to_eez < 55560.0:
+            if risk_level != "CRITICAL":
+                risk_level = "WARNING"
+            override_reasons.append(f"EEZ border proximity: vessel is operating within {round(dist_to_eez / 1852.0, 1)} NM of the outer EEZ limit, risking drift into international waters.")
+        # 3. Deep-Sea navigation limit (Beyond 24 NM = 44.4 km from coast)
+        elif dist_to_coast > 44448.0:
+            if risk_level not in ["CRITICAL", "WARNING"]:
+                risk_level = "WARNING"
+            override_reasons.append("Deep-sea hazard: vessel is operating beyond the 24 NM Contiguous Zone. Active satellite monitoring and deep-sea permits required.")
+
     # 2. Evaluate Weather Report (with API Failsafe check)
     weather_warning_requires_route = False
     if state.get("weather_report"):
@@ -677,7 +697,7 @@ async def fetch_ocean_report(state: AgentState) -> Dict[str, Any]:
             "data": {"sst_gradient_front": True, "chlorophyll_density": 3.8},
             "source": "INCOIS",
             "data_mode": "live",
-            "timestamp": "2026-08-28T22:30:00Z",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
             "status": "success"
         }
     }
@@ -703,6 +723,31 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
         c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
         return R * c
 
+    # Point-in-polygon helper using ray-casting
+    def is_inside_polygon(x: float, y: float, poly: list) -> bool:
+        inside = False
+        n = len(poly)
+        p1x, p1y = poly[0]
+        for i in range(n + 1):
+            p2x, p2y = poly[i % n]
+            if x > min(p1x, p2x):
+                if x <= max(p1x, p2x):
+                    if y <= max(p1y, p2y):
+                        if p1x != p2x:
+                            xints = (x - p1x) * (p2y - p1y) / (p2x - p1x) + p1y
+                        if p1y == p2y or y <= xints:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
+    # EEZ polygon coordinates exactly matching App.tsx React UI
+    eez_poly = [
+        (23.0, 68.0), (20.0, 69.5), (16.0, 70.5), (12.0, 71.5), (8.0, 74.0), (6.0, 77.0),
+        (8.0, 80.0), (12.0, 81.5), (16.0, 84.0), (20.0, 88.0), (21.5, 87.5), (19.0, 85.0),
+        (16.0, 81.0), (13.0, 80.0), (10.0, 79.0), (8.0, 78.0), (8.0, 77.0), (10.0, 76.0),
+        (13.0, 74.0), (16.0, 73.0), (19.0, 72.0), (21.0, 70.0), (23.0, 68.0)
+    ]
+
     # 1. Calculate distance to India's West Coast baseline
     baseline_pts = [
         (13.0, 74.8), (14.0, 74.3), (14.8, 74.1), (15.48, 73.8),
@@ -714,15 +759,32 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
         if d < min_dist_to_coast:
             min_dist_to_coast = d
 
+    # Calculate distance to outer EEZ boundary segments (West Coast segments)
+    eez_segments = [
+        ((23.0, 68.0), (20.0, 69.5)),
+        ((20.0, 69.5), (16.0, 70.5)),
+        ((16.0, 70.5), (12.0, 71.5)),
+        ((12.0, 71.5), (8.0, 74.0)),
+        ((8.0, 74.0), (6.0, 77.0))
+    ]
+    min_dist_to_eez_line = float('inf')
+    for seg in eez_segments:
+        p1, p2 = seg[0], seg[1]
+        for i in range(11):
+            t = i / 10.0
+            seg_lat = p1[0] + t * (p2[0] - p1[0])
+            seg_lon = p1[1] + t * (p2[1] - p1[1])
+            d = haversine_distance(lat, lon, seg_lat, seg_lon)
+            if d < min_dist_to_eez_line:
+                min_dist_to_eez_line = d
+
     # Official UNCLOS limits
     TERRITORIAL_LIMIT = 12 * 1852.0  # 12 Nautical Miles = 22.2 km
-    EEZ_LIMIT = 200 * 1852.0         # 200 Nautical Miles = 370.4 km
 
     inside_territorial = min_dist_to_coast <= TERRITORIAL_LIMIT
-    inside_eez = min_dist_to_coast <= EEZ_LIMIT
+    inside_eez = is_inside_polygon(lat, lon, eez_poly)
 
     dist_to_territorial_boundary = abs(min_dist_to_coast - TERRITORIAL_LIMIT)
-    dist_to_eez_boundary = abs(EEZ_LIMIT - min_dist_to_coast)
 
     # 2. Calculate distance to restricted zones for safety rules
     in_restricted = False
@@ -765,7 +827,7 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
                 "nearest_boundary": "Goa Naval Exercise Zone Boundary" if lon < 75.0 else "India-Sri Lanka IMBL",
                 "distance_to_boundary_meters": round(dist_to_restricted, 2),
                 "dist_to_territorial_sea_meters": round(dist_to_territorial_boundary, 2),
-                "dist_to_eez_boundary_meters": round(dist_to_eez_boundary, 2),
+                "dist_to_eez_boundary_meters": round(min_dist_to_eez_line, 2),
                 "inside_eez": inside_eez,
                 "inside_territorial": inside_territorial,
                 "distance_to_coast_meters": round(min_dist_to_coast, 2)
@@ -1046,7 +1108,7 @@ def consensus_explainer_node(state: AgentState):
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
                         safety_advice = "Elevated swells or strong winds are detected in your area. Please navigate with caution."
                     else:
-                        safety_advice = f"Elevated risk factors are detected due to {overrides}. Please monitor updates."
+                        safety_advice = f"Caution: {overrides}."
                 elif final_risk == "SAFE":
                     vessel_name = "your vessel"
                     if "c1" in user_query.lower():
