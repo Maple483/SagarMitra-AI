@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Send, Ship, Anchor, Layers, X, Activity, ShieldAlert, Download, Upload, MapPin, Trash2, Info, ExternalLink, Plus, MoreVertical, Search, Navigation } from 'lucide-react';
+import { Send, Ship, Anchor, Layers, X, Activity, ShieldAlert, Download, Upload, MapPin, Trash2, Info, ExternalLink, Plus, MoreVertical, Search, Navigation, Wind } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -48,6 +48,7 @@ export default function App() {
   const waveLayerRef = useRef<any>(null);
   const eezLayerRef = useRef<any>(null);
   const customMarkersLayerRef = useRef<any>(null);
+  const cycloneLayerRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([
@@ -58,7 +59,8 @@ export default function App() {
   const [layers, setLayers] = useState({
     vessels: true,
     waves: false,
-    eez: true // Default to true now to highlight India
+    eez: true, // Default to true now to highlight India
+    cyclones: true // IMD Live Cyclone & Gale Warnings
   });
   
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
@@ -207,6 +209,83 @@ export default function App() {
         fillOpacity: 0.08
       }).addTo(eezGrp);
 
+      // 4. IMD Live Cyclone & Gale Warning Bulletins Layer
+      const cyclonesGrp = window.L.layerGroup();
+      cycloneLayerRef.current = cyclonesGrp;
+
+      // Fetch Live IMD Cyclone Bulletins & Gale Polygons from Backend
+      fetch('http://localhost:8000/api/weather/cyclone_alerts')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.bulletins) {
+            data.bulletins.forEach((bulletin: any) => {
+              const isRed = bulletin.warning_level === 'RED_WARNING';
+              const strokeColor = isRed ? '#ef4444' : '#f97316';
+              const fillColor = isRed ? '#dc2626' : '#ea580c';
+
+              // 1. Gale Warning Danger Polygon (35kt+ / 50kt+ winds)
+              if (bulletin.gale_warning_polygon && bulletin.gale_warning_polygon.length > 0) {
+                window.L.polygon(bulletin.gale_warning_polygon, {
+                  color: strokeColor,
+                  weight: 2,
+                  dashArray: '6, 6',
+                  fill: true,
+                  fillColor: fillColor,
+                  fillOpacity: 0.18
+                }).bindPopup(`
+                  <div class="p-2 min-w-[200px]">
+                    <div class="flex items-center gap-1.5 font-bold ${isRed ? 'text-red-500' : 'text-orange-400'} text-xs uppercase tracking-wider mb-1">
+                      <span>⚠️ ${bulletin.warning_level.replace('_', ' ')}</span>
+                    </div>
+                    <div class="text-sm font-bold text-slate-800">${bulletin.name}</div>
+                    <div class="text-xs text-slate-600 mt-1">Category: <b>${bulletin.intensity_category}</b></div>
+                    <div class="text-xs text-slate-600">Gale Winds: <b>${bulletin.max_sustained_winds_kmh} km/h</b> (Gusts: ${bulletin.max_gusts_kmh} km/h)</div>
+                    <div class="text-xs text-slate-600">Pressure: <b>${bulletin.central_pressure_hpa} hPa</b> | Motion: ${bulletin.movement_direction} at ${bulletin.movement_speed_kmh} km/h</div>
+                    <div class="text-[11px] text-slate-700 bg-slate-100 p-1.5 rounded mt-2 border border-slate-200">
+                      ${bulletin.fishermen_warning_text}
+                    </div>
+                  </div>
+                `).addTo(cyclonesGrp);
+              }
+
+              // 2. Cyclone Eye / Center Marker
+              const eyeIcon = window.L.divIcon({
+                className: 'cyclone-eye-icon',
+                html: `
+                  <div class="w-8 h-8 rounded-full ${isRed ? 'bg-red-600' : 'bg-orange-600'} border-2 border-white flex items-center justify-center text-white text-xs font-black shadow-lg animate-pulse">
+                    🌀
+                  </div>
+                `,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+              });
+
+              window.L.marker([bulletin.center_lat, bulletin.center_lon], { icon: eyeIcon })
+                .bindPopup(`
+                  <div class="p-2">
+                    <div class="font-bold text-sm text-red-600 flex items-center gap-1">
+                      🌀 Center of ${bulletin.name}
+                    </div>
+                    <div class="text-xs text-slate-600 mt-1">Eye Coordinates: ${bulletin.center_lat.toFixed(2)}°N, ${bulletin.center_lon.toFixed(2)}°E</div>
+                    <div class="text-xs font-medium text-slate-800">Max Winds: ${bulletin.max_sustained_winds_kmh} km/h</div>
+                  </div>
+                `).addTo(cyclonesGrp);
+
+              // 3. Projected Forecast Track
+              if (bulletin.predicted_track && bulletin.predicted_track.length > 1) {
+                const trackCoords = bulletin.predicted_track.map((t: any) => [t.lat, t.lon]);
+                window.L.polyline(trackCoords, {
+                  color: strokeColor,
+                  weight: 3,
+                  dashArray: '4, 8',
+                  opacity: 0.85
+                }).bindPopup(`<b>${bulletin.name} Projected Track (Next 24-48h)</b>`).addTo(cyclonesGrp);
+              }
+            });
+          }
+        })
+        .catch(err => console.warn('Could not fetch live cyclone alerts:', err));
+
       // Store refs and add default layers
       vesselLayerRef.current = vesselsGrp;
       waveLayerRef.current = wavesGrp;
@@ -214,6 +293,7 @@ export default function App() {
       
       vesselsGrp.addTo(map);
       eezGrp.addTo(map);
+      cyclonesGrp.addTo(map);
 
       mapRef.current = map;
       
@@ -253,14 +333,17 @@ export default function App() {
   useEffect(() => {
     if (!mapRef.current) return;
     
-    if (layers.vessels) mapRef.current.addLayer(vesselLayerRef.current);
-    else mapRef.current.removeLayer(vesselLayerRef.current);
+    if (layers.vessels && vesselLayerRef.current) mapRef.current.addLayer(vesselLayerRef.current);
+    else if (vesselLayerRef.current) mapRef.current.removeLayer(vesselLayerRef.current);
     
-    if (layers.waves) mapRef.current.addLayer(waveLayerRef.current);
-    else mapRef.current.removeLayer(waveLayerRef.current);
+    if (layers.waves && waveLayerRef.current) mapRef.current.addLayer(waveLayerRef.current);
+    else if (waveLayerRef.current) mapRef.current.removeLayer(waveLayerRef.current);
     
-    if (layers.eez) mapRef.current.addLayer(eezLayerRef.current);
-    else mapRef.current.removeLayer(eezLayerRef.current);
+    if (layers.eez && eezLayerRef.current) mapRef.current.addLayer(eezLayerRef.current);
+    else if (eezLayerRef.current) mapRef.current.removeLayer(eezLayerRef.current);
+
+    if (layers.cyclones && cycloneLayerRef.current) mapRef.current.addLayer(cycloneLayerRef.current);
+    else if (cycloneLayerRef.current) mapRef.current.removeLayer(cycloneLayerRef.current);
   }, [layers]);
 
   // Sync Routes to Leaflet
@@ -806,6 +889,13 @@ export default function App() {
                   <ShieldAlert className="w-4 h-4" /> EEZ Geofence
                 </span>
                 <input type="checkbox" checked={layers.eez} onChange={() => toggleLayer('eez')} className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 bg-slate-800" />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer group">
+                <span className="text-sm font-medium text-slate-200 group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                  <Wind className="w-4 h-4 text-red-500" /> IMD Cyclones & Gales
+                </span>
+                <input type="checkbox" checked={layers.cyclones} onChange={() => toggleLayer('cyclones')} className="w-4 h-4 rounded border-slate-600 text-red-600 focus:ring-red-500 bg-slate-800" />
               </label>
             </div>
           )}

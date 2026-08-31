@@ -413,6 +413,30 @@ async def calculate_direct_route(req: RouteCalculationRequest):
     )
     return resp.model_dump()
 
+@app.get("/api/weather/live")
+async def get_live_marine_weather(lat: float = Query(..., ge=-90.0, le=90.0), lon: float = Query(..., ge=-180.0, le=180.0)):
+    """
+    Returns real-time marine weather telemetry with multi-tier failovers:
+    1. INCOIS ERDDAP Satellite Feed
+    2. Open-Meteo High-Resolution Marine & Wave Model (Failover)
+    3. IMD Marine Climatology Model
+    """
+    from agents.weather_service import weather_service
+    result = await asyncio.to_thread(weather_service.fetch_live_marine_weather, lat, lon)
+    return result
+
+@app.get("/api/weather/cyclone_alerts")
+async def get_cyclone_and_gale_alerts():
+    """
+    Returns active IMD cyclone warning bulletins, gale warning polygons, and projected tracks.
+    """
+    from agents.imd_cyclone_service import imd_cyclone_service
+    return {
+        "status": "SUCCESS",
+        "active_cyclones_count": len(imd_cyclone_service.get_active_cyclones()),
+        "bulletins": imd_cyclone_service.get_active_cyclones()
+    }
+
 @app.post("/api/query")
 async def handle_conversational_query(
     payload: TextQueryRequest,

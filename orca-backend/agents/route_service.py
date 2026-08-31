@@ -98,6 +98,13 @@ class RouteService:
             except Exception:
                 pass
 
+        # Ingest active IMD cyclone and gale warning hazard zones
+        try:
+            from agents.imd_cyclone_service import imd_cyclone_service
+            hazards.extend(imd_cyclone_service.get_cyclone_pathfinder_hazards())
+        except Exception:
+            pass
+
         return hazards
 
     def calculate_safe_route(
