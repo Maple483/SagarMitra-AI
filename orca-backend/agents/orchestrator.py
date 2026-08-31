@@ -843,7 +843,8 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
     TERRITORIAL_LIMIT = 12 * 1852.0  # 12 Nautical Miles = 22.2 km
 
     inside_territorial = min_dist_to_coast <= TERRITORIAL_LIMIT
-    inside_eez = is_inside_polygon(lat, lon, eez_poly)
+    # A coordinate is inside the EEZ if it lies inside the outer polygon OR if it is within 200 NM (370.4 km) of the coastal baseline
+    inside_eez = is_inside_polygon(lat, lon, eez_poly) or inside_territorial or (min_dist_to_coast <= 200.0 * 1852.0)
 
     dist_to_territorial_boundary = abs(min_dist_to_coast - TERRITORIAL_LIMIT)
 
