@@ -731,12 +731,27 @@ async def fetch_weather_report(state: AgentState) -> Dict[str, Any]:
         }
 
 async def fetch_ocean_report(state: AgentState) -> Dict[str, Any]:
-    # Mock ocean retrieval (normally checks INCOIS)
-    await asyncio.sleep(0.1)
+    coords = state.get("vessel_coords")
+    if not coords:
+        coords = {"lat": 13.08, "lon": 80.27}
+    lat = float(coords.get("lat", 13.08))
+    lon = float(coords.get("lon", 80.27))
+    
+    try:
+        from agents.pfz_loader import find_nearest_pfz
+        nearest_pfz = find_nearest_pfz(lat, lon)
+    except Exception as e:
+        print(f"[DEBUG] Error importing/running find_nearest_pfz: {e}")
+        nearest_pfz = None
+        
     return {
         "ocean_report": {
-            "data": {"sst_gradient_front": True, "chlorophyll_density": 3.8},
-            "source": "INCOIS",
+            "data": {
+                "sst_gradient_front": True,
+                "chlorophyll_density": 3.8,
+                "nearest_pfz": nearest_pfz
+            },
+            "source": "INCOIS PFZ Advisories",
             "data_mode": "live",
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "status": "success"
@@ -1026,6 +1041,19 @@ def consensus_explainer_node(state: AgentState):
     action = state.get("routing_action", "no_routing")
     confidence = state.get("decision_confidence", 1.0)
     
+    # Extract nearest PFZ advisory details from ocean report
+    ocean_rep = state.get("ocean_report", {})
+    nearest_pfz_data = "None"
+    if ocean_rep and ocean_rep.get("status") == "success" and ocean_rep.get("data"):
+        pfz_info = ocean_rep["data"].get("nearest_pfz")
+        if pfz_info:
+            nearest_pfz_data = (
+                f"Coast: {pfz_info['coast_name']} ({pfz_info['state']}), "
+                f"Distance to vessel: {pfz_info['distance_to_vessel_km']} km, "
+                f"Direction: {pfz_info['direction']}, Bearing: {pfz_info['bearing_deg']} degrees, "
+                f"Depth range: {pfz_info['depth_mtr_range']} m, Forecast Validity: {pfz_info['validity']}"
+            )
+            
     # Calculate data mode summary to prevent KeyError
     modes = []
     for report_name in ["weather_report", "ocean_report", "geofence_report"]:
@@ -1092,13 +1120,15 @@ def consensus_explainer_node(state: AgentState):
             "- Conflicts Resolved: {conflicts}\n"
             "- Routing Action: {routing_action}\n"
             "- Decision Confidence Score: {confidence}\n"
-            "- Data Mode: {data_mode_summary}\n\n"
+            "- Data Mode: {data_mode_summary}\n"
+            "- Nearest PFZ: {nearest_pfz_data}\n\n"
             "Instructions:\n"
             "1. Explain the safety decision clearly, referencing the precise boundary distances (convert meters to km by dividing by 1000) from the evidence log. Be extremely accurate with these values.\n"
-            "2. Keep the entire response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
-            "3. Do NOT use emojis of any kind.\n"
-            "4. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
-            "5. Do NOT use special unicode characters. Use standard ASCII spaces and letters only."
+            "2. If a PFZ is requested, explain the nearest Potential Fishing Zone using the exact distance, direction, and coast name from the Nearest PFZ data provided above.\n"
+            "3. Keep the entire response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
+            "4. Do NOT use emojis of any kind.\n"
+            "5. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "6. Do NOT use special unicode characters. Use standard ASCII spaces and letters only."
         )
         
         try:
@@ -1113,7 +1143,8 @@ def consensus_explainer_node(state: AgentState):
                 "conflicts": state.get("conflicts", []),
                 "routing_action": action,
                 "confidence": confidence,
-                "data_mode_summary": data_mode_summary
+                "data_mode_summary": data_mode_summary,
+                "nearest_pfz_data": nearest_pfz_data
             })
             advice = response.content
             print("[DEBUG] Safety explainer LLM succeeded.")
@@ -1126,8 +1157,15 @@ def consensus_explainer_node(state: AgentState):
             nearest_boundary_name = geo_data.get("nearest_boundary", "restricted border")
             
             safety_advice = ""
-            if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []):
-                if final_risk == "CRITICAL":
+            if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []) or "pfz_search" in state.get("query_intents", []):
+                if "pfz_search" in state.get("query_intents", []):
+                    ocean_data = state.get("ocean_report", {}).get("data", {})
+                    pfz_info = ocean_data.get("nearest_pfz") if ocean_data else None
+                    if pfz_info:
+                        safety_advice = f"The nearest Potential Fishing Zone is {pfz_info['distance_to_vessel_km']} km away off {pfz_info['coast_name']}, {pfz_info['state']} in the {pfz_info['direction']} direction, with depth range {pfz_info['depth_mtr_range']} m."
+                    else:
+                        safety_advice = "No potential fishing zones were identified in your immediate region today."
+                elif final_risk == "CRITICAL":
                     if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
                         safety_advice = f"Your vessel has breached the restricted {nearest_boundary_name}. Turn back immediately."
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
