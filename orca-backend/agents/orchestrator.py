@@ -462,31 +462,32 @@ def router_node(state: AgentState):
         if "tomorrow" in msg:
             relative_time_expr = "tomorrow"
             
-        informational_keywords = ["who are you", "what is", "about sagarmitra", "hello", "hi", "help"]
-        import re
-        if any(re.search(rf"\b{re.escape(kw)}\b", msg) for kw in informational_keywords):
-            intents = ["informational"]
-            location_required = False
-        else:
-            intents = []
-            if query_text.strip():
-                if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain"]):
-                    intents.append("weather_info")
-                if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch"]):
-                    intents.append("pfz_search")
-                if any(g in msg for g in ["border", "imbl", "restricted", "mpa", "naval"]):
-                    intents.append("border_check")
-                    
-                if not intents:
-                    intents = ["general_safety"]
+        # 1. Classify intents using robust keyword checks
+        intents = []
+        if any(w in msg for w in ["weather", "cyclone", "wind", "swell", "rain", "storm", "waves", "forecast"]):
+            intents.append("weather_info")
+        if any(o in msg for o in ["fish", "pfz", "chlorophyll", "temp", "catch", "fishing", "productivity"]):
+            intents.append("pfz_search")
             
-            # Fallback check for location dependency
-            for intent in intents:
-                if intent in ["border_check", "general_safety", "fishing_safety"]:
-                    location_required = True
-                elif intent in ["weather_info", "pfz_search"]:
-                    if any(k in msg for k in ["here", "near", "at", "coords", "gps", "position", "current"]):
-                        location_required = True
+        # A border_check safety query requires both a safety trigger word and a location/zone context word
+        has_safety_trigger = any(t in msg for t in ["safe", "restricted", "danger", "warning", "check", "crossed", "breached", "violation", "alert", "steer"])
+        has_location_context = any(l in msg for l in ["border", "imbl", "eez", "boundary", "zone", "line", "c1", "goa", "mumbai", "chennai", "here", "current", "position", "coords", "gps", "near", "at"])
+        if has_safety_trigger and has_location_context:
+            intents.append("border_check")
+            
+        informational_keywords = ["who are you", "what is", "about", "hello", "hi", "help", "guide", "explain", "how to", "what can"]
+        if any(re.search(rf"\b{re.escape(kw)}\b", msg) for kw in informational_keywords) or "eez" in msg or "imbl" in msg:
+            intents.append("informational")
+            
+        # If the user query is completely out-of-scope (no match), classify as informational so we handle it gracefully
+        if not intents:
+            intents = ["informational"]
+            
+        # 2. Determine location requirements based on active safety intents
+        location_required = False
+        if any(i in intents for i in ["border_check", "weather_info", "pfz_search"]):
+            if any(k in msg for k in ["safe", "restricted", "here", "near", "at", "coords", "gps", "position", "current", "c1", "goa", "mumbai", "chennai"]):
+                location_required = True
                         
     # Deterministic mapping: derive agents in code rather than letting LLM decide independently
     agents = derive_required_agents(intents, messages[-1].content)
@@ -828,14 +829,17 @@ def consensus_explainer_node(state: AgentState):
     if status == "PARTIAL_DATA":
         data_mode_summary += " (Warning: Some external datasets failed or timed out)"
         
+    safety_intents = {"border_check", "weather_info", "pfz_search"}
+    has_safety = any(i in state.get("query_intents", []) for i in safety_intents)
+    user_query = state["messages"][-1].content
+    
     # Direct response informational check
-    if "informational" in state.get("query_intents", []):
+    if "informational" in state.get("query_intents", []) and not has_safety:
         prompt_template = ChatPromptTemplate.from_template(
             "You are SagarMitra AI, a multi-agent decision support assistant for Indian coastal fishermen. "
             "Helpfully answer the following general question without invoking spatial datasets:\n"
             "Question: {query}"
         )
-        user_query = state["messages"][-1].content
         
         # Use try/except in case OPENAI_API_KEY environment variable is not defined yet
         try:
@@ -846,12 +850,19 @@ def consensus_explainer_node(state: AgentState):
         except Exception:
             # High-fidelity keyword matching for general questions in offline mode
             q = user_query.lower()
-            if any(k in q for k in ["who are you", "what is", "about", "sagarmitra"]):
+            if "eez" in q:
+                advice = "An Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has special rights to explore and use marine resources. India's EEZ is an active monitoring zone but is safe for Indian vessels."
+            elif "imbl" in q or "sri lanka" in q:
+                advice = "The International Maritime Boundary Line (IMBL) marks the territorial border between neighboring nations (such as India and Sri Lanka). Crossing the IMBL without authorization is restricted and unsafe."
+            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["who are you", "what is", "about", "sagarmitra"]):
                 advice = "I am SagarMitra AI, a decision support assistant for Indian coastal fishermen. I analyze satellite parameter feeds (SST, chlorophyll) to find Potential Fishing Zones (PFZ) and monitor real-time weather and boundary geofences to keep you safe at sea."
-            elif any(k in q for k in ["how", "help", "guide", "prompts"]):
+            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["how", "help", "guide", "prompts"]):
                 advice = "You can query me about safety, weather, or fish locations. Try asking: 'Is it safe near Goa tomorrow?', 'Are there any cyclone alerts in the region?', or 'Is this coordinate restricted?'. Be sure to provide coordinates (e.g. 15.42 N, 73.80 E) for spatial safety checks."
-            else:
+            elif any(re.search(rf"\b{re.escape(k)}\b", q) for k in ["hello", "hi", "hey", "good morning", "good afternoon"]):
                 advice = "Hello! I am SagarMitra AI. I check marine weather advisories, geofenced borders, and Potential Fishing Zones (PFZ). Please provide your GPS coordinates to begin safety analysis."
+            else:
+                # Unrelated prompt handler
+                advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs). I cannot assist with unrelated general inquiries."
     else:
         # Structured Narrative Consensus Explanation
         prompt_template = ChatPromptTemplate.from_template(
@@ -885,24 +896,49 @@ def consensus_explainer_node(state: AgentState):
             advice = response.content
         except Exception:
             # Fallback formatting for local offline testing (high fidelity natural language builder)
-            if final_risk == "CRITICAL":
-                if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
-                    advice = "Critical Boundary Warning: Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
-                elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
-                    advice = "Critical Weather Alert: Severe weather conditions (high swells or gale-force winds) detected in your area. Seek harbor or safe shelter immediately."
+            safety_advice = ""
+            if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []):
+                if final_risk == "CRITICAL":
+                    if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
+                        safety_advice = "Critical Boundary Warning: Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
+                    elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
+                        safety_advice = "Critical Weather Alert: Severe weather conditions (high swells or gale-force winds) detected in your area. Seek harbor or safe shelter immediately."
+                    else:
+                        safety_advice = f"Critical Warning: Safety limits have been exceeded. Primary cause: {overrides}."
+                elif final_risk == "WARNING":
+                    if any(k in overrides.lower() for k in ["proximity", "border", "within 2km", "restricted"]):
+                        vessel_name = "your vessel"
+                        if "c1" in user_query.lower():
+                            vessel_name = "coordinate c1"
+                        safety_advice = f"Boundary Proximity Warning: The {vessel_name} is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
+                    elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
+                        safety_advice = "Weather Advisory: Elevated swells or strong winds detected in your area. Please navigate with caution."
+                    else:
+                        safety_advice = f"Safety Advisory: Elevated risk factors detected. Primary cause: {overrides}. Please monitor updates."
+                elif final_risk == "SAFE":
+                    vessel_name = "your vessel"
+                    if "c1" in user_query.lower():
+                        vessel_name = "coordinate c1"
+                    safety_advice = f"Safety Check: Environmental and spatial checks are normal. The {vessel_name} is in safe, unrestricted waters. Have a safe voyage!"
                 else:
-                    advice = f"Critical Warning: Safety limits have been exceeded. Primary cause: {overrides}."
-            elif final_risk == "WARNING":
-                if any(k in overrides.lower() for k in ["proximity", "border", "within 2km", "restricted"]):
-                    advice = "Boundary Proximity Warning: Your vessel is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
-                elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
-                    advice = "Weather Advisory: Elevated swells or strong winds detected in your area. Please navigate with caution."
-                else:
-                    advice = f"Safety Advisory: Elevated risk factors detected. Primary cause: {overrides}. Please monitor updates."
-            elif final_risk == "SAFE":
-                advice = "Safety Check: All environmental and spatial checks are normal. Weather is clear and your vessel is operating in safe, unrestricted waters. Have a safe voyage!"
+                    safety_advice = "Data Advisory: Safety checks are currently degraded or offline due to partial data feeds."
+                    
+            # Check for informational / explanation parts in compound query
+            info_advice = ""
+            q = user_query.lower()
+            if "eez" in q:
+                info_advice = "The Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has special rights to explore and use marine resources. India's EEZ is safe for Indian vessels."
+            elif "imbl" in q or "sri lanka" in q:
+                info_advice = "The International Maritime Boundary Line (IMBL) marks the territorial border between neighboring nations. Crossing the IMBL without authorization is restricted."
+                
+            if safety_advice and info_advice:
+                advice = f"{safety_advice}\n\nRegarding your question: {info_advice}"
+            elif safety_advice:
+                advice = safety_advice
+            elif info_advice:
+                advice = info_advice
             else:
-                advice = "Data Advisory: Safety checks are currently degraded or offline due to partial data feeds. Please exercise caution at sea and monitor local marine radio broadcasts."
+                advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs). I cannot assist with unrelated general inquiries."
                 
             if status == "PARTIAL_DATA":
                 advice += " (Warning: Some oceanographic or weather forecast feeds are currently offline)."
@@ -911,7 +947,6 @@ def consensus_explainer_node(state: AgentState):
         "consensus_advice": advice,
         "messages": [AIMessage(content=advice)]
     }
-
 
 # ==========================================
 # 5. Graph Assembly & Routing
