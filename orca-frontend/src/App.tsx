@@ -176,6 +176,17 @@ export default function App() {
       eezGrp.addTo(map);
 
       mapRef.current = map;
+      
+      // Fix Leaflet container size bug (gray tiles)
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+      
+      window.addEventListener('resize', () => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      });
     };
 
     if (window.L) {
