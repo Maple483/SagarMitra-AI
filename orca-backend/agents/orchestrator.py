@@ -126,47 +126,35 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
     in_restricted = False
     if state.get("geofence_report") and state["geofence_report"].get("status") == "success" and state["geofence_report"].get("data"):
         geo = state["geofence_report"]["data"]
-        dist = geo.get("distance_to_boundary_meters", 99999.0)
+        dist = geo.get("distance_to_boundary_meters")
         in_restricted = geo.get("in_restricted_zone", False)
         g_rep_success = True
         
-        # Add precise restricted zone and UNCLOS boundaries to evidence log
-        boundary_name = geo.get('nearest_boundary', 'restricted_boundary').replace(' ', '_').lower()
-        evidence.append({
-            "source": "geofence",
-            "metric": f"distance_to_{boundary_name}",
-            "value": dist,
-            "unit": "meters",
-            "timestamp": state["geofence_report"].get("timestamp", "")
-        })
-        if "dist_to_territorial_sea_meters" in geo:
+        # Only log restricted boundary if actually near or inside a restricted zone
+        if in_restricted or (dist is not None and dist < 15000.0):
+            boundary_name = geo.get('nearest_boundary', 'restricted_boundary')
             evidence.append({
                 "source": "geofence",
-                "metric": "distance_to_territorial_sea_boundary",
-                "value": geo["dist_to_territorial_sea_meters"],
-                "unit": "meters"
+                "metric": f"distance_to_{boundary_name.lower().replace(' ', '_')}",
+                "value": round(dist / 1000.0, 1),
+                "unit": "km",
+                "timestamp": state["geofence_report"].get("timestamp", "")
             })
-        if "dist_to_eez_boundary_meters" in geo:
-            evidence.append({
-                "source": "geofence",
-                "metric": "distance_to_eez_boundary",
-                "value": geo["dist_to_eez_boundary_meters"],
-                "unit": "meters"
-            })
+        
         if "inside_eez" in geo:
             evidence.append({
                 "source": "geofence",
-                "metric": "inside_eez",
+                "metric": "inside_indian_eez",
                 "value": geo["inside_eez"],
                 "unit": "boolean"
             })
-        if "inside_territorial" in geo:
-            evidence.append({
-                "source": "geofence",
-                "metric": "inside_territorial",
-                "value": geo["inside_territorial"],
-                "unit": "boolean"
-            })
+            if not geo["inside_eez"] or geo.get("dist_to_eez_boundary_meters", 999999.0) < 55560.0:
+                evidence.append({
+                    "source": "geofence",
+                    "metric": "distance_to_outer_eez_limit",
+                    "value": round(geo.get("dist_to_eez_boundary_meters", 0.0) / 1000.0, 1),
+                    "unit": "km"
+                })
             
         if in_restricted:
             risk_level = "CRITICAL"
@@ -892,19 +880,21 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
 
     # 4. Check Restricted Operational Zones
     in_restricted = False
-    dist_to_restricted = 99999.0
-    nearest_boundary = "Indian Territorial Sea Limit"
+    dist_to_restricted = None
+    nearest_boundary = None
 
     # 4a. Goa Naval Zone: Lat 15.0 to 16.0, Lon 72.0 to 73.5
     if 15.0 <= lat <= 16.0 and 72.0 <= lon <= 73.5:
         in_restricted = True
         dist_to_restricted = 0.0
         nearest_boundary = "Goa Naval Exercise Zone"
-    elif lon < 75.0:
-        nearest_boundary = "Goa Naval Exercise Zone Boundary"
+    elif lon < 75.0 and 13.0 <= lat <= 18.0:
         closest_lat = max(15.0, min(lat, 16.0))
         closest_lon = max(72.0, min(lon, 73.5))
-        dist_to_restricted = haversine_distance(lat, lon, closest_lat, closest_lon)
+        d_goa = haversine_distance(lat, lon, closest_lat, closest_lon)
+        if d_goa < 25000.0:
+            nearest_boundary = "Goa Naval Exercise Zone"
+            dist_to_restricted = d_goa
 
     # 4b. India-Sri Lanka IMBL (Palk Strait & Gulf of Mannar: Lat 8.5 to 10.3 only)
     if 8.5 <= lat <= 10.3 and 78.8 <= lon <= 80.4:
@@ -923,12 +913,12 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
             "data": {
                 "in_restricted_zone": in_restricted,
                 "nearest_boundary": nearest_boundary,
-                "distance_to_boundary_meters": round(dist_to_restricted, 2),
-                "dist_to_territorial_sea_meters": round(dist_to_territorial_boundary, 2),
-                "dist_to_eez_boundary_meters": round(min_dist_to_eez_line, 2),
+                "distance_to_boundary_meters": round(dist_to_restricted, 1) if dist_to_restricted is not None else None,
+                "dist_to_territorial_sea_meters": round(dist_to_territorial_boundary, 1),
+                "dist_to_eez_boundary_meters": round(min_dist_to_eez_line, 1),
                 "inside_eez": inside_eez,
                 "inside_territorial": inside_territorial,
-                "distance_to_coast_meters": round(min_dist_to_coast, 2)
+                "distance_to_coast_meters": round(min_dist_to_coast, 1)
             },
             "source": "PostGIS",
             "data_mode": "live",
@@ -1198,12 +1188,14 @@ def consensus_explainer_node(state: AgentState):
             "- Data Mode: {data_mode_summary}\n"
             "- Nearest PFZ: {nearest_pfz_data}\n\n"
             "Instructions:\n"
-            "1. Explain the safety decision clearly, referencing the precise boundary distances (convert meters to km by dividing by 1000) from the evidence log. Be extremely accurate with these values.\n"
-            "2. If a PFZ is requested, explain the nearest Potential Fishing Zone using the exact distance, direction, and coast name from the Nearest PFZ data provided above.\n"
-            "3. Keep the entire response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
-            "4. Do NOT use emojis of any kind.\n"
-            "5. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
-            "6. Do NOT use special unicode characters. Use standard ASCII spaces and letters only."
+            "1. Clearly state the safety recommendation and the primary reason based on the Primary Reason(s) provided.\n"
+            "2. If there is an active Cyclone, Gale, or severe weather warning, highlight the storm details and immediate advisory action without cluttering with unneeded border distances.\n"
+            "3. If near or across a boundary (e.g. IMBL or EEZ limit), state the single relevant border distance rounded to 1 decimal place.\n"
+            "4. If asking about Potential Fishing Zones (PFZs), explain the nearest PFZ using the coast name, direction, and distance.\n"
+            "5. Keep the entire response strictly under 2 clear, helpful sentences. Do NOT exceed 2 sentences.\n"
+            "6. Do NOT use emojis of any kind.\n"
+            "7. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "8. Do NOT output raw multi-digit decimals (e.g. use 138.9 km instead of 138.917 km). Use standard ASCII spaces and letters only."
         )
         
         try:
