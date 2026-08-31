@@ -176,11 +176,6 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             if risk_level != "CRITICAL":
                 risk_level = "WARNING"
             override_reasons.append(f"EEZ border proximity: vessel is operating within {round(dist_to_eez / 1852.0, 1)} NM of the outer EEZ limit, risking drift into international waters.")
-        # 3. Deep-Sea navigation limit (Beyond 24 NM = 44.4 km from coast)
-        elif dist_to_coast > 44448.0:
-            if risk_level not in ["CRITICAL", "WARNING"]:
-                risk_level = "WARNING"
-            override_reasons.append("Deep-sea hazard: vessel is operating beyond the 24 NM Contiguous Zone. Active satellite monitoring and deep-sea permits required.")
 
     # 2. Evaluate Weather Report (with API Failsafe check)
     weather_warning_requires_route = False
