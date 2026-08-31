@@ -463,7 +463,8 @@ def router_node(state: AgentState):
             relative_time_expr = "tomorrow"
             
         informational_keywords = ["who are you", "what is", "about sagarmitra", "hello", "hi", "help"]
-        if any(kw in msg for kw in informational_keywords):
+        import re
+        if any(re.search(rf"\b{re.escape(kw)}\b", msg) for kw in informational_keywords):
             intents = ["informational"]
             location_required = False
         else:
