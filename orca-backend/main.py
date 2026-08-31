@@ -265,7 +265,8 @@ async def handle_chat_query(req: QueryRequest):
         "messages": [HumanMessage(content=clean_prompt)],
         "vessel_id": vessel_id,
         "vessel_coords": {"lat": lat, "lon": lon} if lat else None,
-        "request_type": "query"
+        "request_type": "query",
+        "system_context": req.prompt
     }
     
     config = {"configurable": {"thread_id": "web_chat_session"}}

@@ -67,6 +67,7 @@ class AgentState(TypedDict):
     
     # Final Output
     consensus_advice: Optional[str]            # The finalized English explanation ready for translation
+    system_context: Optional[str]              # The raw frontend system context string containing active hazards
 
 
 # ==========================================
@@ -214,6 +215,51 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
                     risk_level = "WARNING"
                 override_reasons.append("Caution: elevated swells/winds detected.")
                 weather_warning_requires_route = True
+
+    # 2b. Evaluate active Map Hazards from system context
+    sys_ctx = state.get("system_context")
+    if sys_ctx and has_coords:
+        lat = state["vessel_coords"]["lat"]
+        lon = state["vessel_coords"]["lon"]
+        
+        # Regex to parse: High wave alert (4.5m swells) at Lat 16.0, Lng 71.0
+        pattern_hazard = re.compile(
+            r"High wave alert\s*\((\d+\.?\d*)m swells\)\s*at\s*Lat\s*(-?\d+\.?\d*),\s*Lng\s*(-?\d+\.?\d*)",
+            re.IGNORECASE
+        )
+        hazards = pattern_hazard.findall(sys_ctx)
+        
+        import math
+        def get_haversine(lat1, lon1, lat2, lon2):
+            R = 6371000.0
+            phi1 = math.radians(lat1)
+            phi2 = math.radians(lat2)
+            d_phi = math.radians(lat2 - lat1)
+            d_lon = math.radians(lon2 - lon1)
+            a = math.sin(d_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lon / 2.0)**2
+            c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+            return R * c
+            
+        for swell_str, h_lat_str, h_lon_str in hazards:
+            try:
+                swell_h = float(swell_str)
+                h_lat = float(h_lat_str)
+                h_lon = float(h_lon_str)
+                
+                dist_to_hazard = get_haversine(lat, lon, h_lat, h_lon)
+                # Map wave alerts have a radius of 80 km
+                if dist_to_hazard <= 80000.0:
+                    if swell_h > 3.0:
+                        risk_level = "CRITICAL"
+                        override_reasons.append(f"High wave hazard zone breach: vessel is inside the active warning area of a {swell_h}m swell region (radius 80km) centered at Lat {h_lat}, Lng {h_lon}.")
+                        weather_warning_requires_route = True
+                    elif swell_h > 2.2:
+                        if risk_level != "CRITICAL":
+                            risk_level = "WARNING"
+                        override_reasons.append(f"High wave hazard zone proximity: vessel is inside the warning area of a {swell_h}m swell region (radius 80km) centered at Lat {h_lat}, Lng {h_lon}.")
+                        weather_warning_requires_route = True
+            except Exception as ex:
+                print(f"[DEBUG] Error parsing map hazard: {ex}")
 
     # 3. Check for Conflicts (e.g. Favorable fish vs Warnings)
     if state.get("ocean_report") and state["ocean_report"].get("status") == "success" and state["ocean_report"].get("data"):
