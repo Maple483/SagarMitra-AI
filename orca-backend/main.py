@@ -244,6 +244,9 @@ async def handle_chat_query(req: QueryRequest):
     from agents.orchestrator import robust_coordinate_parser
     pre_parsed = robust_coordinate_parser(req.prompt)
     
+    # Strip SYSTEM CONTEXT before sending to the LangGraph agents
+    clean_prompt = req.prompt.split("[SYSTEM CONTEXT:")[0].strip()
+    
     vessel_id = "IND-TN-01-F-1234" # Default mock vessel
     lat, lon = None, None
     if pre_parsed:
@@ -259,7 +262,7 @@ async def handle_chat_query(req: QueryRequest):
             
     # 2. Invoke LangGraph Orchestration
     initial_state = {
-        "messages": [HumanMessage(content=req.prompt)],
+        "messages": [HumanMessage(content=clean_prompt)],
         "vessel_id": vessel_id,
         "vessel_coords": {"lat": lat, "lon": lon} if lat else None,
         "request_type": "query"

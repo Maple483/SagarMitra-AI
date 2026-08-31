@@ -387,7 +387,7 @@ def get_llm(temperature=0.0):
         return ChatOpenAI(
             base_url="https://api.groq.com/openai/v1",
             api_key=groq_key,
-            model="llama-3.1-70b-versatile",
+            model="openai/gpt-oss-120b",
             temperature=temperature
         )
     else:
@@ -424,7 +424,7 @@ def router_node(state: AgentState):
             "- 'informational': Greetings, help, standard information requests.\n"
             "- 'general_safety': General safety check combining weather and border checks.\n"
             "- 'fishing_safety': Fishing-specific safety combining weather, ocean state, and border checks.\n\n"
-            "If coordinates are explicitly mentioned, parse them as {'lat': float, 'lon': float}.\n"
+            "If coordinates are explicitly mentioned, parse them as {{'lat': float, 'lon': float}}.\n"
             "If target times are requested (e.g. tomorrow, next week), extract relative_time_expr or absolute start/end datetimes."
         )),
         *messages
@@ -452,7 +452,8 @@ def router_node(state: AgentState):
         if target_time_start or target_time_end:
             relative_time_expr = None
             
-    except Exception:
+    except Exception as e:
+        print(f"[LLM ERROR] Router node failed: {e}")
         # Fallback to local deterministic keyword and context parsing
         query_text = messages[-1].content
         msg = query_text.lower()
@@ -847,7 +848,8 @@ def consensus_explainer_node(state: AgentState):
             chain = prompt_template | llm
             response = chain.invoke({"query": user_query})
             advice = response.content
-        except Exception:
+        except Exception as e:
+            print(f"[LLM ERROR] Informational consensus explainer failed: {e}")
             # High-fidelity keyword matching for general questions in offline mode
             q = user_query.lower()
             if "eez" in q:
@@ -894,7 +896,8 @@ def consensus_explainer_node(state: AgentState):
                 "data_mode_summary": data_mode_summary
             })
             advice = response.content
-        except Exception:
+        except Exception as e:
+            print(f"[LLM ERROR] Safety consensus explainer failed: {e}")
             # Fallback formatting for local offline testing (high fidelity natural language builder)
             safety_advice = ""
             if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []):
