@@ -325,12 +325,12 @@ async def handle_chat_query(req: QueryRequest):
     """Bridges the React frontend chat requests to the LangGraph safety orchestrator with language-barrier translation."""
     print(f"[DEBUG] Received frontend query: '{req.prompt}'")
     
+    # Strip SYSTEM CONTEXT before parsing coordinates or sending to agents
+    clean_prompt = req.prompt.split("[SYSTEM CONTEXT:")[0].strip()
+    
     # 1. Resolve coordinates from query text using robust_coordinate_parser
     from agents.orchestrator import robust_coordinate_parser
-    pre_parsed = robust_coordinate_parser(req.prompt)
-    
-    # Strip SYSTEM CONTEXT before sending to the LangGraph agents
-    clean_prompt = req.prompt.split("[SYSTEM CONTEXT:")[0].strip()
+    pre_parsed = robust_coordinate_parser(clean_prompt)
     
     # Language barrier resolution
     is_indic = any(0x0900 <= ord(c) <= 0x0DFF for c in clean_prompt)
@@ -348,6 +348,16 @@ async def handle_chat_query(req: QueryRequest):
     if pre_parsed:
         lat = pre_parsed["lat"]
         lon = pre_parsed["lon"]
+        # Save this to the digital twin cache in Redis so follow-up chat turns refer to the same coordinates!
+        try:
+            redis_client.set(f"vessel:{vessel_id}:current", json.dumps({
+                "lat": lat,
+                "lon": lon,
+                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "telemetry_status": "chat_update"
+            }))
+        except Exception as e:
+            print(f"[Redis Error] Failed to update twin cache: {e}")
     else:
         # Fallback to digital twin coordinate cache
         cached_twin = redis_client.get(f"vessel:{vessel_id}:current")

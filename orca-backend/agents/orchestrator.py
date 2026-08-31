@@ -153,6 +153,20 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
                 "value": geo["dist_to_eez_boundary_meters"],
                 "unit": "meters"
             })
+        if "inside_eez" in geo:
+            evidence.append({
+                "source": "geofence",
+                "metric": "inside_eez",
+                "value": geo["inside_eez"],
+                "unit": "boolean"
+            })
+        if "inside_territorial" in geo:
+            evidence.append({
+                "source": "geofence",
+                "metric": "inside_territorial",
+                "value": geo["inside_territorial"],
+                "unit": "boolean"
+            })
             
         if in_restricted:
             risk_level = "CRITICAL"
@@ -408,6 +422,10 @@ class QueryAnalysis(BaseModel):
         return self
 
 def robust_coordinate_parser(text: str) -> Optional[Dict[str, float]]:
+    # Strip system context suffix to prevent matching metadata coordinate details (e.g. wave alert coordinates)
+    if "[SYSTEM CONTEXT:" in text:
+        text = text.split("[SYSTEM CONTEXT:")[0].strip()
+        
     # 0. Marker-aware check to prevent coordinate collision for multiple named markers (e.g. t1, t2, c1, c2)
     marker_match = re.search(r'\b(t1|t2|c1|c2)\b', text, re.IGNORECASE)
     if marker_match:
