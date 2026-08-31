@@ -128,13 +128,31 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
         dist = geo.get("distance_to_boundary_meters", 99999.0)
         in_restricted = geo.get("in_restricted_zone", False)
         g_rep_success = True
+        
+        # Add precise restricted zone and UNCLOS boundaries to evidence log
+        boundary_name = geo.get('nearest_boundary', 'restricted_boundary').replace(' ', '_').lower()
         evidence.append({
             "source": "geofence",
-            "metric": "distance_to_boundary",
+            "metric": f"distance_to_{boundary_name}",
             "value": dist,
             "unit": "meters",
             "timestamp": state["geofence_report"].get("timestamp", "")
         })
+        if "dist_to_territorial_sea_meters" in geo:
+            evidence.append({
+                "source": "geofence",
+                "metric": "distance_to_territorial_sea_boundary",
+                "value": geo["dist_to_territorial_sea_meters"],
+                "unit": "meters"
+            })
+        if "dist_to_eez_boundary_meters" in geo:
+            evidence.append({
+                "source": "geofence",
+                "metric": "distance_to_eez_boundary",
+                "value": geo["dist_to_eez_boundary_meters"],
+                "unit": "meters"
+            })
+            
         if in_restricted:
             risk_level = "CRITICAL"
             override_reasons.append("Boundary breach: vessel is inside a restricted zone.")
@@ -329,12 +347,22 @@ class QueryAnalysis(BaseModel):
         return self
 
 def robust_coordinate_parser(text: str) -> Optional[Dict[str, float]]:
-    """
-    Robustly parses coordinates in decimal or cardinal formats (e.g. 13.08 N, 80.27 E)
-    from translated Indic natural language inputs. Enforces context check (requires
-    explicit geolocation tokens or cardinal labels N/S/E/W or raw comma-separated floats
-    or regional terms அட்சரேகை/தீர்க்கரேகை) to prevent mistaking wind or swell speeds for coordinates.
-    """
+    # 0. Marker-aware check to prevent coordinate collision for multiple named markers (e.g. t1, t2, c1, c2)
+    marker_match = re.search(r'\b(t1|t2|c1|c2)\b', text, re.IGNORECASE)
+    if marker_match:
+        marker_name = marker_match.group(1).lower()
+        # Find exact definition in system context: "t2" is at Lat 14.5638, Lng 73.0784
+        pattern_marker_def = re.compile(
+            rf'"{re.escape(marker_name)}"\s+is\s+at\s+Lat\s+(-?\d+\.\d+),\s+Lng\s+(-?\d+\.\d+)',
+            re.IGNORECASE
+        )
+        match_def = pattern_marker_def.search(text)
+        if match_def:
+            lat = float(match_def.group(1))
+            lon = float(match_def.group(2))
+            if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
+                return {"lat": lat, "lon": lon}
+
     text_clean = text.upper().replace("°", "").replace("'", "")
     
     # 1. Look for pairs of numbers with cardinal indicators: N/S, E/W
@@ -675,30 +703,49 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
         c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
         return R * c
 
+    # 1. Calculate distance to India's West Coast baseline
+    baseline_pts = [
+        (13.0, 74.8), (14.0, 74.3), (14.8, 74.1), (15.48, 73.8),
+        (16.0, 73.6), (17.0, 73.3), (18.0, 73.0), (19.0, 72.8), (20.0, 72.7)
+    ]
+    min_dist_to_coast = float('inf')
+    for pt in baseline_pts:
+        d = haversine_distance(lat, lon, pt[0], pt[1])
+        if d < min_dist_to_coast:
+            min_dist_to_coast = d
+
+    # Official UNCLOS limits
+    TERRITORIAL_LIMIT = 12 * 1852.0  # 12 Nautical Miles = 22.2 km
+    EEZ_LIMIT = 200 * 1852.0         # 200 Nautical Miles = 370.4 km
+
+    inside_territorial = min_dist_to_coast <= TERRITORIAL_LIMIT
+    inside_eez = min_dist_to_coast <= EEZ_LIMIT
+
+    dist_to_territorial_boundary = abs(min_dist_to_coast - TERRITORIAL_LIMIT)
+    dist_to_eez_boundary = abs(EEZ_LIMIT - min_dist_to_coast)
+
+    # 2. Calculate distance to restricted zones for safety rules
     in_restricted = False
-    nearest_boundary = "India-Sri Lanka IMBL"
-    distance = 1500.0
+    dist_to_restricted = 99999.0
     
     if lon < 75.0:
-        nearest_boundary = "Goa Naval Exercise Zone Boundary"
         # Bounding box off Goa: Lat 15.0 to 16.0, Lon 72.0 to 73.5
         # Check if inside Goa restricted naval area
         if 15.0 <= lat <= 16.0 and 72.0 <= lon <= 73.5:
             in_restricted = True
-            distance = 0.0
+            dist_to_restricted = 0.0
         else:
-            # Calculate distance to boundary
-            # Closest longitude edge is 73.5, closest latitude edges are 15.0 and 16.0
+            # Calculate distance to boundary of Goa Naval exercise zone
             closest_lat = max(15.0, min(lat, 16.0))
             closest_lon = max(72.0, min(lon, 73.5))
-            distance = haversine_distance(lat, lon, closest_lat, closest_lon)
+            dist_to_restricted = haversine_distance(lat, lon, closest_lat, closest_lon)
     else:
         # East Coast: segment from (9.0, 79.5) to (11.0, 80.3)
         # Check if inside restricted boundary (e.g. east of IMBL)
         line_lon = 79.5 + ((lat - 9.0) / (11.0 - 9.0)) * (80.3 - 79.5) if 9.0 <= lat <= 11.0 else 80.3
         if lon > line_lon:
             in_restricted = True
-            distance = 0.0
+            dist_to_restricted = 0.0
         else:
             min_dist = float('inf')
             for i in range(11):
@@ -708,15 +755,20 @@ async def fetch_geofence_report(state: AgentState) -> Dict[str, Any]:
                 d = haversine_distance(lat, lon, seg_lat, seg_lon)
                 if d < min_dist:
                     min_dist = d
-            distance = min_dist
-            
+            dist_to_restricted = min_dist
+
     await asyncio.sleep(0.1)
     return {
         "geofence_report": {
             "data": {
                 "in_restricted_zone": in_restricted,
-                "nearest_boundary": nearest_boundary,
-                "distance_to_boundary_meters": round(distance, 2)
+                "nearest_boundary": "Goa Naval Exercise Zone Boundary" if lon < 75.0 else "India-Sri Lanka IMBL",
+                "distance_to_boundary_meters": round(dist_to_restricted, 2),
+                "dist_to_territorial_sea_meters": round(dist_to_territorial_boundary, 2),
+                "dist_to_eez_boundary_meters": round(dist_to_eez_boundary, 2),
+                "inside_eez": inside_eez,
+                "inside_territorial": inside_territorial,
+                "distance_to_coast_meters": round(min_dist_to_coast, 2)
             },
             "source": "PostGIS",
             "data_mode": "live",
@@ -939,7 +991,7 @@ def consensus_explainer_node(state: AgentState):
             "- Decision Confidence Score: {confidence}\n"
             "- Data Mode: {data_mode_summary}\n\n"
             "Instructions:\n"
-            "1. Explain the safety decision clearly, referencing the risks (like proximity to borders, wind, or swells) if applicable.\n"
+            "1. Explain the safety decision clearly, referencing the precise boundary distances (convert meters to km by dividing by 1000) from the evidence log. Be extremely accurate with these values.\n"
             "2. Keep the entire response strictly under 2 sentences. Do NOT exceed 2 sentences.\n"
             "3. Do NOT use emojis of any kind.\n"
             "4. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
@@ -965,11 +1017,16 @@ def consensus_explainer_node(state: AgentState):
         except Exception as e:
             print(f"[LLM ERROR] Safety consensus explainer failed: {e}")
             # Fallback formatting for local offline testing (high fidelity natural language builder)
+            geo_data = state.get("geofence_report", {}).get("data", {})
+            dist_to_territorial_km = round(geo_data.get("dist_to_territorial_sea_meters", 0.0) / 1000.0, 1)
+            dist_to_restricted_km = round(geo_data.get("distance_to_boundary_meters", 0.0) / 1000.0, 1)
+            nearest_boundary_name = geo_data.get("nearest_boundary", "restricted border")
+            
             safety_advice = ""
             if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []):
                 if final_risk == "CRITICAL":
                     if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
-                        safety_advice = "Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
+                        safety_advice = f"Your vessel has breached the restricted {nearest_boundary_name}. Turn back immediately."
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
                         safety_advice = "Severe weather conditions (high swells or gale-force winds) are detected in your area. Seek harbor or safe shelter immediately."
                     else:
@@ -981,7 +1038,11 @@ def consensus_explainer_node(state: AgentState):
                             vessel_name = "coordinate c1"
                         elif "c2" in user_query.lower():
                             vessel_name = "coordinate c2"
-                        safety_advice = f"Your vessel is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
+                        elif "t1" in user_query.lower():
+                            vessel_name = "coordinate t1"
+                        elif "t2" in user_query.lower():
+                            vessel_name = "coordinate t2"
+                        safety_advice = f"Your vessel is operating {dist_to_restricted_km} km from the {nearest_boundary_name}. I recommend taking preventative action to steer away."
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
                         safety_advice = "Elevated swells or strong winds are detected in your area. Please navigate with caution."
                     else:
@@ -992,7 +1053,11 @@ def consensus_explainer_node(state: AgentState):
                         vessel_name = "coordinate c1"
                     elif "c2" in user_query.lower():
                         vessel_name = "coordinate c2"
-                    safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is in safe, unrestricted waters. Have a safe voyage!"
+                    elif "t1" in user_query.lower():
+                        vessel_name = "coordinate t1"
+                    elif "t2" in user_query.lower():
+                        vessel_name = "coordinate t2"
+                    safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is safe, operating {dist_to_territorial_km} km from the territorial sea boundary."
                 else:
                     safety_advice = "Safety checks are currently degraded or offline due to partial data feeds."
                     
