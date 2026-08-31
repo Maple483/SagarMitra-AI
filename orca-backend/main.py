@@ -171,7 +171,7 @@ def detect_indic_language(text: str) -> str:
     return "hi"  # Default Hindi fallback
 
 async def mock_bhashini_translate(text: str, source_lang: str, target_lang: str) -> str:
-    """Wrapper translation pipeline connecting to MeitY Bhashini REST API, with mock fallback."""
+    """Wrapper translation pipeline using Groq LLaMA 3 to translate regional Indic languages and English."""
     if source_lang == target_lang or not text:
         return text
         
@@ -183,72 +183,57 @@ async def mock_bhashini_translate(text: str, source_lang: str, target_lang: str)
     except Exception:
         pass
         
-    bhashini_key = os.getenv("BHASHINI_API_KEY")
-    bhashini_url = os.getenv("BHASHINI_API_URL", "https://dhruva-api.bhashini.gov.in/services/inference/pipeline")
+    # Language code expansion
+    lang_names = {
+        "en": "English",
+        "ta": "Tamil",
+        "te": "Telugu",
+        "ml": "Malayalam",
+        "kn": "Kannada",
+        "hi": "Hindi",
+        "bn": "Bengali",
+        "gu": "Gujarati",
+        "or": "Odia",
+        "regional": "the regional Indic language"
+    }
     
-    src_code = source_lang
-    if src_code == "regional":
-        src_code = detect_indic_language(text)
-        
-    if not bhashini_key:
-        # High-fidelity local regional translator fallback when offline/no keys configured
-        tamil_dict = {
-            "safe": "பாதுகாப்பானது",
-            "warning": "எச்சரிக்கை",
-            "critical": "ஆபத்தானது",
-            "Your vessel is operating": "உங்கள் படகு இயங்குகிறது",
-            "Seek harbor or safe shelter immediately.": "உடனே துறைமுக அல்லது பாதுகாப்பான புகலிடத்தை அடையவும்.",
-            "Turn back immediately.": "உடனே திரும்பி செல்லவும்.",
-            "The system rates the area as SAFE": "இப்பகுதி பாதுகாப்பானது என்று கணினி மதிப்பிடுகிறது",
-            "No potential fishing zones were identified in your immediate region today.": "இன்று உங்கள் பகுதியில் மீன்பிடி மண்டலங்கள் எதுவும் கண்டறியப்படவில்லை.",
-            "No hazards were detected within any monitored boundary": "கண்காணிக்கப்படும் எல்லைக்குள் எந்த ஆபத்துகளும் கண்டறியப்படவில்லை"
-        }
-        if target_lang in ["ta", "regional"]:
-            translated = text
-            for eng_word, tam_word in tamil_dict.items():
-                translated = translated.replace(eng_word, tam_word)
-            return translated
-        return text
-        
+    src_name = lang_names.get(source_lang, "the local language")
+    tgt_name = lang_names.get(target_lang, "English")
+    
     try:
-        headers = {
-            "Authorization": bhashini_key,
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "pipelineTasks": [
-                {
-                    "taskType": "translation",
-                    "config": {
-                        "language": {
-                            "sourceLanguage": src_code,
-                            "targetLanguage": target_lang
-                        },
-                        "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
-                    }
-                }
-            ],
-            "inputData": {
-                "input": [{"source": text}]
-            }
-        }
+        from agents.orchestrator import get_llm
+        from langchain_core.prompts import ChatPromptTemplate
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", (
+                f"You are a professional, accurate translation assistant. Translate the user text from {src_name} to {tgt_name}.\n"
+                "Instructions:\n"
+                "1. Output ONLY the raw translated text. Do NOT include any meta-comments, notes, greetings, explanations, or quotes.\n"
+                "2. Preserve all numbers, coordinate decimal numbers, and geographic names exactly."
+            )),
+            ("human", "{text}")
+        ])
+        
+        # Instantiate fast Groq LLM
+        llm = get_llm(temperature=0.0)
+        chain = prompt | llm
         
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(
             None,
-            lambda: requests.post(bhashini_url, json=payload, headers=headers, timeout=5)
+            lambda: chain.invoke({"text": text})
         )
         
-        if response.status_code == 200:
-            res_data = response.json()
-            translated = res_data["pipelineResponse"][0]["output"][0]["target"]
+        translated = response.content.strip()
+        if translated:
             try:
                 redis_client.set(cache_key, translated)
             except Exception:
                 pass
             return translated
+            
     except Exception as e:
-        print(f"[Bhashini Error] Connection to Bhashini API failed: {e}")
+        print(f"[Groq Translation Error] Failed to translate: {e}")
         
     return text
 
