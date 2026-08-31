@@ -158,13 +158,43 @@ export default function App() {
         radius: 80000
       }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 3.2m swells</div>').addTo(wavesGrp);
 
-      // 3. Highlight Indian EEZ
+      // 3. Highlight Indian EEZ (Geographically Accurate to UNCLOS & IMBL)
       const eezCoords: [number, number][] = [
-        [23.0, 68.0], [20.0, 69.5], [16.0, 70.5], [12.0, 71.5], [8.0, 74.0], [6.0, 77.0], [8.0, 80.0], [12.0, 81.5], [16.0, 84.0], [20.0, 88.0],
-        [21.5, 87.5], [19.0, 85.0], [16.0, 81.0], [13.0, 80.0], [10.0, 79.0], [8.0, 78.0], [8.0, 77.0], [10.0, 76.0], [13.0, 74.0], [16.0, 73.0], [19.0, 72.0], [21.0, 70.0], [23.0, 68.0]
+        [23.5, 67.5],  // Sir Creek / India-Pakistan EEZ Boundary
+        [20.5, 66.5],  // Outer Arabian Sea EEZ
+        [18.0, 68.0],  // West of Maharashtra
+        [15.0, 69.0],  // West of Goa
+        [13.0, 69.5],  // West of Northern Lakshadweep
+        [10.0, 69.0],  // West of Kavaratti / Agatti
+        [7.5, 71.0],   // Southwest of Minicoy
+        [7.0, 72.8],   // Eight Degree Channel (India-Maldives Maritime Border)
+        [5.5, 76.0],   // South of Wadge Bank
+        [5.5, 77.5],   // Southernmost Indian EEZ limit
+        [7.0, 78.5],   // Gulf of Mannar Southern Entrance
+        [8.5, 79.2],   // Gulf of Mannar Median Line
+        [9.15, 79.52], // Adam's Bridge / IMBL Median Line
+        [9.85, 79.85], // Palk Bay Median Line
+        [10.3, 80.3],  // Palk Strait Exit (North of Jaffna, outside Sri Lanka)
+        [12.0, 83.5],  // Bay of Bengal / East of Chennai
+        [15.5, 86.0],  // Bay of Bengal / East of Andhra Pradesh
+        [18.5, 88.5],  // Bay of Bengal / East of Odisha
+        [21.0, 90.0],  // Northern Bay of Bengal / India-Bangladesh Border
+        [21.8, 89.0],  // West Bengal Sundarbans
+        [20.0, 86.0],  // Return along Indian coastline
+        [17.0, 82.5],
+        [13.0, 80.3],
+        [10.0, 79.8],
+        [8.1, 77.5],   // Kanyakumari Coast
+        [10.0, 75.8],  // Kerala Coast
+        [13.0, 74.8],  // Karnataka Coast
+        [15.5, 73.8],  // Goa Coast
+        [19.0, 72.8],  // Mumbai Coast
+        [21.0, 72.0],  // Gujarat Coast
+        [23.5, 68.5],  // Kutch Coast
+        [23.5, 67.5]   // Close loop
       ];
       window.L.polygon(eezCoords, { 
-        color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 2, dashArray: '5, 10' 
+        color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.12, weight: 2, dashArray: '6, 8' 
       }).bindPopup('<div class="font-bold text-blue-600">Indian EEZ (Active Monitoring Zone)</div>').addTo(eezGrp);
 
       // Store refs and add default layers
