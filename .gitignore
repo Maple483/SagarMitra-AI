@@ -34,4 +34,5 @@ walkthrough.md
 *.png
 *.pdf
 *.html
+!**/index.html
 
