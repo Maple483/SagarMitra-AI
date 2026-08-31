@@ -326,6 +326,27 @@ class MaritimeAStarPathfinder:
             smoothed.append(raw_coords[best_next])
             i = best_next
 
+        # Secondary pass: Direct raycast between non-adjacent smoothed waypoints
+        for _ in range(2):
+            if len(smoothed) <= 2:
+                break
+            refined = [smoothed[0]]
+            m = 0
+            while m < len(smoothed) - 1:
+                next_m = m + 1
+                for n in range(len(smoothed) - 1, m + 1, -1):
+                    p1 = smoothed[m]
+                    p2 = smoothed[n]
+                    dist = haversine_km(p1[0], p1[1], p2[0], p2[1])
+                    samples = max(4, int(math.ceil(dist / 2.5)))
+                    pts = self._spherical_geodesic_interpolate(p1[0], p1[1], p2[0], p2[1], samples)
+                    if all(not self.provider.is_cell_impassable(*self.provider.coord_to_cell(lat, lon)) for lat, lon in pts):
+                        next_m = n
+                        break
+                refined.append(smoothed[next_m])
+                m = next_m
+            smoothed = refined
+
         # Calculate total smoothed geodesic distance
         total_dist = 0.0
         for k in range(len(smoothed) - 1):

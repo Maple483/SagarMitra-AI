@@ -124,18 +124,19 @@ class MaritimeBoundaryProvider:
             (9.10, 79.35), (9.30, 79.70), (9.15, 79.75), (8.95, 79.40), (9.10, 79.35)
         ]
 
-        # 5. Full Lakshadweep Island Territory (Matching OpenStreetMap Island Boundary)
-        # Lat 8.5 to 12.6 N, Lon 71.5 to 74.0 E
+        # 5. Full Lakshadweep Island & Administrative Territory (Matching OpenStreetMap Island Polygon)
+        # Bounded by: Lat 7.7°N to 12.8°N, Lon 71.3°E to 74.2°E
         lakshadweep_zone_poly = [
-            (12.60, 71.50),  # Northwest (Bitra / Cora Divh)
-            (12.60, 73.50),  # Northeast (Chetlat / Kiltan)
-            (10.90, 74.00),  # East (Andrott Island)
-            (10.00, 73.90),  # Southeast (Kalpeni Island)
-            (8.60, 73.30),   # South (North of Nine Degree Channel)
-            (8.50, 72.70),   # Southwest
-            (10.00, 71.90),  # West (Suheli Par Reefs)
-            (11.00, 71.70),  # West (Agatti / Bangaram)
-            (12.60, 71.50)   # Close loop
+            (12.80, 71.30),  # Northwest
+            (12.80, 73.80),  # Northeast
+            (10.90, 74.20),  # East (Andrott)
+            (9.80, 74.00),   # Southeast (Kalpeni)
+            (7.80, 73.30),   # South apex east (Minicoy)
+            (7.70, 73.00),   # South apex bottom (Below 8.0°N boundary tip)
+            (7.80, 72.70),   # South apex west
+            (9.80, 71.40),   # Southwest (Suheli)
+            (11.00, 71.30),  # West (Agatti / Bitra)
+            (12.80, 71.30)   # Close loop
         ]
         # Minicoy Island Atoll (in Eight Degree Channel)
         minicoy_poly = [
