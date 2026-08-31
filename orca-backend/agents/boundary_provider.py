@@ -140,11 +140,53 @@ class MaritimeBoundaryProvider:
             (2.2, 72.7), (2.2, 73.8), (0.0, 73.6), (0.0, 72.7), (2.2, 72.7)
         ]
 
+        # 7. Official Indian EEZ Polygon (UNCLOS & Bilateral IMBL boundaries)
+        self.indian_eez_poly = [
+            (23.70, 68.05),  # Sir Creek / India-Pakistan EEZ Boundary
+            (20.50, 66.50),  # Outer Arabian Sea 200 NM limit
+            (18.00, 67.50),  # West of Maharashtra
+            (15.00, 68.50),  # West of Goa
+            (13.00, 69.20),  # West of Northern Lakshadweep (Chetlat / Bitra)
+            (10.00, 68.80),  # West of Kavaratti / Agatti
+            (7.50, 71.00),   # Southwest of Minicoy
+            (7.00, 72.80),   # Eight Degree Channel (India-Maldives Boundary)
+            (6.00, 74.80),   # Southern Lakshadweep Sea
+            (4.784, 77.023), # Point T: India - Sri Lanka - Maldives Trijunction (1976 Treaty)
+            (5.00, 77.18),   # Position 13m
+            (6.00, 77.80),
+            (7.50, 78.40),
+            (8.37, 78.90),
+            (8.85, 79.15),
+            (9.10, 79.53),   # Position 6 (South of Adam's Bridge / Dhanushkodi)
+            (9.22, 79.53),   # Position 5
+            (9.36, 79.51),   # Position 4
+            (9.67, 79.37),   # Position 3
+            (9.95, 79.58),   # Position 2
+            (10.08, 80.05),  # Position 1 (Palk Strait Exit, North of Point Pedro)
+            (10.50, 80.50),
+            (11.00, 81.50),  # 1976 Bay of Bengal Treaty line
+            (12.50, 83.50),  # 200 NM off Chennai
+            (15.50, 86.00),  # 200 NM off Andhra Pradesh
+            (18.50, 88.50),  # 200 NM off Odisha
+            (21.15, 89.40),  # India - Bangladesh Maritime Boundary (2014 UNCLOS Tribunal)
+            (21.65, 89.15),  # West Bengal Coast
+            (25.0, 90.0),    # Mainland envelope closure
+            (25.0, 65.0),
+            (23.70, 68.05)
+        ]
+
+        self.inside_eez_mask = np.zeros((self.num_rows, self.num_cols), dtype=bool)
+
         # Point in polygon rasterizer
         for r in range(self.num_rows):
             lat = float(self.lat_by_row[r])
             for c in range(self.num_cols):
                 lon = float(self.lon_by_col[c])
+                
+                # Check EEZ containment
+                if self._point_in_polygon(lat, lon, self.indian_eez_poly):
+                    self.inside_eez_mask[r, c] = True
+
                 if self._point_in_polygon(lat, lon, mainland_poly):
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, sri_lanka_poly):
@@ -161,6 +203,11 @@ class MaritimeBoundaryProvider:
                     self.static_impassable_mask[r, c] = True
                 elif self._point_in_polygon(lat, lon, maldives_south_poly):
                     self.static_impassable_mask[r, c] = True
+
+    def is_inside_eez(self, lat: float, lon: float) -> bool:
+        """Returns True if the coordinate is within India's Exclusive Economic Zone."""
+        r, c = self.coord_to_cell(lat, lon)
+        return bool(self.inside_eez_mask[r, c])
 
     def _point_in_polygon(self, x: float, y: float, poly: List[Tuple[float, float]]) -> bool:
         """Ray-casting point in polygon algorithm."""
@@ -180,10 +227,19 @@ class MaritimeBoundaryProvider:
         return inside
 
     def is_cell_impassable(self, r: int, c: int) -> bool:
-        """Returns True if cell is inside land, shoal barrier, or restricted naval zone."""
+        """
+        Returns True if cell is inside land, shoal barrier, restricted naval zone,
+        or OUTSIDE the Indian Exclusive Economic Zone (Strict EEZ Geofence).
+        """
         if r < 0 or r >= self.num_rows or c < 0 or c >= self.num_cols:
             return True
-        return bool(self.static_impassable_mask[r, c])
+        # Hard obstacle check (Land / Shoal / Naval Zone)
+        if self.static_impassable_mask[r, c]:
+            return True
+        # Strict EEZ Geofence check (International Waters & Foreign EEZs are impassable for fishing vessels)
+        if not self.inside_eez_mask[r, c]:
+            return True
+        return False
 
     def snap_to_connected_navigable_water(self, lat: float, lon: float, max_search_cells: int = 8) -> Tuple[float, float, int, int]:
         """

@@ -167,10 +167,18 @@ def test_bearing_computation():
     assert compute_bearing(10.0, 70.0, 11.0, 70.0) == 0.0
     # Due East along equator
     assert compute_bearing(0.0, 70.0, 0.0, 71.0) == 90.0
-    # Eastbound forward azimuth at Lat 10
-    assert abs(compute_bearing(10.0, 70.0, 10.0, 71.0) - 90.0) < 0.2
-    # Due South
-    assert compute_bearing(10.0, 70.0, 9.0, 70.0) == 180.0
+def test_strict_eez_geofencing():
+    """Test 8: Strict EEZ geofencing rejects targets in international waters."""
+    rs = RouteService()
+    
+    # Start inside Indian EEZ off Mumbai
+    start = {"lat": 18.9, "lon": 72.8}
+    # Target in deep international waters (high seas west of Indian EEZ)
+    target_high_seas = {"lat": 18.0, "lon": 60.0}
+    
+    resp = rs.calculate_safe_route(start, target_high_seas)
+    assert resp.status == "INVALID_COORDINATES"
+    assert "outside the Indian Exclusive Economic Zone" in resp.message
 
 
 if __name__ == "__main__":

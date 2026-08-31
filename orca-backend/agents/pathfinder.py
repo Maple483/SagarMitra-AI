@@ -24,6 +24,12 @@ class StartOnLandError(PathfindingError):
 class TargetOnLandError(PathfindingError):
     pass
 
+class StartOutsideEEZError(PathfindingError):
+    pass
+
+class TargetOutsideEEZError(PathfindingError):
+    pass
+
 class NoSafePathFoundError(PathfindingError):
     pass
 
@@ -170,11 +176,17 @@ class MaritimeAStarPathfinder:
         s_lat, s_lon, start_r, start_c = self.provider.snap_to_connected_navigable_water(start_lat, start_lon)
         g_lat, g_lon, goal_r, goal_c = self.provider.snap_to_connected_navigable_water(goal_lat, goal_lon)
 
+        if not self.provider.is_inside_eez(start_lat, start_lon):
+            raise StartOutsideEEZError("Departure location lies outside the Indian Exclusive Economic Zone in International Waters.")
+
+        if not self.provider.is_inside_eez(goal_lat, goal_lon):
+            raise TargetOutsideEEZError("Target destination lies outside the Indian Exclusive Economic Zone in International Waters. Fishing vessels are legally restricted from crossing the outer EEZ boundary.")
+
         if self.provider.is_cell_impassable(start_r, start_c):
-            raise StartOnLandError("Departure coordinates cannot be connected to navigable water.")
+            raise StartOnLandError("Departure coordinates cannot be connected to navigable water inside the EEZ.")
 
         if self.provider.is_cell_impassable(goal_r, goal_c):
-            raise TargetOnLandError("Target destination lies inside an impassable land or shoal area.")
+            raise TargetOnLandError("Target destination lies inside an impassable land, shoal, or restricted zone.")
 
         if (start_r, start_c) == (goal_r, goal_c):
             return {

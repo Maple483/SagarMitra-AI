@@ -11,6 +11,8 @@ from agents.pathfinder import (
     PathfindingError,
     StartOnLandError,
     TargetOnLandError,
+    StartOutsideEEZError,
+    TargetOutsideEEZError,
     NoSafePathFoundError
 )
 
@@ -122,7 +124,7 @@ class RouteService:
                 goal_lon=target_lon,
                 hazards=hazards
             )
-        except (StartOnLandError, TargetOnLandError) as e:
+        except (StartOnLandError, TargetOnLandError, StartOutsideEEZError, TargetOutsideEEZError) as e:
             return RouteResponse(
                 status="INVALID_COORDINATES",
                 total_dist_km=0.0,
