@@ -796,6 +796,7 @@ def routing_node(state: AgentState):
 
 def consensus_explainer_node(state: AgentState):
     status = state.get("response_status")
+    advice = ""
     
     # 1. Deterministic Interventions for Validation Failures (Prevents LLM Hallucinations)
     if status == "INSUFFICIENT_LOCATION":
@@ -868,8 +869,9 @@ def consensus_explainer_node(state: AgentState):
     else:
         # Structured Narrative Consensus Explanation
         prompt_template = ChatPromptTemplate.from_template(
-            "You are the Consensus Explainer for SagarMitra AI. "
-            "Explain the safety decision to the fisherman clearly and concisely in English.\n\n"
+            "You are the Consensus Explainer for SagarMitra AI, a decision support assistant for Indian coastal fishermen.\n"
+            "Explain the safety decision and answer the fisherman's questions helpfully, clearly, and concisely in English.\n\n"
+            "FISHERMAN'S QUERY: {query}\n\n"
             "SYSTEM DECISION:\n"
             "- Final Risk Level: {final_risk_level}\n"
             "- Primary Reason(s): {override_reasons}\n"
@@ -878,15 +880,18 @@ def consensus_explainer_node(state: AgentState):
             "- Routing Action: {routing_action}\n"
             "- Decision Confidence Score: {confidence}\n"
             "- Data Mode: {data_mode_summary}\n\n"
-            "Write a short response explaining why the decision was made, details of the warning if any, and instructions on what to do next. "
-            "If confidence is 0.0 or risk is UNKNOWN, warn the fisherman that data is offline and caution must be exercised. "
-            "If synthetic data was used, state transparently that this is a simulated fallback forecast."
+            "Instructions:\n"
+            "1. Explain the safety decision clearly, referencing the risks (like proximity to borders, wind, or swells) if applicable.\n"
+            "2. Helpfully answer any general or specific questions they asked in their query (e.g. explaining what is EEZ, IMBL, or major fishing zones if they asked about them).\n"
+            "3. Keep the response under 4 sentences. Do NOT use markdown formatting like bold asterisks (**) or bullet points. Output a single, clean, readable paragraph."
         )
         
         try:
+            print("[DEBUG] Executing Safety consensus explainer LLM...")
             llm = get_llm(temperature=0.0)
             chain = prompt_template | llm
             response = chain.invoke({
+                "query": user_query,
                 "final_risk_level": final_risk,
                 "override_reasons": overrides,
                 "evidence_log": evidence,
@@ -896,6 +901,7 @@ def consensus_explainer_node(state: AgentState):
                 "data_mode_summary": data_mode_summary
             })
             advice = response.content
+            print("[DEBUG] Safety explainer LLM succeeded.")
         except Exception as e:
             print(f"[LLM ERROR] Safety consensus explainer failed: {e}")
             # Fallback formatting for local offline testing (high fidelity natural language builder)
@@ -903,39 +909,43 @@ def consensus_explainer_node(state: AgentState):
             if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []):
                 if final_risk == "CRITICAL":
                     if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
-                        safety_advice = "Critical Boundary Warning: Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
+                        safety_advice = "Your vessel has breached a restricted maritime zone. Turn back immediately to exit the zone and return to safe waters."
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "storm"]):
-                        safety_advice = "Critical Weather Alert: Severe weather conditions (high swells or gale-force winds) detected in your area. Seek harbor or safe shelter immediately."
+                        safety_advice = "Severe weather conditions (high swells or gale-force winds) are detected in your area. Seek harbor or safe shelter immediately."
                     else:
-                        safety_advice = f"Critical Warning: Safety limits have been exceeded. Primary cause: {overrides}."
+                        safety_advice = f"Safety limits have been exceeded. Primary cause: {overrides}."
                 elif final_risk == "WARNING":
                     if any(k in overrides.lower() for k in ["proximity", "border", "within 2km", "restricted"]):
                         vessel_name = "your vessel"
                         if "c1" in user_query.lower():
                             vessel_name = "coordinate c1"
-                        safety_advice = f"Boundary Proximity Warning: The {vessel_name} is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
+                        elif "c2" in user_query.lower():
+                            vessel_name = "coordinate c2"
+                        safety_advice = f"Your vessel is operating within 2km of a restricted border zone. I recommend taking preventative action to steer away from the boundary."
                     elif any(k in overrides.lower() for k in ["weather", "swell", "wind", "elevated"]):
-                        safety_advice = "Weather Advisory: Elevated swells or strong winds detected in your area. Please navigate with caution."
+                        safety_advice = "Elevated swells or strong winds are detected in your area. Please navigate with caution."
                     else:
-                        safety_advice = f"Safety Advisory: Elevated risk factors detected. Primary cause: {overrides}. Please monitor updates."
+                        safety_advice = f"Elevated risk factors are detected due to {overrides}. Please monitor updates."
                 elif final_risk == "SAFE":
                     vessel_name = "your vessel"
                     if "c1" in user_query.lower():
                         vessel_name = "coordinate c1"
-                    safety_advice = f"Safety Check: Environmental and spatial checks are normal. The {vessel_name} is in safe, unrestricted waters. Have a safe voyage!"
+                    elif "c2" in user_query.lower():
+                        vessel_name = "coordinate c2"
+                    safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is in safe, unrestricted waters. Have a safe voyage!"
                 else:
-                    safety_advice = "Data Advisory: Safety checks are currently degraded or offline due to partial data feeds."
+                    safety_advice = "Safety checks are currently degraded or offline due to partial data feeds."
                     
             # Check for informational / explanation parts in compound query
             info_advice = ""
             q = user_query.lower()
             if "eez" in q:
-                info_advice = "The Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has special rights to explore and use marine resources. India's EEZ is safe for Indian vessels."
+                info_advice = "The Exclusive Economic Zone (EEZ) is a maritime zone extending up to 200 nautical miles from a country's coast, where the country has sovereign rights to explore and manage marine resources. India's EEZ is safe for Indian vessels."
             elif "imbl" in q or "sri lanka" in q:
                 info_advice = "The International Maritime Boundary Line (IMBL) marks the territorial border between neighboring nations. Crossing the IMBL without authorization is restricted."
                 
             if safety_advice and info_advice:
-                advice = f"{safety_advice}\n\nRegarding your question: {info_advice}"
+                advice = f"{safety_advice} Regarding your question: {info_advice}"
             elif safety_advice:
                 advice = safety_advice
             elif info_advice:
@@ -944,7 +954,7 @@ def consensus_explainer_node(state: AgentState):
                 advice = "I am SagarMitra AI, a dedicated coastal marine safety assistant. I can only answer questions related to weather conditions, border zones, or Potential Fishing Zones (PFZs). I cannot assist with unrelated general inquiries."
                 
             if status == "PARTIAL_DATA":
-                advice += " (Warning: Some oceanographic or weather forecast feeds are currently offline)."
+                advice += " Warning: Some oceanographic or weather forecast feeds are currently offline."
     
     return {
         "consensus_advice": advice,
