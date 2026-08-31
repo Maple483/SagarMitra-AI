@@ -1,9 +1,9 @@
-# 🌊 SagarMitra AI (ORCA)
+# SagarMitra AI (ORCA)
 ### **Intelligent Multilingual Maritime Safety & Dynamic A\* Navigation Platform for Indian Coastal Waters**
 
 ---
 
-## 📌 Overview
+## Overview
 **SagarMitra AI** is a real-time maritime intelligence platform designed to safeguard Indian fishermen, navigators, and coastal vessels. It integrates:
 - **Groq-Powered Multilingual AI Assistant:** Real-time conversational safety reasoning across 8+ Indic languages (Tamil, Telugu, Hindi, Malayalam, Kannada, Gujarati, Bengali, Odia) and English.
 - **Dynamic Time-Dependent A\* Pathfinder:** Safe nautical pathfinding avoiding active storm swell alerts, shallow shoals (e.g. Adam's Bridge), restricted naval operational zones, and island landmasses.
@@ -13,7 +13,7 @@
 
 ---
 
-## 🚀 Quick Start & Run Guide
+## Quick Start & Run Guide
 
 ### 1. Prerequisites
 - **Python:** `3.10` or higher
@@ -68,7 +68,7 @@
 
 ---
 
-## 🧪 Automated Test Suite
+##  Automated Test Suite
 
 Run the full pathfinding and spatial geometry verification suite:
 ```bash
@@ -87,7 +87,7 @@ pytest orca-backend/tests/test_pathfinder.py -v
 
 ---
 
-## 🗺️ System Architecture & File Structure
+##  System Architecture & File Structure
 
 ```
 sih/
@@ -116,7 +116,7 @@ sih/
 
 ---
 
-## 📡 API Endpoints Reference
+##  API Endpoints Reference
 
 ### 1. `POST /api/chat`
 Conversational marine safety queries with automatic Indic language translation and route synthesis.
