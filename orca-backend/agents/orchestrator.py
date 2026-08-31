@@ -159,7 +159,7 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
         if in_restricted:
             risk_level = "CRITICAL"
             override_reasons.append("Boundary breach: vessel is inside a restricted zone.")
-        elif dist < 2000.0:
+        elif dist is not None and dist < 2000.0:
             if risk_level != "CRITICAL":
                 risk_level = "WARNING"
             near_border = True
@@ -382,12 +382,12 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
         rec = "SAFE"
         if g_data.get("in_restricted_zone"):
             rec = "CRITICAL"
-        elif g_data.get("distance_to_boundary_meters", 99999.0) < 2000.0:
+        elif g_data.get("distance_to_boundary_meters") is not None and g_data.get("distance_to_boundary_meters") < 2000.0:
             rec = "WARNING"
         agent_assessments["geofence"] = {
             "recommendation": rec,
             "confidence": 1.0,
-            "reason": f"Distance to border: {g_data.get('distance_to_boundary_meters')}m",
+            "reason": f"Distance to border: {g_data.get('distance_to_boundary_meters')}m" if g_data.get('distance_to_boundary_meters') is not None else "Within open Indian EEZ waters.",
             "source": "PostGIS"
         }
     if state.get("ocean_report") and state["ocean_report"].get("status") == "success" and state["ocean_report"].get("data"):
@@ -1220,8 +1220,8 @@ def consensus_explainer_node(state: AgentState):
             # Fallback formatting for local offline testing (high fidelity natural language builder)
             geo_data = state.get("geofence_report", {}).get("data", {})
             dist_to_territorial_km = round(geo_data.get("dist_to_territorial_sea_meters", 0.0) / 1000.0, 1)
-            dist_to_restricted_km = round(geo_data.get("distance_to_boundary_meters", 0.0) / 1000.0, 1)
-            nearest_boundary_name = geo_data.get("nearest_boundary", "restricted border")
+            dist_to_restricted_km = round((geo_data.get("distance_to_boundary_meters") or 0.0) / 1000.0, 1)
+            nearest_boundary_name = geo_data.get("nearest_boundary") or "restricted border"
             
             safety_advice = ""
             if "border_check" in state.get("query_intents", []) or "weather_info" in state.get("query_intents", []) or "pfz_search" in state.get("query_intents", []):
