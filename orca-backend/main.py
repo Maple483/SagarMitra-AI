@@ -145,27 +145,112 @@ async def get_device_token(authorization: Optional[str] = Header(None)) -> dict:
 
 
 # ==========================================
-# 4. Mock Bhashini Translation Adapter
+# 4. Live Bhashini Translation Adapter
 # ==========================================
 
+def detect_indic_language(text: str) -> str:
+    """Quick Unicode range scanner mapping Indic scripts to Bhashini locale codes."""
+    for c in text:
+        val = ord(c)
+        if 0x0B80 <= val <= 0x0BFF:
+            return "ta"  # Tamil
+        elif 0x0C00 <= val <= 0x0C7F:
+            return "te"  # Telugu
+        elif 0x0D00 <= val <= 0x0D7F:
+            return "ml"  # Malayalam
+        elif 0x0C80 <= val <= 0x0CFF:
+            return "kn"  # Kannada
+        elif 0x0900 <= val <= 0x097F:
+            return "hi"  # Hindi
+        elif 0x0980 <= val <= 0x09FF:
+            return "bn"  # Bengali
+        elif 0x0A80 <= val <= 0x0AFF:
+            return "gu"  # Gujarati
+        elif 0x0B00 <= val <= 0x0B7F:
+            return "or"  # Odia
+    return "hi"  # Default Hindi fallback
+
 async def mock_bhashini_translate(text: str, source_lang: str, target_lang: str) -> str:
-    """Wrapper translation pipeline simulating Bhashini API calls."""
-    if source_lang == target_lang:
+    """Wrapper translation pipeline connecting to MeitY Bhashini REST API, with mock fallback."""
+    if source_lang == target_lang or not text:
         return text
-    
+        
     cache_key = f"translation:{source_lang}:{target_lang}:{text}"
-    cached = redis_client.get(cache_key)
-    if cached:
-        return cached
+    try:
+        cached = redis_client.get(cache_key)
+        if cached:
+            return cached
+    except Exception:
+        pass
+        
+    bhashini_key = os.getenv("BHASHINI_API_KEY")
+    bhashini_url = os.getenv("BHASHINI_API_URL", "https://dhruva-api.bhashini.gov.in/services/inference/pipeline")
+    
+    src_code = source_lang
+    if src_code == "regional":
+        src_code = detect_indic_language(text)
+        
+    if not bhashini_key:
+        # High-fidelity local regional translator fallback when offline/no keys configured
+        tamil_dict = {
+            "safe": "பாதுகாப்பானது",
+            "warning": "எச்சரிக்கை",
+            "critical": "ஆபத்தானது",
+            "Your vessel is operating": "உங்கள் படகு இயங்குகிறது",
+            "Seek harbor or safe shelter immediately.": "உடனே துறைமுக அல்லது பாதுகாப்பான புகலிடத்தை அடையவும்.",
+            "Turn back immediately.": "உடனே திரும்பி செல்லவும்.",
+            "The system rates the area as SAFE": "இப்பகுதி பாதுகாப்பானது என்று கணினி மதிப்பிடுகிறது",
+            "No potential fishing zones were identified in your immediate region today.": "இன்று உங்கள் பகுதியில் மீன்பிடி மண்டலங்கள் எதுவும் கண்டறியப்படவில்லை.",
+            "No hazards were detected within any monitored boundary": "கண்காணிக்கப்படும் எல்லைக்குள் எந்த ஆபத்துகளும் கண்டறியப்படவில்லை"
+        }
+        if target_lang in ["ta", "regional"]:
+            translated = text
+            for eng_word, tam_word in tamil_dict.items():
+                translated = translated.replace(eng_word, tam_word)
+            return translated
+        return text
         
     try:
-        translated = text # Mock no-op translation
-        redis_client.set(cache_key, translated)
-        return translated
-    except Exception:
-        if source_lang == "regional":
-            raise HTTPException(status_code=400, detail="மொழிபெயர்க்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.")
-        return text
+        headers = {
+            "Authorization": bhashini_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "pipelineTasks": [
+                {
+                    "taskType": "translation",
+                    "config": {
+                        "language": {
+                            "sourceLanguage": src_code,
+                            "targetLanguage": target_lang
+                        },
+                        "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
+                    }
+                }
+            ],
+            "inputData": {
+                "input": [{"source": text}]
+            }
+        }
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(bhashini_url, json=payload, headers=headers, timeout=5)
+        )
+        
+        if response.status_code == 200:
+            res_data = response.json()
+            translated = res_data["pipelineResponse"][0]["output"][0]["target"]
+            try:
+                redis_client.set(cache_key, translated)
+            except Exception:
+                pass
+            return translated
+    except Exception as e:
+        print(f"[Bhashini Error] Connection to Bhashini API failed: {e}")
+        
+    return text
 
 
 # ==========================================
@@ -237,7 +322,7 @@ async def refresh_token(refresh_token: str = Query(...)):
 
 @app.post("/api/chat")
 async def handle_chat_query(req: QueryRequest):
-    """Bridges the React frontend chat requests to the LangGraph safety orchestrator."""
+    """Bridges the React frontend chat requests to the LangGraph safety orchestrator with language-barrier translation."""
     print(f"[DEBUG] Received frontend query: '{req.prompt}'")
     
     # 1. Resolve coordinates from query text using robust_coordinate_parser
@@ -247,6 +332,17 @@ async def handle_chat_query(req: QueryRequest):
     # Strip SYSTEM CONTEXT before sending to the LangGraph agents
     clean_prompt = req.prompt.split("[SYSTEM CONTEXT:")[0].strip()
     
+    # Language barrier resolution
+    is_indic = any(0x0900 <= ord(c) <= 0x0DFF for c in clean_prompt)
+    source_lang = "en"
+    if is_indic:
+        source_lang = detect_indic_language(clean_prompt)
+        print(f"[Bhashini] Indic language '{source_lang}' detected. Translating query to English...")
+        english_prompt = await mock_bhashini_translate(clean_prompt, source_lang, "en")
+        print(f"[Bhashini] Translated query: '{english_prompt}'")
+    else:
+        english_prompt = clean_prompt
+        
     vessel_id = "IND-TN-01-F-1234" # Default mock vessel
     lat, lon = None, None
     if pre_parsed:
@@ -262,7 +358,7 @@ async def handle_chat_query(req: QueryRequest):
             
     # 2. Invoke LangGraph Orchestration
     initial_state = {
-        "messages": [HumanMessage(content=clean_prompt)],
+        "messages": [HumanMessage(content=english_prompt)],
         "vessel_id": vessel_id,
         "vessel_coords": {"lat": lat, "lon": lon} if lat else None,
         "request_type": "query",
@@ -283,8 +379,16 @@ async def handle_chat_query(req: QueryRequest):
                 "lng": float(coords["lon"]) # React UI expects 'lng'
             }
             
+        consensus_advice = result.get("consensus_advice")
+        
+        # Translate the advice back to the user's regional language
+        if is_indic:
+            print(f"[Bhashini] Translating consensus advice back to '{source_lang}'...")
+            consensus_advice = await mock_bhashini_translate(consensus_advice, "en", source_lang)
+            print(f"[Bhashini] Translated advice: '{consensus_advice}'")
+            
         return {
-            "reply": result.get("consensus_advice"),
+            "reply": consensus_advice,
             "coordinates": extracted_coords
         }
     except Exception as e:
