@@ -149,8 +149,10 @@ class MaritimeBoundaryProvider:
             (13.00, 69.20),  # West of Northern Lakshadweep (Chetlat / Bitra)
             (10.00, 68.80),  # West of Kavaratti / Agatti
             (7.50, 71.00),   # Southwest of Minicoy
-            (7.00, 72.80),   # Eight Degree Channel (India-Maldives Boundary)
-            (6.00, 74.80),   # Southern Lakshadweep Sea
+            (7.15, 72.85),   # Eight Degree Channel Median Line (between Minicoy 8.28°N and Maldives 7.06°N)
+            (7.35, 73.50),
+            (7.40, 74.50),   # East of Northern Maldives
+            (6.50, 75.80),   # Wadge Bank Approach
             (4.784, 77.023), # Point T: India - Sri Lanka - Maldives Trijunction (1976 Treaty)
             (5.00, 77.18),   # Position 13m
             (6.00, 77.80),

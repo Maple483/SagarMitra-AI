@@ -166,10 +166,12 @@ export default function App() {
         [18.00, 67.50],  // West of Mumbai
         [15.00, 68.50],  // West of Goa
         [13.00, 69.20],  // West of Northern Lakshadweep (Chetlat / Bitra)
-        [10.00, 68.80],  // West of Kavaratti / Agatti
+        // India - Maldives Maritime Boundary (1976 Treaty & Eight Degree Channel)
         [7.50, 71.00],   // Southwest of Minicoy
-        [7.00, 72.80],   // Eight Degree Channel (India-Maldives Boundary)
-        [6.00, 74.80],   // Southern Lakshadweep Sea
+        [7.15, 72.85],   // Eight Degree Channel Center (Median Line between Minicoy 8.28°N and Maldives 7.06°N)
+        [7.35, 73.50],
+        [7.40, 74.50],   // East of Maldives Northern Atoll
+        [6.50, 75.80],   // Approach to Wadge Bank
         [4.784, 77.023], // Point T: India - Sri Lanka - Maldives Trijunction (1976 Treaty)
         
         // India - Sri Lanka Maritime Boundary (Gulf of Mannar & Palk Strait 1974/1976 Treaties)
@@ -581,15 +583,16 @@ export default function App() {
       });
       const routeData = await res.json();
       if (routeData.status === "SUCCESS") {
-        setRoutes(prev => [...prev, { ...routeData, id: newMarkerId, vesselName: nearestVessel.name }]);
+        setRoutes([{ ...routeData, id: newMarkerId, vesselName: nearestVessel.name }]);
         setMessages(prev => [...prev, {
           role: 'system',
           content: `Safe nautical route computed from ${nearestVessel.name} to ${markerAlias} avoiding obstacles. Total Distance: ${routeData.total_dist_nm} NM. Nominal ETE: ${routeData.nominal_ete_hours} hrs at ${speed} knots.`
         }]);
       } else {
+        setRoutes([]); // Clear invalid/stale routes so no ghost lines persist on the map
         setMessages(prev => [...prev, {
           role: 'system',
-          content: `Warning: Unable to resolve a safe route from ${nearestVessel.name} to ${markerAlias}: ${routeData.message || 'Path blocked by obstacles'}.`
+          content: `Warning: Unable to resolve a route from ${nearestVessel.name} to ${markerAlias}: ${routeData.message || 'Target lies outside Indian EEZ jurisdiction'}.`
         }]);
       }
     } catch (err) {
