@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Send, Ship, Anchor, Layers, X, Activity, ShieldAlert, Download, Upload, MapPin, Trash2, Info, ExternalLink, Plus, MoreVertical, Search, Navigation, Wind } from 'lucide-react';
+import { WeatherQuickWidget } from './components/WeatherQuickWidget';
+import { WeatherMapDrawer } from './components/WeatherMapDrawer';
 
 declare global {
   interface Window {
@@ -84,6 +86,9 @@ export default function App() {
   const [routes, setRoutes] = useState<any[]>([]);
   const routesLayerRef = useRef<any>(null);
 
+  const [isWeatherDrawerOpen, setIsWeatherDrawerOpen] = useState(false);
+  const [weatherCoords, setWeatherCoords] = useState({ lat: 18.95, lon: 72.85 });
+
   useEffect(() => {
     const initMap = () => {
       if (!window.L || mapRef.current) return;
@@ -117,6 +122,9 @@ export default function App() {
       map.on('click', (e: any) => { 
         setContextMenu(null); 
         setShowSettingsMenu(false); 
+        const clickLat = Math.round(e.latlng.lat * 10000) / 10000;
+        const clickLon = Math.round(e.latlng.lng * 10000) / 10000;
+        setWeatherCoords({ lat: clickLat, lon: clickLon });
         setTempMarker(prev => {
           if (prev) return null; // clicking empty map removes existing temp marker
           return { lat: e.latlng.lat, lng: e.latlng.lng };
@@ -805,6 +813,24 @@ export default function App() {
       {/* Right Map Panel */}
       <div className="flex-1 h-[50vh] md:h-full relative bg-slate-950 z-0">
         <div id="marine-map" className="absolute inset-0 w-full h-full"></div>
+        
+        {/* Quick Marine Weather Telemetry Widget */}
+        <WeatherQuickWidget 
+          coords={weatherCoords}
+          onToggleDrawer={() => setIsWeatherDrawerOpen(true)}
+          onLocationChange={(lat, lon) => setWeatherCoords({ lat, lon })}
+        />
+
+        {/* Map-Retained Weather Drawer Overlay */}
+        <WeatherMapDrawer
+          isOpen={isWeatherDrawerOpen}
+          onClose={() => setIsWeatherDrawerOpen(false)}
+          coords={weatherCoords}
+          onUpdateCoords={(lat, lon) => {
+            setWeatherCoords({ lat, lon });
+            if (mapRef.current) mapRef.current.flyTo([lat, lon], 9);
+          }}
+        />
         
         {/* Search Bar (Top Center) */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] w-full max-w-sm px-4 sm:px-0">

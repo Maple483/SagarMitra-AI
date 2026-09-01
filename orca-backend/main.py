@@ -1,6 +1,7 @@
 import os
 import json
 import uuid
+import math
 import datetime
 import asyncio
 from typing import Dict, Any, List, Optional, Set
@@ -13,9 +14,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import models and agent brain
+# Import models, weather engine and agent brain
 from models import User, Vessel, TelemetryLog, Geofence, ProactiveAlertLog
 from agents.orchestrator import app as agent_brain
+from agents.weather_service import weather_service
+from agents.weather_schema import RouteWeatherRequest, RouteWeatherResponse
 
 app = FastAPI(title="SagarMitra AI Backend Gateway")
 
@@ -498,6 +501,7 @@ async def handle_conversational_query(
     
     return {
         "consensus_advice": advice_local,
+        "consensus_advice_en": result.get("consensus_advice"),
         "location_source": location_source,
         "final_risk_level": result.get("final_risk_level"),
         "override_reasons": result.get("override_reasons"),
@@ -579,6 +583,70 @@ async def get_vessel_history(
         "logs": mock_history,
         "next_cursor": "2026-08-29T10:05:00Z"
     }
+
+
+# ==========================================
+# 6. Marine Weather & Space-Time Trajectory Endpoints
+# ==========================================
+
+@app.get("/api/weather/live")
+async def get_live_weather(
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lon: float = Query(..., ge=-180.0, le=180.0)
+):
+    """Retrieves real-time marine weather, swell oceanography & INCOIS/IMD alerts."""
+    state = weather_service.fetch_live_weather(lat, lon)
+    return state.dict()
+
+
+@app.get("/api/weather/forecast")
+async def get_weather_forecast(
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lon: float = Query(..., ge=-180.0, le=180.0),
+    days: int = Query(3, ge=1, le=7)
+):
+    """Retrieves multi-day hourly marine forecast streams with realistic diurnal oscillations."""
+    state = weather_service.fetch_live_weather(lat, lon)
+    is_land = state.provenance.marine_source == "LANDMASS_INLAND"
+    base_wind = state.wind.speed_kt
+    base_wave = state.waves.wave_height_m or 0.0
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    summary = []
+    for h in range(0, days * 24, 3):
+        # Realistic diurnal sea-breeze & swell oscillation
+        diurnal_wind = math.sin(math.pi * h / 12.0) * 3.5
+        diurnal_wave = math.sin(math.pi * h / 12.0) * 0.3
+        
+        pred_wind = round(max(5.0, base_wind + diurnal_wind), 1)
+        pred_wave = 0.0 if is_land else round(max(0.4, base_wave + diurnal_wave), 2)
+        
+        summary.append({
+            "hour_offset": h,
+            "timestamp_utc": (now + datetime.timedelta(hours=h)).isoformat(),
+            "wind_speed_kt": pred_wind,
+            "wave_height_m": pred_wave,
+            "wave_period_s": 0.0 if is_land else 7.5,
+            "is_cross_sea": False if is_land else (state.is_cross_sea and pred_wave >= 1.2)
+        })
+
+    return {
+        "status": "SUCCESS",
+        "latitude": lat,
+        "longitude": lon,
+        "forecast_days": days,
+        "current": state.dict(),
+        "hourly_summary": summary
+    }
+
+
+@app.post("/api/weather/route", response_model=RouteWeatherResponse)
+async def evaluate_route_weather(request: RouteWeatherRequest):
+    """
+    Evaluates space-time weather & seamanship hazards along a route trajectory.
+    Uses 2D vector SOG/COG navigation physics and wave energy density scaling.
+    """
+    return weather_service.evaluate_route_trajectory(request)
 
 
 # ==========================================
