@@ -186,8 +186,10 @@ class WeatherService:
             return False
             
         # Peninsular & Central India inland (bounded by East Coast ~80.2 E)
-        if 8.5 <= lat < 21.0 and 73.6 <= lon <= 80.2:
-            # Exception for West coast strip (within ~0.15 deg of coast)
+        if 8.5 <= lat < 21.0 and 72.8 <= lon <= 80.2:
+            # Exception for West coast ocean waters
+            if lat < 11.0 and lon <= 76.0: return False   # Kerala / Lakshadweep Sea
+            if lat < 14.0 and lon <= 74.6: return False   # Malabar / Mangaluru offshore
             if lat < 16.0 and lon <= 73.85: return False  # Goa / Konkan coast
             if lat < 20.0 and lon <= 72.95: return False  # Mumbai / Maharashtra coast
             return True
@@ -245,7 +247,7 @@ class WeatherService:
     def fetch_live_weather(self, lat: float, lon: float, timestamp_utc: Optional[datetime] = None) -> CommonWeatherState:
         """
         Synthesizes live space-time marine oceanography state for specified (lat, lon, time).
-        Priority: Landmass Classifier -> INCOIS ASCAT/OSF -> Open-Meteo REST API -> WGS84 Spatial Model.
+        Priority: Landmass Classifier -> Active Hazards -> INCOIS ASCAT/OSF -> Open-Meteo REST API -> WGS84 Spatial Model.
         """
         if not timestamp_utc:
             timestamp_utc = datetime.now(timezone.utc)
@@ -271,6 +273,14 @@ class WeatherService:
                     spatial_quality="LAND_NO_MARINE_DATA"
                 )
             )
+
+        # Check collision with active hazard circles (IMD High Wave Circles / Cyclones)
+        active_circle = None
+        for circle in ACTIVE_HAZARD_CIRCLES:
+            dist_nm, _ = spherical_rhumb_distance_and_bearing(lat, lon, circle["center_lat"], circle["center_lon"])
+            if (dist_nm * 1.852) <= circle["radius_km"]:
+                active_circle = circle
+                break
 
         is_sheltered = self.is_in_sheltered_harbor(lat, lon)
         
@@ -532,12 +542,12 @@ class WeatherService:
                 max_wind_kt = max(max_wind_kt, state.wind.speed_kt)
 
                 # WMO / IMO Douglas Sea State Segment Hazard Categorization
-                if risk_wave_idx >= 3.5 or state.wind.speed_kt >= 34.0:
+                if risk_wave_idx >= 4.2 or state.wind.speed_kt >= 38.0:
                     seg_hazard = HazardLevel.SEVERE
                     duration_wave_exceeded_h += dt_hours
-                elif risk_wave_idx >= 2.5 or state.wind.speed_kt >= 24.0:
+                elif risk_wave_idx >= 3.0 or state.wind.speed_kt >= 28.0:
                     seg_hazard = HazardLevel.HIGH
-                elif risk_wave_idx >= 1.6 or state.wind.speed_kt >= 16.0:
+                elif risk_wave_idx >= 2.2 or state.wind.speed_kt >= 22.0:
                     seg_hazard = HazardLevel.MODERATE
                 else:
                     seg_hazard = HazardLevel.LOW
@@ -564,11 +574,11 @@ class WeatherService:
                 curr_time += timedelta(hours=dt_hours)
 
         # Overall WMO / IMO Douglas Sea State hazard categorization
-        if max_risk_wave_idx >= 3.5 or max_wind_kt >= 34.0:
+        if max_risk_wave_idx >= 4.2 or max_wind_kt >= 38.0:
             overall_hazard = HazardLevel.SEVERE
-        elif max_risk_wave_idx >= 2.5 or max_wind_kt >= 24.0:
+        elif max_risk_wave_idx >= 3.0 or max_wind_kt >= 28.0:
             overall_hazard = HazardLevel.HIGH
-        elif max_risk_wave_idx >= 1.6 or max_wind_kt >= 16.0:
+        elif max_risk_wave_idx >= 2.2 or max_wind_kt >= 22.0:
             overall_hazard = HazardLevel.MODERATE
         else:
             overall_hazard = HazardLevel.LOW
