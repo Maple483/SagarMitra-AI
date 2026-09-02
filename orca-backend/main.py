@@ -589,14 +589,6 @@ async def get_vessel_history(
 # 6. Marine Weather & Space-Time Trajectory Endpoints
 # ==========================================
 
-@app.get("/api/weather/live")
-async def get_live_weather(
-    lat: float = Query(..., ge=-90.0, le=90.0),
-    lon: float = Query(..., ge=-180.0, le=180.0)
-):
-    """Retrieves real-time marine weather, swell oceanography & INCOIS/IMD alerts."""
-    state = weather_service.fetch_live_weather(lat, lon)
-    return state.dict()
 
 
 @app.get("/api/weather/forecast")

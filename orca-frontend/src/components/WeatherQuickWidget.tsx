@@ -109,19 +109,23 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
         style: 'bg-slate-800/80 border-slate-600 text-slate-300'
       };
     }
-    if (waveHeight >= 4.2 || windSpeed >= 38.0) {
+    const isHighWaveAlert = weatherData?.provenance?.marine_source === 'INCOIS_HIGH_WAVE_ALERT' ||
+                           weatherData?.system_metadata?.data_source === 'INCOIS_HIGH_WAVE_ALERT';
+    const warningLevel = weatherData?.safety_assessment?.warning_level;
+
+    if (waveHeight >= 4.2 || windSpeed >= 38.0 || (isHighWaveAlert && waveHeight >= 4.0) || warningLevel === 'RED_WARNING') {
       return {
         label: 'STATUS: SEVERE HAZARD',
         style: 'bg-red-950/80 border-red-500/50 text-red-300 animate-pulse'
       };
     }
-    if (waveHeight >= 3.0 || windSpeed >= 28.0) {
+    if (waveHeight >= 3.0 || windSpeed >= 28.0 || isHighWaveAlert || warningLevel === 'ORANGE_ALERT') {
       return {
         label: 'STATUS: HIGH HAZARD',
         style: 'bg-orange-950/80 border-orange-500/50 text-orange-300'
       };
     }
-    if (waveHeight >= 2.2 || windSpeed >= 22.0) {
+    if (waveHeight >= 2.2 || windSpeed >= 22.0 || warningLevel === 'YELLOW_WATCH') {
       return {
         label: 'STATUS: MODERATE',
         style: 'bg-amber-950/80 border-amber-500/50 text-amber-300'

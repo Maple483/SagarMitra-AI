@@ -146,16 +146,6 @@ ACTIVE_HAZARD_CIRCLES = [
         "wind_speed_kt": 26.0,
         "wave_dir": 110.0,
         "hazard_level": "HIGH"
-    },
-    {
-        "name": "IMD Cyclone ASNA Warning Zone (Gujarat Coast)",
-        "center_lat": 21.5,
-        "center_lon": 68.5,
-        "radius_km": 200.0,
-        "wave_height_m": 5.2,
-        "wind_speed_kt": 55.0,
-        "wave_dir": 210.0,
-        "hazard_level": "SEVERE"
     }
 ]
 
@@ -344,36 +334,43 @@ class WeatherService:
         # 2. Try Live Open-Meteo REST API
         open_meteo_live = self.fetch_open_meteo_live(lat, lon)
 
-        if incois_ascat:
-            wind_speed_kt = incois_ascat["wind_speed_kt"]
-            wind_dir_deg = incois_ascat["wind_direction_deg"]
-        elif open_meteo_live:
-            wind_speed_kt = open_meteo_live["wind_speed_kt"]
-            wind_dir_deg = open_meteo_live["wind_dir_deg"]
+        if active_circle:
+            wave_height = active_circle["wave_height_m"]
+            wave_dir = active_circle.get("wave_dir", 240.0)
+            wave_period = 9.5
+            wind_speed_kt = active_circle.get("wind_speed_kt", 28.0)
+            wind_dir_deg = active_circle.get("wave_dir", 240.0)
         else:
-            lat_off = abs(lat - 18.0) * 0.25
-            lon_off = abs(lon - 72.0) * 0.15
-            wind_speed_kt = round(10.5 + (lat_off * 1.5) + (lon_off * 0.8), 1)
-            wind_dir_deg = round((235.0 + lat_off * 8.0) % 360, 1)
+            if incois_ascat:
+                wind_speed_kt = incois_ascat["wind_speed_kt"]
+                wind_dir_deg = incois_ascat["wind_direction_deg"]
+            elif open_meteo_live:
+                wind_speed_kt = open_meteo_live["wind_speed_kt"]
+                wind_dir_deg = open_meteo_live["wind_dir_deg"]
+            else:
+                lat_off = abs(lat - 18.0) * 0.25
+                lon_off = abs(lon - 72.0) * 0.15
+                wind_speed_kt = round(10.5 + (lat_off * 1.5) + (lon_off * 0.8), 1)
+                wind_dir_deg = round((235.0 + lat_off * 8.0) % 360, 1)
 
-        if is_sheltered:
-            wave_height = 0.5
-            wave_dir = 240.0
-            wave_period = 6.0
-        elif incois_osf:
-            wave_height = incois_osf["significant_wave_height_m"]
-            wave_dir = incois_osf["wave_direction_deg"]
-            wave_period = incois_osf["peak_wave_period_s"]
-        elif open_meteo_live:
-            wave_height = open_meteo_live["wave_height_m"]
-            wave_dir = open_meteo_live["wave_dir_deg"]
-            wave_period = open_meteo_live["wave_period_s"]
-        else:
-            lat_off = abs(lat - 18.0) * 0.25
-            lon_off = abs(lon - 72.0) * 0.15
-            wave_height = round(0.85 + (lat_off * 0.30) + (lon_off * 0.15), 2)
-            wave_dir = round((225.0 + lat_off * 6.0) % 360, 1)
-            wave_period = 7.5
+            if is_sheltered:
+                wave_height = 0.5
+                wave_dir = 240.0
+                wave_period = 6.0
+            elif incois_osf:
+                wave_height = incois_osf["significant_wave_height_m"]
+                wave_dir = incois_osf["wave_direction_deg"]
+                wave_period = incois_osf["peak_wave_period_s"]
+            elif open_meteo_live:
+                wave_height = open_meteo_live["wave_height_m"]
+                wave_dir = open_meteo_live["wave_dir_deg"]
+                wave_period = open_meteo_live["wave_period_s"]
+            else:
+                lat_off = abs(lat - 18.0) * 0.25
+                lon_off = abs(lon - 72.0) * 0.15
+                wave_height = round(0.85 + (lat_off * 0.30) + (lon_off * 0.15), 2)
+                wave_dir = round((225.0 + lat_off * 6.0) % 360, 1)
+                wave_period = 7.5
 
         u_curr = incois_osf["u_current_kt"] if incois_osf else 0.3
         v_curr = incois_osf["v_current_kt"] if incois_osf else 0.1
@@ -383,11 +380,11 @@ class WeatherService:
         is_cross_sea = 60.0 <= diff <= 120.0 and wave_height >= 1.0
 
         provenance = ProvenanceMetadata(
-            atmospheric_source="INCOIS_ASCAT" if incois_ascat else "OPEN-METEO_ATMOSPHERE",
-            marine_source="INCOIS_OSF" if incois_osf else ("COASTAL_SHELTERED" if is_sheltered else "OPEN-METEO_MARINE"),
+            atmospheric_source="IMD_HIGH_WAVE_WARNING" if active_circle else ("INCOIS_ASCAT" if incois_ascat else "OPEN-METEO_ATMOSPHERE"),
+            marine_source="INCOIS_HIGH_WAVE_ALERT" if active_circle else ("INCOIS_OSF" if incois_osf else ("COASTAL_SHELTERED" if is_sheltered else "OPEN-METEO_MARINE")),
             valid_from_utc=timestamp_utc - timedelta(hours=1),
             valid_until_utc=timestamp_utc + timedelta(hours=3),
-            spatial_quality="COASTAL_SHELTERED" if is_sheltered else "DIRECT"
+            spatial_quality="HIGH_WAVE_ALERT" if active_circle else ("COASTAL_SHELTERED" if is_sheltered else "DIRECT")
         )
 
         return CommonWeatherState(
@@ -411,7 +408,38 @@ class WeatherService:
     def fetch_live_marine_weather(self, lat: float, lon: float) -> Dict[str, Any]:
         """Backward compatibility alias for legacy orchestrator node calls."""
         state = self.fetch_live_weather(lat, lon)
+        is_eez_out = state.provenance.marine_source == "OUTSIDE_INDIAN_EEZ"
         is_land = state.provenance.marine_source == "LANDMASS_INLAND"
+        is_high_wave = state.provenance.marine_source == "INCOIS_HIGH_WAVE_ALERT"
+        
+        w_m = state.waves.wave_height_m if state.waves.wave_height_m is not None else 0.0
+        w_spd = state.wind.speed_kt
+
+        if is_eez_out:
+            safety_status = "OUTSIDE EEZ"
+            warning_level = "OUTSIDE_EEZ"
+            advisory = "Coordinates outside Indian EEZ. Marine advisories restricted to 200 NM zone."
+        elif is_land:
+            safety_status = "LANDMASS — NO MARINE DATA"
+            warning_level = "LANDMASS"
+            advisory = "Inland landmass coordinates. No ocean swell data applicable."
+        elif is_high_wave or w_m >= 4.2 or w_spd >= 38.0:
+            safety_status = "SEVERE HAZARD"
+            warning_level = "RED_WARNING"
+            advisory = f"High Wave Alert: Ocean swell reaching {w_m}m. Extreme danger for small & medium craft."
+        elif w_m >= 3.0 or w_spd >= 28.0:
+            safety_status = "HIGH HAZARD"
+            warning_level = "ORANGE_ALERT"
+            advisory = f"High Swell Warning: Waves reaching {w_m}m. Small craft advisory in effect."
+        elif w_m >= 2.2 or w_spd >= 22.0:
+            safety_status = "MODERATE"
+            warning_level = "YELLOW_WATCH"
+            advisory = f"Moderate Sea State: Waves {w_m}m. Exercise caution in open waters."
+        else:
+            safety_status = "SAFE"
+            warning_level = "GREEN_NORMAL"
+            advisory = "Smooth to moderate sea state. Suitable for mechanized vessels."
+
         return {
             "status": "SUCCESS",
             "latitude": lat,
@@ -420,15 +448,15 @@ class WeatherService:
                 "wind_speed_kmh": round(state.wind.speed_kt * 1.852, 1),
                 "wind_speed_knots": state.wind.speed_kt,
                 "wind_gusts_kmh": round(state.wind.gust_kt * 1.852, 1),
-                "wave_height_m": state.waves.wave_height_m if state.waves.wave_height_m is not None else 0.0,
+                "wave_height_m": w_m,
                 "swell_height_m": state.waves.swell_height_m if state.waves.swell_height_m is not None else 0.0,
                 "wave_direction_deg": state.waves.wave_direction_deg or 0.0,
                 "wave_period_seconds": state.waves.wave_period_s or 0.0
             },
             "safety_assessment": {
-                "safety_status": "LANDMASS — NO MARINE DATA" if is_land else ("SAFE" if (state.waves.wave_height_m or 0.0) < 2.8 else "CAUTION"),
-                "warning_level": "LANDMASS" if is_land else ("GREEN_NORMAL" if (state.waves.wave_height_m or 0.0) < 2.8 else "YELLOW_WATCH"),
-                "advisory": "Inland landmass coordinates. No ocean swell data applicable." if is_land else "Smooth to moderate sea state. Suitable for mechanized vessels."
+                "safety_status": safety_status,
+                "warning_level": warning_level,
+                "advisory": advisory
             },
             "system_metadata": {
                 "data_source": state.provenance.marine_source,
