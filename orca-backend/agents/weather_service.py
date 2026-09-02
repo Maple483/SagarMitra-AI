@@ -174,8 +174,43 @@ class WeatherService:
         """Determines if WGS84 coordinates fall on inland landmasses where ocean swells are non-existent."""
         if self.is_in_sheltered_harbor(lat, lon):
             return False
+
+        # 1. Lakshadweep Island Atolls & Landmasses (36 islands & inhabited atolls)
+        lakshadweep_islands = [
+            (8.23, 8.38, 72.95, 73.11),   # Minicoy Island
+            (10.00, 10.17, 73.58, 73.72), # Kalpeni & Cheriyam Island
+            (9.96, 10.15, 72.20, 72.39),  # Suheli Par
+            (10.75, 10.90, 73.61, 73.78), # Andrott Island
+            (10.51, 10.63, 72.58, 72.71), # Kavaratti Island (UT Capital)
+            (10.79, 10.92, 72.13, 72.26), # Agatti Island & Airport
+            (10.89, 11.00, 72.24, 72.40), # Bangaram & Tinnekara Atoll
+            (11.08, 11.20, 72.68, 72.80), # Amini Island
+            (11.17, 11.30, 72.72, 72.85), # Kadmat Island
+            (11.43, 11.55, 72.96, 73.08), # Kiltan Island
+            (11.64, 11.76, 72.65, 72.77), # Chetlat Island
+            (11.55, 11.66, 72.14, 72.25), # Bitra Island
+            (11.10, 11.26, 72.00, 72.16), # Perumal Par
+            (12.02, 12.20, 71.82, 71.98), # Cheriyapani Reef
+            (12.25, 12.40, 71.82, 71.98), # Valiyapani Reef
+        ]
+        for min_lat, max_lat, min_lon, max_lon in lakshadweep_islands:
+            if min_lat <= lat <= max_lat and min_lon <= lon <= max_lon:
+                return True
+
+        # 2. Andaman & Nicobar Island Landmasses
+        if (11.45 <= lat <= 12.00 and 92.55 <= lon <= 92.85) or \
+           (12.00 <= lat <= 13.70 and 92.65 <= lon <= 93.05) or \
+           (10.50 <= lat <= 10.95 and 92.35 <= lon <= 92.65) or \
+           (9.10 <= lat <= 9.30 and 92.70 <= lon <= 92.88) or \
+           (6.75 <= lat <= 8.10 and 93.30 <= lon <= 93.95):
+            return True
+
+        # 3. Sri Lanka Landmass
+        if 5.90 <= lat <= 9.85 and 79.65 <= lon <= 81.90:
+            if not (lat > 9.0 and lon < 79.8):  # Palk Strait channel
+                return True
             
-        # Peninsular & Central India inland (bounded by East Coast ~80.2 E)
+        # 4. Peninsular & Central India inland (bounded by East Coast ~80.2 E)
         if 8.5 <= lat < 21.0 and 72.8 <= lon <= 80.2:
             # Exception for West coast ocean waters
             if lat < 11.0 and lon <= 76.0: return False   # Kerala / Lakshadweep Sea
@@ -184,16 +219,16 @@ class WeatherService:
             if lat < 20.0 and lon <= 72.95: return False  # Mumbai / Maharashtra coast
             return True
             
-        # Northern & Eastern India inland landmass
+        # 5. Northern & Eastern India inland landmass
         if 21.0 <= lat <= 32.0 and 72.5 <= lon <= 88.0:
             if lat < 22.5 and lon < 72.6: return False # Gujarat Gulf of Khambhat coast
             return True
             
-        # Middle East / Oman inland landmass
+        # 6. Middle East / Oman inland landmass
         if 13.0 <= lat <= 26.0 and 48.0 <= lon <= 58.5:
             return True
             
-        # Pakistan inland landmass
+        # 7. Pakistan inland landmass
         if 24.8 <= lat <= 35.0 and 61.0 <= lon <= 72.0:
             return True
 
