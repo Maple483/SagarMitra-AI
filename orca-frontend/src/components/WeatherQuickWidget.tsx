@@ -84,16 +84,25 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
 
   const round = (val: number, dec: number) => Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
 
-  const isLand = 
+  const isOutsideEEZ = 
+    weatherData?.provenance?.marine_source === 'OUTSIDE_INDIAN_EEZ' || 
+    weatherData?.system_metadata?.data_source === 'OUTSIDE_INDIAN_EEZ';
+
+  const isLand = !isOutsideEEZ && (
     weatherData?.provenance?.marine_source === 'LANDMASS_INLAND' || 
     weatherData?.system_metadata?.data_source === 'LANDMASS_INLAND' || 
-    weatherData?.safety_assessment?.warning_level === 'LANDMASS' ||
-    weatherData?.waves?.wave_height_m === 0 || 
-    weatherData?.telemetry?.wave_height_m === 0;
-  const windSpeed = weatherData?.wind?.speed_kt ?? weatherData?.telemetry?.wind_speed_knots ?? weatherData?.telemetry?.wind_speed_kt ?? (isLand ? 8.5 : 12.0);
-  const waveHeight = isLand ? 0.0 : (weatherData?.waves?.wave_height_m ?? weatherData?.telemetry?.wave_height_m ?? 1.2);
+    weatherData?.safety_assessment?.warning_level === 'LANDMASS'
+  );
+  const windSpeed = weatherData?.wind?.speed_kt ?? weatherData?.telemetry?.wind_speed_knots ?? weatherData?.telemetry?.wind_speed_kt ?? (isLand || isOutsideEEZ ? 0.0 : 12.0);
+  const waveHeight = isLand || isOutsideEEZ ? 0.0 : (weatherData?.waves?.wave_height_m ?? weatherData?.telemetry?.wave_height_m ?? 1.2);
 
   const getStatusBadge = () => {
+    if (isOutsideEEZ) {
+      return {
+        label: 'STATUS: OUTSIDE EEZ',
+        style: 'bg-slate-800/80 border-slate-600 text-slate-400'
+      };
+    }
     if (isLand) {
       return {
         label: 'STATUS: LANDMASS',
@@ -159,8 +168,13 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
           </span>
         </div>
 
-        {/* Quick Weather Metrics Grid or Land Notice */}
-        {isLand ? (
+        {/* Quick Weather Metrics Grid or Land/EEZ Notice */}
+        {isOutsideEEZ ? (
+          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60 text-center my-1">
+            <span className="text-xs font-semibold text-slate-300 block">OUTSIDE INDIAN EEZ BOUNDARY</span>
+            <span className="text-[10px] text-slate-400">Telemetry & INCOIS advisories are restricted to Indian EEZ (200 NM)</span>
+          </div>
+        ) : isLand ? (
           <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/60 text-center my-1">
             <span className="text-xs font-semibold text-slate-300 block">INLAND LANDMASS COORDINATES</span>
             <span className="text-[10px] text-slate-400">Marine wind & ocean swell data not applicable on land</span>

@@ -244,13 +244,66 @@ class WeatherService:
             logger.warning(f"Open-Meteo live API query skipped: {e}")
         return None
 
+    def is_inside_indian_eez(self, lat: float, lon: float) -> bool:
+        """Determines if WGS84 coordinates fall inside the official 200 NM Indian EEZ boundary."""
+        if 6.0 <= lat <= 14.0 and 91.0 <= lon <= 94.0:
+            return True  # Andaman & Nicobar EEZ
+        if lon < 65.8 or lat < 4.75 or lat > 24.5 or lon > 93.0:
+            return False
+            
+        poly = [
+            (23.85, 68.10), (21.80, 66.10), (20.40, 65.80), (17.50, 68.30),
+            (14.50, 69.20), (12.50, 68.50), (10.00, 68.30), (8.00, 69.50),
+            (7.60, 71.00), (7.60, 73.50), (7.80, 74.80), (4.784, 77.023),
+            (7.20, 78.60), (8.60, 79.20), (9.15, 79.52), (9.80, 79.80),
+            (10.20, 80.30), (11.50, 83.50), (13.50, 85.00), (16.00, 86.50),
+            (18.00, 88.50), (21.15, 89.40), (21.65, 89.15)
+        ]
+        
+        n = len(poly)
+        inside = False
+        p1x, p1y = poly[0]
+        for i in range(n + 1):
+            p2x, p2y = poly[i % n]
+            if lat > min(p1x, p2x):
+                if lat <= max(p1x, p2x):
+                    if lon <= max(p1y, p2y):
+                        if p1x != p2x:
+                            xinters = (lat - p1x) * (p2y - p1y) / (p2x - p1x) + p1y
+                        if p1y == p2y or lon <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
     def fetch_live_weather(self, lat: float, lon: float, timestamp_utc: Optional[datetime] = None) -> CommonWeatherState:
         """
         Synthesizes live space-time marine oceanography state for specified (lat, lon, time).
-        Priority: Landmass Classifier -> Active Hazards -> INCOIS ASCAT/OSF -> Open-Meteo REST API -> WGS84 Spatial Model.
+        Priority: EEZ Boundary Check -> Landmass Classifier -> INCOIS ASCAT/OSF -> Open-Meteo REST API -> WGS84 Spatial Model.
         """
         if not timestamp_utc:
             timestamp_utc = datetime.now(timezone.utc)
+
+        # 1. Check EEZ restriction (Restricted to Indian 200 NM EEZ)
+        if not self.is_inside_indian_eez(lat, lon):
+            return CommonWeatherState(
+                lat=round(lat, 4),
+                lon=round(lon, 4),
+                timestamp_utc=timestamp_utc,
+                wind=WindMetrics(speed_kt=0.0, gust_kt=0.0, direction_deg=0.0),
+                waves=WaveMetrics(wave_height_m=0.0, swell_height_m=0.0, wave_direction_deg=0.0, wave_period_s=0.0),
+                currents=CurrentMetrics(speed_kt=0.0, direction_deg=0.0, u_current_kt=0.0, v_current_kt=0.0),
+                is_cross_sea=False,
+                air_temp_c=0.0,
+                sea_surface_temp_c=0.0,
+                pressure_hpa=0.0,
+                provenance=ProvenanceMetadata(
+                    atmospheric_source="OUTSIDE_INDIAN_EEZ",
+                    marine_source="OUTSIDE_INDIAN_EEZ",
+                    valid_from_utc=timestamp_utc - timedelta(hours=1),
+                    valid_until_utc=timestamp_utc + timedelta(hours=3),
+                    spatial_quality="RESTRICTED_EEZ_ZONE"
+                )
+            )
 
         # If location is inland, return 0 wave height
         if self.is_on_landmass(lat, lon):

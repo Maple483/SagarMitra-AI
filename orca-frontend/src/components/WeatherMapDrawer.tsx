@@ -311,21 +311,24 @@ export const WeatherMapDrawer: React.FC<WeatherMapDrawerProps> = ({ isOpen, onCl
 
             {/* Data Provenance & Metrics */}
             {(() => {
-              const isLand = 
+              const isOutsideEEZ = 
+                weather?.provenance?.marine_source === 'OUTSIDE_INDIAN_EEZ' || 
+                weather?.system_metadata?.data_source === 'OUTSIDE_INDIAN_EEZ';
+
+              const isLand = !isOutsideEEZ && (
                 weather?.provenance?.marine_source === 'LANDMASS_INLAND' || 
                 weather?.system_metadata?.data_source === 'LANDMASS_INLAND' || 
-                weather?.safety_assessment?.warning_level === 'LANDMASS' ||
-                weather?.waves?.wave_height_m === 0 ||
-                weather?.telemetry?.wave_height_m === 0;
+                weather?.safety_assessment?.warning_level === 'LANDMASS'
+              );
 
-              const windSpeed = weather?.wind?.speed_kt ?? weather?.telemetry?.wind_speed_knots ?? weather?.telemetry?.wind_speed_kt ?? (isLand ? 8.5 : 12.0);
+              const windSpeed = weather?.wind?.speed_kt ?? weather?.telemetry?.wind_speed_knots ?? weather?.telemetry?.wind_speed_kt ?? (isLand || isOutsideEEZ ? 0.0 : 12.0);
               const windGust = weather?.wind?.gust_kt ?? (weather?.telemetry?.wind_gusts_kmh ? round(weather.telemetry.wind_gusts_kmh / 1.852, 1) : round(windSpeed * 1.3, 1));
               const windDir = weather?.wind?.direction_deg ?? weather?.telemetry?.wind_direction_deg ?? 240;
 
-              const waveHeight = isLand ? 0.0 : (weather?.waves?.wave_height_m ?? weather?.telemetry?.wave_height_m ?? 1.2);
-              const swellHeight = isLand ? 0.0 : (weather?.waves?.swell_height_m ?? weather?.telemetry?.swell_height_m ?? 0.9);
-              const wavePeriod = isLand ? 0.0 : (weather?.waves?.wave_period_s ?? weather?.telemetry?.wave_period_seconds ?? 7.5);
-              const source = weather?.provenance?.marine_source ?? weather?.system_metadata?.data_source ?? (isLand ? "LANDMASS_INLAND" : "INCOIS_OSF_GRID");
+              const waveHeight = isLand || isOutsideEEZ ? 0.0 : (weather?.waves?.wave_height_m ?? weather?.telemetry?.wave_height_m ?? 1.2);
+              const swellHeight = isLand || isOutsideEEZ ? 0.0 : (weather?.waves?.swell_height_m ?? weather?.telemetry?.swell_height_m ?? 0.9);
+              const wavePeriod = isLand || isOutsideEEZ ? 0.0 : (weather?.waves?.wave_period_s ?? weather?.telemetry?.wave_period_seconds ?? 7.5);
+              const source = weather?.provenance?.marine_source ?? weather?.system_metadata?.data_source ?? (isOutsideEEZ ? "OUTSIDE_INDIAN_EEZ" : isLand ? "LANDMASS_INLAND" : "INCOIS_OSF_GRID");
 
               return (
                 <>
@@ -336,7 +339,17 @@ export const WeatherMapDrawer: React.FC<WeatherMapDrawerProps> = ({ isOpen, onCl
                     </span>
                   </div>
 
-                  {isLand ? (
+                  {isOutsideEEZ ? (
+                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 text-center space-y-1">
+                      <div className="flex items-center justify-center gap-2 text-slate-300 font-semibold text-xs uppercase tracking-wider">
+                        <MapPin className="w-4 h-4 text-amber-400" />
+                        <span>COORDINATES OUTSIDE INDIAN EEZ</span>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Live oceanography, high wave advisories, and space-time route calculations are restricted to coordinates within the Indian Exclusive Economic Zone (200 NM).
+                      </p>
+                    </div>
+                  ) : isLand ? (
                     <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 text-center space-y-1">
                       <div className="flex items-center justify-center gap-2 text-slate-300 font-semibold text-xs uppercase tracking-wider">
                         <MapPin className="w-4 h-4 text-amber-400" />
