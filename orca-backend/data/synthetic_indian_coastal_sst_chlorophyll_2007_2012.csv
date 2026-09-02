@@ -1,0 +1,937 @@
+Year,Month,State,Ocean_Region,SST_C,Chlorophyll_mg_m3,SST_anomaly_C,Chlorophyll_anomaly_mg_m3,Season
+2007,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.9,0.257,0.43,0.01,Winter
+2007,1,Andhra Pradesh,Bay of Bengal,26.34,0.715,0.06,-0.006,Winter
+2007,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,24.43,1.185,0.09,0.182,Winter
+2007,1,Goa,Arabian Sea,26.04,1.046,-0.17,0.141,Winter
+2007,1,Gujarat,Arabian Sea / Gulf region,24.23,1.107,0.3,0.028,Winter
+2007,1,Karnataka,Arabian Sea,26.05,0.998,0.01,0.142,Winter
+2007,1,Kerala,Arabian Sea,26.54,1.182,0.06,0.182,Winter
+2007,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.51,0.221,0.47,-0.003,Winter
+2007,1,Maharashtra,Arabian Sea,25.52,0.849,0.24,-0.084,Winter
+2007,1,Odisha,Bay of Bengal,25.68,0.832,0.17,-0.008,Winter
+2007,1,Puducherry,Bay of Bengal,26.85,0.702,-0.02,-0.05,Winter
+2007,1,Tamil Nadu,Bay of Bengal,26.63,0.584,-0.04,-0.074,Winter
+2007,1,West Bengal,Bay of Bengal,25.13,0.998,0.08,0.02,Winter
+2007,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.01,0.295,0.13,0.036,Winter
+2007,2,Andhra Pradesh,Bay of Bengal,26.88,0.649,-0.07,-0.024,Winter
+2007,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.73,0.996,-0.0,0.028,Winter
+2007,2,Goa,Arabian Sea,26.91,0.989,-0.12,0.054,Winter
+2007,2,Gujarat,Arabian Sea / Gulf region,25.29,0.985,0.09,-0.052,Winter
+2007,2,Karnataka,Arabian Sea,26.71,0.891,-0.03,-0.019,Winter
+2007,2,Kerala,Arabian Sea,27.24,0.969,0.01,-0.013,Winter
+2007,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.74,0.33,0.21,0.077,Winter
+2007,2,Maharashtra,Arabian Sea,26.44,0.897,0.09,-0.093,Winter
+2007,2,Odisha,Bay of Bengal,26.73,0.749,0.29,-0.144,Winter
+2007,2,Puducherry,Bay of Bengal,27.17,0.684,-0.3,0.043,Winter
+2007,2,Tamil Nadu,Bay of Bengal,27.37,0.651,0.11,-0.019,Winter
+2007,2,West Bengal,Bay of Bengal,26.34,1.068,0.43,0.13,Winter
+2007,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.49,0.224,-0.02,0.007,Pre-monsoon
+2007,3,Andhra Pradesh,Bay of Bengal,28.3,0.739,0.12,0.045,Pre-monsoon
+2007,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,28.39,0.928,0.38,0.004,Pre-monsoon
+2007,3,Goa,Arabian Sea,28.1,0.946,-0.06,-0.042,Pre-monsoon
+2007,3,Gujarat,Arabian Sea / Gulf region,28.02,1.144,0.23,0.134,Pre-monsoon
+2007,3,Karnataka,Arabian Sea,28.07,0.898,0.1,0.012,Pre-monsoon
+2007,3,Kerala,Arabian Sea,27.9,1.127,-0.34,0.097,Pre-monsoon
+2007,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.14,0.12,0.02,-0.064,Pre-monsoon
+2007,3,Maharashtra,Arabian Sea,27.98,0.924,-0.03,-0.019,Pre-monsoon
+2007,3,Odisha,Bay of Bengal,28.18,0.716,0.3,-0.118,Pre-monsoon
+2007,3,Puducherry,Bay of Bengal,28.41,0.652,-0.18,-0.115,Pre-monsoon
+2007,3,Tamil Nadu,Bay of Bengal,28.59,0.685,0.12,0.001,Pre-monsoon
+2007,3,West Bengal,Bay of Bengal,28.41,1.106,0.7,0.187,Pre-monsoon
+2007,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.3,0.28,-0.0,0.044,Pre-monsoon
+2007,4,Andhra Pradesh,Bay of Bengal,29.59,0.846,0.03,0.186,Pre-monsoon
+2007,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.5,1.018,-0.06,0.119,Pre-monsoon
+2007,4,Goa,Arabian Sea,29.69,0.969,0.09,0.005,Pre-monsoon
+2007,4,Gujarat,Arabian Sea / Gulf region,30.8,0.892,0.23,-0.031,Pre-monsoon
+2007,4,Karnataka,Arabian Sea,29.65,0.918,0.1,0.017,Pre-monsoon
+2007,4,Kerala,Arabian Sea,29.56,1.089,-0.13,0.05,Pre-monsoon
+2007,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.29,0.191,0.34,0.005,Pre-monsoon
+2007,4,Maharashtra,Arabian Sea,30.16,1.008,0.27,0.058,Pre-monsoon
+2007,4,Odisha,Bay of Bengal,30.33,0.669,0.56,-0.117,Pre-monsoon
+2007,4,Puducherry,Bay of Bengal,30.0,0.639,0.08,-0.113,Pre-monsoon
+2007,4,Tamil Nadu,Bay of Bengal,29.87,0.676,0.1,0.087,Pre-monsoon
+2007,4,West Bengal,Bay of Bengal,30.21,0.875,0.5,-0.036,Pre-monsoon
+2007,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.81,0.115,0.26,-0.12,Pre-monsoon
+2007,5,Andhra Pradesh,Bay of Bengal,30.52,0.972,0.12,0.18,Pre-monsoon
+2007,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,32.05,1.091,0.1,0.026,Pre-monsoon
+2007,5,Goa,Arabian Sea,30.67,0.96,0.2,-0.203,Pre-monsoon
+2007,5,Gujarat,Arabian Sea / Gulf region,32.19,1.096,0.07,0.066,Pre-monsoon
+2007,5,Karnataka,Arabian Sea,30.54,1.146,0.05,0.063,Pre-monsoon
+2007,5,Kerala,Arabian Sea,30.18,1.375,-0.1,0.077,Pre-monsoon
+2007,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.7,0.226,0.1,0.049,Pre-monsoon
+2007,5,Maharashtra,Arabian Sea,31.08,1.164,0.06,-0.036,Pre-monsoon
+2007,5,Odisha,Bay of Bengal,31.04,0.964,0.39,0.011,Pre-monsoon
+2007,5,Puducherry,Bay of Bengal,30.77,0.829,0.2,-0.006,Pre-monsoon
+2007,5,Tamil Nadu,Bay of Bengal,30.54,0.696,-0.05,-0.089,Pre-monsoon
+2007,5,West Bengal,Bay of Bengal,31.16,1.165,0.49,0.046,Pre-monsoon
+2007,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.24,0.429,0.08,0.058,Southwest_Monsoon
+2007,6,Andhra Pradesh,Bay of Bengal,29.38,1.081,-0.05,0.108,Southwest_Monsoon
+2007,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.62,1.489,0.13,0.151,Southwest_Monsoon
+2007,6,Goa,Arabian Sea,29.72,1.427,0.12,-0.094,Southwest_Monsoon
+2007,6,Gujarat,Arabian Sea / Gulf region,30.81,1.481,0.3,0.117,Southwest_Monsoon
+2007,6,Karnataka,Arabian Sea,29.86,1.516,0.35,0.082,Southwest_Monsoon
+2007,6,Kerala,Arabian Sea,29.57,1.742,0.07,0.026,Southwest_Monsoon
+2007,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.34,0.266,0.24,0.028,Southwest_Monsoon
+2007,6,Maharashtra,Arabian Sea,29.96,1.482,0.19,-0.074,Southwest_Monsoon
+2007,6,Odisha,Bay of Bengal,30.02,1.132,0.43,-0.176,Southwest_Monsoon
+2007,6,Puducherry,Bay of Bengal,29.93,1.169,0.1,0.024,Southwest_Monsoon
+2007,6,Tamil Nadu,Bay of Bengal,29.98,0.981,0.2,-0.04,Southwest_Monsoon
+2007,6,West Bengal,Bay of Bengal,29.78,1.433,0.25,-0.021,Southwest_Monsoon
+2007,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.43,0.332,0.02,-0.071,Southwest_Monsoon
+2007,7,Andhra Pradesh,Bay of Bengal,28.45,1.289,0.38,0.127,Southwest_Monsoon
+2007,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.48,1.876,-0.16,0.142,Southwest_Monsoon
+2007,7,Goa,Arabian Sea,28.32,1.608,0.2,-0.084,Southwest_Monsoon
+2007,7,Gujarat,Arabian Sea / Gulf region,27.52,1.82,0.11,0.099,Southwest_Monsoon
+2007,7,Karnataka,Arabian Sea,28.19,1.787,0.29,0.059,Southwest_Monsoon
+2007,7,Kerala,Arabian Sea,27.72,2.07,-0.34,0.095,Southwest_Monsoon
+2007,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.22,0.411,0.13,0.039,Southwest_Monsoon
+2007,7,Maharashtra,Arabian Sea,27.93,1.857,0.14,0.025,Southwest_Monsoon
+2007,7,Odisha,Bay of Bengal,27.69,1.515,0.06,-0.033,Southwest_Monsoon
+2007,7,Puducherry,Bay of Bengal,28.49,1.141,-0.02,-0.106,Southwest_Monsoon
+2007,7,Tamil Nadu,Bay of Bengal,28.22,1.166,-0.03,-0.042,Southwest_Monsoon
+2007,7,West Bengal,Bay of Bengal,28.01,1.831,0.52,0.039,Southwest_Monsoon
+2007,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.96,0.425,-0.04,-0.017,Southwest_Monsoon
+2007,8,Andhra Pradesh,Bay of Bengal,27.32,1.371,0.24,0.11,Southwest_Monsoon
+2007,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.2,2.03,0.1,0.129,Southwest_Monsoon
+2007,8,Goa,Arabian Sea,27.16,1.945,0.06,0.087,Southwest_Monsoon
+2007,8,Gujarat,Arabian Sea / Gulf region,25.98,1.819,0.41,-0.021,Southwest_Monsoon
+2007,8,Karnataka,Arabian Sea,27.04,1.935,-0.0,0.163,Southwest_Monsoon
+2007,8,Kerala,Arabian Sea,27.16,2.044,-0.16,-0.006,Southwest_Monsoon
+2007,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.91,0.449,0.38,0.047,Southwest_Monsoon
+2007,8,Maharashtra,Arabian Sea,26.74,1.976,-0.0,0.05,Southwest_Monsoon
+2007,8,Odisha,Bay of Bengal,26.77,1.65,0.02,0.055,Southwest_Monsoon
+2007,8,Puducherry,Bay of Bengal,27.65,1.32,0.1,-0.017,Southwest_Monsoon
+2007,8,Tamil Nadu,Bay of Bengal,27.73,1.264,0.22,0.056,Southwest_Monsoon
+2007,8,West Bengal,Bay of Bengal,26.59,1.9,0.37,0.093,Southwest_Monsoon
+2007,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.7,0.355,-0.04,-0.013,Southwest_Monsoon
+2007,9,Andhra Pradesh,Bay of Bengal,26.96,1.06,0.13,-0.078,Southwest_Monsoon
+2007,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.59,1.737,0.05,0.084,Southwest_Monsoon
+2007,9,Goa,Arabian Sea,27.01,1.716,0.12,0.014,Southwest_Monsoon
+2007,9,Gujarat,Arabian Sea / Gulf region,25.32,1.656,0.28,-0.055,Southwest_Monsoon
+2007,9,Karnataka,Arabian Sea,26.41,1.704,-0.18,0.074,Southwest_Monsoon
+2007,9,Kerala,Arabian Sea,26.96,1.983,-0.04,0.097,Southwest_Monsoon
+2007,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.7,0.313,0.26,-0.083,Southwest_Monsoon
+2007,9,Maharashtra,Arabian Sea,26.45,1.77,0.37,-0.026,Southwest_Monsoon
+2007,9,Odisha,Bay of Bengal,26.79,1.414,0.48,-0.12,Southwest_Monsoon
+2007,9,Puducherry,Bay of Bengal,27.5,1.231,0.17,-0.018,Southwest_Monsoon
+2007,9,Tamil Nadu,Bay of Bengal,27.31,1.264,0.08,0.084,Southwest_Monsoon
+2007,9,West Bengal,Bay of Bengal,25.93,1.655,0.2,-0.006,Southwest_Monsoon
+2007,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.01,0.159,-0.03,-0.117,Post-monsoon
+2007,10,Andhra Pradesh,Bay of Bengal,27.69,0.935,0.25,0.011,Post-monsoon
+2007,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.78,1.517,0.24,0.208,Post-monsoon
+2007,10,Goa,Arabian Sea,27.37,1.221,-0.03,-0.067,Post-monsoon
+2007,10,Gujarat,Arabian Sea / Gulf region,26.38,1.441,0.18,0.018,Post-monsoon
+2007,10,Karnataka,Arabian Sea,27.55,1.407,0.33,0.101,Post-monsoon
+2007,10,Kerala,Arabian Sea,27.54,1.637,-0.18,0.137,Post-monsoon
+2007,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.82,0.276,0.12,-0.037,Post-monsoon
+2007,10,Maharashtra,Arabian Sea,27.12,1.301,0.14,-0.046,Post-monsoon
+2007,10,Odisha,Bay of Bengal,27.31,1.111,0.34,-0.093,Post-monsoon
+2007,10,Puducherry,Bay of Bengal,27.84,1.005,-0.14,-0.009,Post-monsoon
+2007,10,Tamil Nadu,Bay of Bengal,27.82,0.984,0.01,0.091,Post-monsoon
+2007,10,West Bengal,Bay of Bengal,26.64,1.284,0.08,-0.077,Post-monsoon
+2007,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.27,0.182,0.05,-0.069,Post-monsoon
+2007,11,Andhra Pradesh,Bay of Bengal,27.57,0.806,-0.08,0.034,Post-monsoon
+2007,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.38,1.258,0.23,0.186,Post-monsoon
+2007,11,Goa,Arabian Sea,27.87,1.023,0.18,-0.004,Post-monsoon
+2007,11,Gujarat,Arabian Sea / Gulf region,26.85,1.164,0.22,0.052,Post-monsoon
+2007,11,Karnataka,Arabian Sea,27.67,1.095,0.1,0.086,Post-monsoon
+2007,11,Kerala,Arabian Sea,27.7,1.071,-0.06,-0.013,Post-monsoon
+2007,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.07,0.265,0.23,0.001,Post-monsoon
+2007,11,Maharashtra,Arabian Sea,27.59,0.99,0.31,-0.037,Post-monsoon
+2007,11,Odisha,Bay of Bengal,27.33,0.899,0.16,-0.026,Post-monsoon
+2007,11,Puducherry,Bay of Bengal,28.05,0.766,-0.0,-0.063,Post-monsoon
+2007,11,Tamil Nadu,Bay of Bengal,28.04,0.576,0.04,-0.143,Post-monsoon
+2007,11,West Bengal,Bay of Bengal,27.41,0.997,0.42,-0.055,Post-monsoon
+2007,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.64,0.118,-0.07,-0.066,Winter
+2007,12,Andhra Pradesh,Bay of Bengal,26.87,0.763,0.12,0.046,Winter
+2007,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.4,1.306,0.03,0.245,Winter
+2007,12,Goa,Arabian Sea,26.86,0.937,0.11,-0.094,Winter
+2007,12,Gujarat,Arabian Sea / Gulf region,24.98,1.286,0.19,0.237,Winter
+2007,12,Karnataka,Arabian Sea,26.82,0.885,0.23,-0.039,Winter
+2007,12,Kerala,Arabian Sea,26.97,1.1,-0.09,0.024,Winter
+2007,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.71,0.155,0.37,-0.103,Winter
+2007,12,Maharashtra,Arabian Sea,26.12,1.011,0.01,-0.004,Winter
+2007,12,Odisha,Bay of Bengal,26.55,0.765,0.37,-0.144,Winter
+2007,12,Puducherry,Bay of Bengal,27.14,0.687,-0.11,-0.046,Winter
+2007,12,Tamil Nadu,Bay of Bengal,27.23,0.697,0.1,-0.055,Winter
+2007,12,West Bengal,Bay of Bengal,26.06,0.96,0.28,-0.019,Winter
+2008,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.19,0.275,-0.28,0.028,Winter
+2008,1,Andhra Pradesh,Bay of Bengal,26.26,0.771,-0.02,0.05,Winter
+2008,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,23.95,0.922,-0.39,-0.081,Winter
+2008,1,Goa,Arabian Sea,26.38,0.913,0.17,0.008,Winter
+2008,1,Gujarat,Arabian Sea / Gulf region,23.67,1.026,-0.26,-0.053,Winter
+2008,1,Karnataka,Arabian Sea,25.81,0.935,-0.23,0.079,Winter
+2008,1,Kerala,Arabian Sea,26.07,1.064,-0.41,0.064,Winter
+2008,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,26.79,0.153,-0.25,-0.071,Winter
+2008,1,Maharashtra,Arabian Sea,24.92,0.839,-0.36,-0.094,Winter
+2008,1,Odisha,Bay of Bengal,25.46,0.832,-0.05,-0.008,Winter
+2008,1,Puducherry,Bay of Bengal,26.89,0.717,0.02,-0.035,Winter
+2008,1,Tamil Nadu,Bay of Bengal,26.46,0.678,-0.21,0.02,Winter
+2008,1,West Bengal,Bay of Bengal,24.72,0.915,-0.33,-0.063,Winter
+2008,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.81,0.23,-0.07,-0.029,Winter
+2008,2,Andhra Pradesh,Bay of Bengal,27.31,0.672,0.36,-0.001,Winter
+2008,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.62,0.848,-0.11,-0.12,Winter
+2008,2,Goa,Arabian Sea,27.1,0.854,0.07,-0.081,Winter
+2008,2,Gujarat,Arabian Sea / Gulf region,25.26,1.076,0.06,0.039,Winter
+2008,2,Karnataka,Arabian Sea,26.44,0.801,-0.3,-0.109,Winter
+2008,2,Kerala,Arabian Sea,27.2,1.057,-0.03,0.075,Winter
+2008,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.36,0.363,-0.17,0.109,Winter
+2008,2,Maharashtra,Arabian Sea,26.41,0.884,0.06,-0.106,Winter
+2008,2,Odisha,Bay of Bengal,26.2,0.818,-0.24,-0.075,Winter
+2008,2,Puducherry,Bay of Bengal,27.45,0.634,-0.02,-0.007,Winter
+2008,2,Tamil Nadu,Bay of Bengal,26.88,0.67,-0.38,-0.0,Winter
+2008,2,West Bengal,Bay of Bengal,25.8,0.859,-0.11,-0.079,Winter
+2008,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.05,0.151,-0.46,-0.066,Pre-monsoon
+2008,3,Andhra Pradesh,Bay of Bengal,28.13,0.704,-0.05,0.01,Pre-monsoon
+2008,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.85,0.837,-0.16,-0.087,Pre-monsoon
+2008,3,Goa,Arabian Sea,28.18,1.04,0.02,0.052,Pre-monsoon
+2008,3,Gujarat,Arabian Sea / Gulf region,27.63,0.935,-0.16,-0.075,Pre-monsoon
+2008,3,Karnataka,Arabian Sea,27.96,0.815,-0.01,-0.071,Pre-monsoon
+2008,3,Kerala,Arabian Sea,28.25,1.174,0.01,0.144,Pre-monsoon
+2008,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.07,0.209,-0.05,0.025,Pre-monsoon
+2008,3,Maharashtra,Arabian Sea,27.96,0.989,-0.05,0.046,Pre-monsoon
+2008,3,Odisha,Bay of Bengal,27.57,0.853,-0.31,0.019,Pre-monsoon
+2008,3,Puducherry,Bay of Bengal,28.53,0.688,-0.06,-0.079,Pre-monsoon
+2008,3,Tamil Nadu,Bay of Bengal,28.26,0.776,-0.21,0.092,Pre-monsoon
+2008,3,West Bengal,Bay of Bengal,27.12,0.843,-0.59,-0.076,Pre-monsoon
+2008,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.0,0.134,-0.3,-0.103,Pre-monsoon
+2008,4,Andhra Pradesh,Bay of Bengal,29.43,0.591,-0.13,-0.068,Pre-monsoon
+2008,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.49,0.779,-0.07,-0.12,Pre-monsoon
+2008,4,Goa,Arabian Sea,29.52,0.916,-0.08,-0.048,Pre-monsoon
+2008,4,Gujarat,Arabian Sea / Gulf region,30.29,0.889,-0.28,-0.034,Pre-monsoon
+2008,4,Karnataka,Arabian Sea,29.47,0.817,-0.08,-0.084,Pre-monsoon
+2008,4,Kerala,Arabian Sea,29.45,1.028,-0.24,-0.011,Pre-monsoon
+2008,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.56,0.136,-0.39,-0.05,Pre-monsoon
+2008,4,Maharashtra,Arabian Sea,30.04,1.014,0.14,0.064,Pre-monsoon
+2008,4,Odisha,Bay of Bengal,29.52,0.799,-0.25,0.013,Pre-monsoon
+2008,4,Puducherry,Bay of Bengal,29.86,0.698,-0.06,-0.054,Pre-monsoon
+2008,4,Tamil Nadu,Bay of Bengal,29.71,0.608,-0.06,0.019,Pre-monsoon
+2008,4,West Bengal,Bay of Bengal,29.58,0.911,-0.13,-0.0,Pre-monsoon
+2008,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.71,0.08,0.16,-0.155,Pre-monsoon
+2008,5,Andhra Pradesh,Bay of Bengal,30.51,0.907,0.11,0.115,Pre-monsoon
+2008,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,31.66,1.043,-0.29,-0.022,Pre-monsoon
+2008,5,Goa,Arabian Sea,30.23,1.151,-0.24,-0.012,Pre-monsoon
+2008,5,Gujarat,Arabian Sea / Gulf region,31.98,1.078,-0.14,0.048,Pre-monsoon
+2008,5,Karnataka,Arabian Sea,30.28,0.96,-0.21,-0.123,Pre-monsoon
+2008,5,Kerala,Arabian Sea,30.2,1.34,-0.08,0.042,Pre-monsoon
+2008,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.53,0.253,-0.07,0.076,Pre-monsoon
+2008,5,Maharashtra,Arabian Sea,31.07,1.089,0.05,-0.111,Pre-monsoon
+2008,5,Odisha,Bay of Bengal,30.27,0.887,-0.38,-0.066,Pre-monsoon
+2008,5,Puducherry,Bay of Bengal,30.27,0.797,-0.3,-0.038,Pre-monsoon
+2008,5,Tamil Nadu,Bay of Bengal,30.47,0.91,-0.12,0.126,Pre-monsoon
+2008,5,West Bengal,Bay of Bengal,30.28,1.083,-0.39,-0.036,Pre-monsoon
+2008,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.88,0.404,-0.28,0.033,Southwest_Monsoon
+2008,6,Andhra Pradesh,Bay of Bengal,29.36,1.017,-0.07,0.044,Southwest_Monsoon
+2008,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.31,1.291,-0.18,-0.048,Southwest_Monsoon
+2008,6,Goa,Arabian Sea,29.72,1.645,0.12,0.124,Southwest_Monsoon
+2008,6,Gujarat,Arabian Sea / Gulf region,30.36,1.298,-0.15,-0.066,Southwest_Monsoon
+2008,6,Karnataka,Arabian Sea,29.4,1.402,-0.11,-0.032,Southwest_Monsoon
+2008,6,Kerala,Arabian Sea,29.26,1.881,-0.23,0.165,Southwest_Monsoon
+2008,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.82,0.157,-0.28,-0.081,Southwest_Monsoon
+2008,6,Maharashtra,Arabian Sea,29.53,1.356,-0.24,-0.2,Southwest_Monsoon
+2008,6,Odisha,Bay of Bengal,29.18,1.298,-0.41,-0.01,Southwest_Monsoon
+2008,6,Puducherry,Bay of Bengal,29.62,1.067,-0.21,-0.078,Southwest_Monsoon
+2008,6,Tamil Nadu,Bay of Bengal,29.47,0.939,-0.31,-0.082,Southwest_Monsoon
+2008,6,West Bengal,Bay of Bengal,29.41,1.426,-0.12,-0.028,Southwest_Monsoon
+2008,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.17,0.357,-0.24,-0.046,Southwest_Monsoon
+2008,7,Andhra Pradesh,Bay of Bengal,28.0,1.113,-0.07,-0.049,Southwest_Monsoon
+2008,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.39,1.634,-0.25,-0.1,Southwest_Monsoon
+2008,7,Goa,Arabian Sea,27.82,1.737,-0.3,0.045,Southwest_Monsoon
+2008,7,Gujarat,Arabian Sea / Gulf region,27.35,1.651,-0.05,-0.07,Southwest_Monsoon
+2008,7,Karnataka,Arabian Sea,28.04,1.674,0.14,-0.054,Southwest_Monsoon
+2008,7,Kerala,Arabian Sea,28.25,1.942,0.19,-0.033,Southwest_Monsoon
+2008,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.18,0.343,0.09,-0.029,Southwest_Monsoon
+2008,7,Maharashtra,Arabian Sea,27.76,1.84,-0.03,0.008,Southwest_Monsoon
+2008,7,Odisha,Bay of Bengal,27.7,1.539,0.07,-0.009,Southwest_Monsoon
+2008,7,Puducherry,Bay of Bengal,28.43,1.116,-0.08,-0.131,Southwest_Monsoon
+2008,7,Tamil Nadu,Bay of Bengal,27.94,1.277,-0.3,0.069,Southwest_Monsoon
+2008,7,West Bengal,Bay of Bengal,27.6,1.694,0.11,-0.098,Southwest_Monsoon
+2008,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.9,0.407,-0.1,-0.035,Southwest_Monsoon
+2008,8,Andhra Pradesh,Bay of Bengal,26.98,1.239,-0.1,-0.022,Southwest_Monsoon
+2008,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.17,1.835,0.07,-0.066,Southwest_Monsoon
+2008,8,Goa,Arabian Sea,27.26,1.74,0.16,-0.118,Southwest_Monsoon
+2008,8,Gujarat,Arabian Sea / Gulf region,25.65,1.816,0.08,-0.024,Southwest_Monsoon
+2008,8,Karnataka,Arabian Sea,27.19,1.788,0.15,0.016,Southwest_Monsoon
+2008,8,Kerala,Arabian Sea,27.23,2.091,-0.09,0.041,Southwest_Monsoon
+2008,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.37,0.374,-0.16,-0.028,Southwest_Monsoon
+2008,8,Maharashtra,Arabian Sea,26.58,1.95,-0.16,0.024,Southwest_Monsoon
+2008,8,Odisha,Bay of Bengal,26.51,1.453,-0.23,-0.142,Southwest_Monsoon
+2008,8,Puducherry,Bay of Bengal,27.41,1.214,-0.14,-0.123,Southwest_Monsoon
+2008,8,Tamil Nadu,Bay of Bengal,27.06,1.32,-0.45,0.112,Southwest_Monsoon
+2008,8,West Bengal,Bay of Bengal,25.97,1.594,-0.25,-0.213,Southwest_Monsoon
+2008,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.27,0.309,-0.47,-0.059,Southwest_Monsoon
+2008,9,Andhra Pradesh,Bay of Bengal,26.78,1.129,-0.05,-0.009,Southwest_Monsoon
+2008,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.38,1.597,-0.16,-0.056,Southwest_Monsoon
+2008,9,Goa,Arabian Sea,26.75,1.697,-0.14,-0.005,Southwest_Monsoon
+2008,9,Gujarat,Arabian Sea / Gulf region,25.15,1.627,0.11,-0.084,Southwest_Monsoon
+2008,9,Karnataka,Arabian Sea,26.35,1.637,-0.24,0.007,Southwest_Monsoon
+2008,9,Kerala,Arabian Sea,27.09,1.87,0.09,-0.016,Southwest_Monsoon
+2008,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.28,0.436,-0.16,0.04,Southwest_Monsoon
+2008,9,Maharashtra,Arabian Sea,25.94,1.807,-0.14,0.011,Southwest_Monsoon
+2008,9,Odisha,Bay of Bengal,26.25,1.434,-0.06,-0.1,Southwest_Monsoon
+2008,9,Puducherry,Bay of Bengal,27.13,1.204,-0.2,-0.045,Southwest_Monsoon
+2008,9,Tamil Nadu,Bay of Bengal,27.22,1.008,-0.01,-0.172,Southwest_Monsoon
+2008,9,West Bengal,Bay of Bengal,25.56,1.586,-0.17,-0.075,Southwest_Monsoon
+2008,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.56,0.19,-0.48,-0.086,Post-monsoon
+2008,10,Andhra Pradesh,Bay of Bengal,27.39,0.829,-0.05,-0.095,Post-monsoon
+2008,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.32,1.106,-0.22,-0.203,Post-monsoon
+2008,10,Goa,Arabian Sea,27.41,1.28,0.01,-0.008,Post-monsoon
+2008,10,Gujarat,Arabian Sea / Gulf region,26.16,1.37,-0.04,-0.053,Post-monsoon
+2008,10,Karnataka,Arabian Sea,26.94,1.19,-0.28,-0.116,Post-monsoon
+2008,10,Kerala,Arabian Sea,27.51,1.542,-0.21,0.042,Post-monsoon
+2008,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.75,0.366,0.05,0.053,Post-monsoon
+2008,10,Maharashtra,Arabian Sea,26.94,1.341,-0.04,-0.006,Post-monsoon
+2008,10,Odisha,Bay of Bengal,26.64,1.193,-0.33,-0.011,Post-monsoon
+2008,10,Puducherry,Bay of Bengal,27.65,1.078,-0.33,0.064,Post-monsoon
+2008,10,Tamil Nadu,Bay of Bengal,27.55,0.864,-0.26,-0.029,Post-monsoon
+2008,10,West Bengal,Bay of Bengal,26.45,1.353,-0.11,-0.008,Post-monsoon
+2008,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.98,0.156,-0.24,-0.095,Post-monsoon
+2008,11,Andhra Pradesh,Bay of Bengal,27.81,0.796,0.16,0.024,Post-monsoon
+2008,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.04,0.849,-0.11,-0.223,Post-monsoon
+2008,11,Goa,Arabian Sea,27.79,0.983,0.1,-0.044,Post-monsoon
+2008,11,Gujarat,Arabian Sea / Gulf region,26.41,1.189,-0.22,0.077,Post-monsoon
+2008,11,Karnataka,Arabian Sea,27.64,1.021,0.07,0.012,Post-monsoon
+2008,11,Kerala,Arabian Sea,27.5,1.256,-0.26,0.172,Post-monsoon
+2008,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.88,0.295,0.04,0.031,Post-monsoon
+2008,11,Maharashtra,Arabian Sea,27.27,1.045,-0.01,0.018,Post-monsoon
+2008,11,Odisha,Bay of Bengal,27.0,0.72,-0.17,-0.205,Post-monsoon
+2008,11,Puducherry,Bay of Bengal,28.0,0.724,-0.05,-0.105,Post-monsoon
+2008,11,Tamil Nadu,Bay of Bengal,27.84,0.799,-0.16,0.081,Post-monsoon
+2008,11,West Bengal,Bay of Bengal,27.06,0.976,0.07,-0.076,Post-monsoon
+2008,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.58,0.239,-0.13,0.055,Winter
+2008,12,Andhra Pradesh,Bay of Bengal,26.74,0.657,-0.01,-0.06,Winter
+2008,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.2,0.892,-0.17,-0.169,Winter
+2008,12,Goa,Arabian Sea,26.67,0.894,-0.08,-0.137,Winter
+2008,12,Gujarat,Arabian Sea / Gulf region,24.73,0.93,-0.06,-0.119,Winter
+2008,12,Karnataka,Arabian Sea,26.38,0.911,-0.21,-0.013,Winter
+2008,12,Kerala,Arabian Sea,27.1,1.193,0.04,0.117,Winter
+2008,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.03,0.259,-0.31,0.001,Winter
+2008,12,Maharashtra,Arabian Sea,25.91,1.008,-0.2,-0.007,Winter
+2008,12,Odisha,Bay of Bengal,25.84,0.967,-0.34,0.058,Winter
+2008,12,Puducherry,Bay of Bengal,26.99,0.768,-0.26,0.035,Winter
+2008,12,Tamil Nadu,Bay of Bengal,27.22,0.809,0.09,0.057,Winter
+2008,12,West Bengal,Bay of Bengal,25.56,1.026,-0.22,0.047,Winter
+2009,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.52,0.177,0.05,-0.07,Winter
+2009,1,Andhra Pradesh,Bay of Bengal,26.56,0.689,0.28,-0.032,Winter
+2009,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,24.58,1.031,0.23,0.028,Winter
+2009,1,Goa,Arabian Sea,26.49,0.802,0.28,-0.103,Winter
+2009,1,Gujarat,Arabian Sea / Gulf region,24.27,1.088,0.34,0.009,Winter
+2009,1,Karnataka,Arabian Sea,26.2,0.732,0.16,-0.124,Winter
+2009,1,Kerala,Arabian Sea,26.68,1.011,0.2,0.011,Winter
+2009,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.2,0.24,0.16,0.016,Winter
+2009,1,Maharashtra,Arabian Sea,25.66,0.888,0.38,-0.045,Winter
+2009,1,Odisha,Bay of Bengal,25.47,0.848,-0.04,0.008,Winter
+2009,1,Puducherry,Bay of Bengal,27.08,0.732,0.21,-0.02,Winter
+2009,1,Tamil Nadu,Bay of Bengal,27.04,0.707,0.37,0.049,Winter
+2009,1,West Bengal,Bay of Bengal,25.32,0.955,0.27,-0.023,Winter
+2009,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.01,0.234,0.13,-0.025,Winter
+2009,2,Andhra Pradesh,Bay of Bengal,27.23,0.567,0.28,-0.106,Winter
+2009,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.19,0.966,0.46,-0.002,Winter
+2009,2,Goa,Arabian Sea,27.44,0.802,0.41,-0.132,Winter
+2009,2,Gujarat,Arabian Sea / Gulf region,25.53,1.099,0.33,0.062,Winter
+2009,2,Karnataka,Arabian Sea,26.77,0.801,0.03,-0.109,Winter
+2009,2,Kerala,Arabian Sea,27.24,0.936,0.01,-0.046,Winter
+2009,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.03,0.188,0.5,-0.066,Winter
+2009,2,Maharashtra,Arabian Sea,26.58,1.03,0.23,0.04,Winter
+2009,2,Odisha,Bay of Bengal,26.52,0.946,0.08,0.053,Winter
+2009,2,Puducherry,Bay of Bengal,27.85,0.49,0.38,-0.151,Winter
+2009,2,Tamil Nadu,Bay of Bengal,27.36,0.474,0.1,-0.196,Winter
+2009,2,West Bengal,Bay of Bengal,25.8,0.965,-0.11,0.027,Winter
+2009,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.78,0.23,0.27,0.013,Pre-monsoon
+2009,3,Andhra Pradesh,Bay of Bengal,28.48,0.692,0.3,-0.002,Pre-monsoon
+2009,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,28.11,0.979,0.1,0.055,Pre-monsoon
+2009,3,Goa,Arabian Sea,28.31,0.942,0.15,-0.046,Pre-monsoon
+2009,3,Gujarat,Arabian Sea / Gulf region,28.06,1.0,0.27,-0.01,Pre-monsoon
+2009,3,Karnataka,Arabian Sea,27.98,0.918,0.01,0.032,Pre-monsoon
+2009,3,Kerala,Arabian Sea,28.35,0.945,0.11,-0.085,Pre-monsoon
+2009,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.27,0.162,0.14,-0.022,Pre-monsoon
+2009,3,Maharashtra,Arabian Sea,28.35,0.95,0.34,0.007,Pre-monsoon
+2009,3,Odisha,Bay of Bengal,28.63,0.891,0.75,0.057,Pre-monsoon
+2009,3,Puducherry,Bay of Bengal,28.85,0.711,0.26,-0.056,Pre-monsoon
+2009,3,Tamil Nadu,Bay of Bengal,28.64,0.708,0.17,0.024,Pre-monsoon
+2009,3,West Bengal,Bay of Bengal,27.76,0.934,0.05,0.015,Pre-monsoon
+2009,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.34,0.214,0.04,-0.023,Pre-monsoon
+2009,4,Andhra Pradesh,Bay of Bengal,29.93,0.569,0.37,-0.091,Pre-monsoon
+2009,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.72,1.008,0.16,0.109,Pre-monsoon
+2009,4,Goa,Arabian Sea,29.72,0.836,0.12,-0.128,Pre-monsoon
+2009,4,Gujarat,Arabian Sea / Gulf region,30.69,0.828,0.12,-0.095,Pre-monsoon
+2009,4,Karnataka,Arabian Sea,29.61,0.877,0.06,-0.024,Pre-monsoon
+2009,4,Kerala,Arabian Sea,29.99,1.014,0.3,-0.025,Pre-monsoon
+2009,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.28,0.162,0.33,-0.024,Pre-monsoon
+2009,4,Maharashtra,Arabian Sea,29.88,0.814,-0.02,-0.136,Pre-monsoon
+2009,4,Odisha,Bay of Bengal,29.95,0.829,0.18,0.043,Pre-monsoon
+2009,4,Puducherry,Bay of Bengal,30.12,0.766,0.2,0.014,Pre-monsoon
+2009,4,Tamil Nadu,Bay of Bengal,29.81,0.476,0.04,-0.113,Pre-monsoon
+2009,4,West Bengal,Bay of Bengal,29.74,0.929,0.03,0.018,Pre-monsoon
+2009,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.64,0.404,0.09,0.169,Pre-monsoon
+2009,5,Andhra Pradesh,Bay of Bengal,30.55,0.701,0.15,-0.091,Pre-monsoon
+2009,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,32.11,0.996,0.16,-0.068,Pre-monsoon
+2009,5,Goa,Arabian Sea,30.85,1.121,0.38,-0.042,Pre-monsoon
+2009,5,Gujarat,Arabian Sea / Gulf region,32.42,0.957,0.3,-0.074,Pre-monsoon
+2009,5,Karnataka,Arabian Sea,30.48,1.091,-0.01,0.008,Pre-monsoon
+2009,5,Kerala,Arabian Sea,30.58,1.253,0.3,-0.046,Pre-monsoon
+2009,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,30.02,0.08,0.42,-0.097,Pre-monsoon
+2009,5,Maharashtra,Arabian Sea,31.48,1.218,0.46,0.018,Pre-monsoon
+2009,5,Odisha,Bay of Bengal,30.84,0.879,0.19,-0.074,Pre-monsoon
+2009,5,Puducherry,Bay of Bengal,30.75,0.734,0.18,-0.101,Pre-monsoon
+2009,5,Tamil Nadu,Bay of Bengal,30.91,0.74,0.32,-0.044,Pre-monsoon
+2009,5,West Bengal,Bay of Bengal,30.76,1.258,0.09,0.139,Pre-monsoon
+2009,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.3,0.358,0.14,-0.013,Southwest_Monsoon
+2009,6,Andhra Pradesh,Bay of Bengal,29.8,0.946,0.37,-0.027,Southwest_Monsoon
+2009,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.64,1.156,0.15,-0.183,Southwest_Monsoon
+2009,6,Goa,Arabian Sea,29.83,1.538,0.23,0.017,Southwest_Monsoon
+2009,6,Gujarat,Arabian Sea / Gulf region,30.71,1.413,0.2,0.049,Southwest_Monsoon
+2009,6,Karnataka,Arabian Sea,29.5,1.409,-0.01,-0.025,Southwest_Monsoon
+2009,6,Kerala,Arabian Sea,29.85,1.751,0.36,0.035,Southwest_Monsoon
+2009,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.33,0.222,0.23,-0.016,Southwest_Monsoon
+2009,6,Maharashtra,Arabian Sea,30.18,1.588,0.41,0.032,Southwest_Monsoon
+2009,6,Odisha,Bay of Bengal,29.69,1.453,0.1,0.145,Southwest_Monsoon
+2009,6,Puducherry,Bay of Bengal,30.18,1.185,0.35,0.04,Southwest_Monsoon
+2009,6,Tamil Nadu,Bay of Bengal,29.99,1.006,0.21,-0.015,Southwest_Monsoon
+2009,6,West Bengal,Bay of Bengal,29.57,1.502,0.04,0.048,Southwest_Monsoon
+2009,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.48,0.57,0.07,0.167,Southwest_Monsoon
+2009,7,Andhra Pradesh,Bay of Bengal,28.34,0.917,0.27,-0.245,Southwest_Monsoon
+2009,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.92,1.737,0.28,0.003,Southwest_Monsoon
+2009,7,Goa,Arabian Sea,28.4,1.699,0.28,0.007,Southwest_Monsoon
+2009,7,Gujarat,Arabian Sea / Gulf region,27.92,1.704,0.52,-0.017,Southwest_Monsoon
+2009,7,Karnataka,Arabian Sea,27.95,1.661,0.05,-0.067,Southwest_Monsoon
+2009,7,Kerala,Arabian Sea,28.35,1.851,0.29,-0.124,Southwest_Monsoon
+2009,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.34,0.321,0.25,-0.051,Southwest_Monsoon
+2009,7,Maharashtra,Arabian Sea,28.08,1.76,0.29,-0.072,Southwest_Monsoon
+2009,7,Odisha,Bay of Bengal,27.64,1.606,0.01,0.058,Southwest_Monsoon
+2009,7,Puducherry,Bay of Bengal,28.65,1.289,0.14,0.042,Southwest_Monsoon
+2009,7,Tamil Nadu,Bay of Bengal,28.66,1.067,0.41,-0.141,Southwest_Monsoon
+2009,7,West Bengal,Bay of Bengal,27.47,1.886,-0.02,0.094,Southwest_Monsoon
+2009,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.14,0.478,0.14,0.036,Southwest_Monsoon
+2009,8,Andhra Pradesh,Bay of Bengal,27.22,1.185,0.14,-0.076,Southwest_Monsoon
+2009,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.29,1.858,0.19,-0.043,Southwest_Monsoon
+2009,8,Goa,Arabian Sea,27.33,1.801,0.23,-0.057,Southwest_Monsoon
+2009,8,Gujarat,Arabian Sea / Gulf region,25.64,1.855,0.07,0.015,Southwest_Monsoon
+2009,8,Karnataka,Arabian Sea,27.11,1.701,0.07,-0.071,Southwest_Monsoon
+2009,8,Kerala,Arabian Sea,27.68,2.128,0.36,0.078,Southwest_Monsoon
+2009,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.96,0.361,0.43,-0.041,Southwest_Monsoon
+2009,8,Maharashtra,Arabian Sea,27.19,1.988,0.45,0.062,Southwest_Monsoon
+2009,8,Odisha,Bay of Bengal,27.01,1.597,0.27,0.002,Southwest_Monsoon
+2009,8,Puducherry,Bay of Bengal,27.9,1.361,0.35,0.024,Southwest_Monsoon
+2009,8,Tamil Nadu,Bay of Bengal,27.51,1.26,0.0,0.052,Southwest_Monsoon
+2009,8,West Bengal,Bay of Bengal,26.44,1.747,0.22,-0.06,Southwest_Monsoon
+2009,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.09,0.421,0.35,0.053,Southwest_Monsoon
+2009,9,Andhra Pradesh,Bay of Bengal,27.1,1.101,0.27,-0.037,Southwest_Monsoon
+2009,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.44,1.647,-0.1,-0.006,Southwest_Monsoon
+2009,9,Goa,Arabian Sea,27.13,1.654,0.24,-0.048,Southwest_Monsoon
+2009,9,Gujarat,Arabian Sea / Gulf region,25.24,1.557,0.2,-0.154,Southwest_Monsoon
+2009,9,Karnataka,Arabian Sea,26.71,1.526,0.12,-0.104,Southwest_Monsoon
+2009,9,Kerala,Arabian Sea,27.3,1.846,0.3,-0.04,Southwest_Monsoon
+2009,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.74,0.378,0.3,-0.018,Southwest_Monsoon
+2009,9,Maharashtra,Arabian Sea,26.48,1.801,0.4,0.005,Southwest_Monsoon
+2009,9,Odisha,Bay of Bengal,26.44,1.561,0.13,0.027,Southwest_Monsoon
+2009,9,Puducherry,Bay of Bengal,27.39,1.338,0.06,0.089,Southwest_Monsoon
+2009,9,Tamil Nadu,Bay of Bengal,27.47,1.153,0.24,-0.027,Southwest_Monsoon
+2009,9,West Bengal,Bay of Bengal,26.11,1.689,0.38,0.028,Southwest_Monsoon
+2009,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.17,0.322,0.13,0.046,Post-monsoon
+2009,10,Andhra Pradesh,Bay of Bengal,27.33,0.936,-0.11,0.012,Post-monsoon
+2009,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.61,1.325,0.07,0.016,Post-monsoon
+2009,10,Goa,Arabian Sea,27.56,1.3,0.16,0.012,Post-monsoon
+2009,10,Gujarat,Arabian Sea / Gulf region,26.59,1.384,0.39,-0.039,Post-monsoon
+2009,10,Karnataka,Arabian Sea,27.32,1.307,0.1,0.001,Post-monsoon
+2009,10,Kerala,Arabian Sea,27.92,1.46,0.2,-0.04,Post-monsoon
+2009,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.87,0.302,0.17,-0.011,Post-monsoon
+2009,10,Maharashtra,Arabian Sea,27.19,1.294,0.21,-0.053,Post-monsoon
+2009,10,Odisha,Bay of Bengal,27.2,1.264,0.23,0.06,Post-monsoon
+2009,10,Puducherry,Bay of Bengal,28.26,0.921,0.28,-0.093,Post-monsoon
+2009,10,Tamil Nadu,Bay of Bengal,28.21,0.889,0.4,-0.004,Post-monsoon
+2009,10,West Bengal,Bay of Bengal,26.69,1.391,0.13,0.03,Post-monsoon
+2009,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.34,0.363,0.12,0.112,Post-monsoon
+2009,11,Andhra Pradesh,Bay of Bengal,27.93,0.895,0.28,0.123,Post-monsoon
+2009,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.43,1.256,0.28,0.184,Post-monsoon
+2009,11,Goa,Arabian Sea,27.84,0.812,0.15,-0.215,Post-monsoon
+2009,11,Gujarat,Arabian Sea / Gulf region,26.81,1.053,0.18,-0.059,Post-monsoon
+2009,11,Karnataka,Arabian Sea,27.54,0.952,-0.03,-0.057,Post-monsoon
+2009,11,Kerala,Arabian Sea,28.25,1.085,0.49,0.001,Post-monsoon
+2009,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.01,0.227,0.17,-0.037,Post-monsoon
+2009,11,Maharashtra,Arabian Sea,27.59,0.928,0.31,-0.099,Post-monsoon
+2009,11,Odisha,Bay of Bengal,27.25,1.028,0.08,0.103,Post-monsoon
+2009,11,Puducherry,Bay of Bengal,28.24,0.843,0.19,0.014,Post-monsoon
+2009,11,Tamil Nadu,Bay of Bengal,28.26,0.703,0.26,-0.016,Post-monsoon
+2009,11,West Bengal,Bay of Bengal,27.1,1.065,0.11,0.013,Post-monsoon
+2009,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.68,0.151,-0.03,-0.033,Winter
+2009,12,Andhra Pradesh,Bay of Bengal,26.89,0.81,0.14,0.093,Winter
+2009,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.64,1.084,0.27,0.023,Winter
+2009,12,Goa,Arabian Sea,27.11,0.981,0.36,-0.05,Winter
+2009,12,Gujarat,Arabian Sea / Gulf region,24.97,1.058,0.18,0.009,Winter
+2009,12,Karnataka,Arabian Sea,26.87,0.885,0.28,-0.039,Winter
+2009,12,Kerala,Arabian Sea,27.08,1.153,0.02,0.077,Winter
+2009,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.78,0.251,0.44,-0.007,Winter
+2009,12,Maharashtra,Arabian Sea,26.62,1.009,0.51,-0.006,Winter
+2009,12,Odisha,Bay of Bengal,26.4,0.875,0.22,-0.034,Winter
+2009,12,Puducherry,Bay of Bengal,27.58,0.714,0.33,-0.019,Winter
+2009,12,Tamil Nadu,Bay of Bengal,27.42,0.665,0.29,-0.087,Winter
+2009,12,West Bengal,Bay of Bengal,25.85,0.978,0.07,-0.001,Winter
+2010,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.65,0.168,0.18,-0.079,Winter
+2010,1,Andhra Pradesh,Bay of Bengal,26.21,0.682,-0.07,-0.039,Winter
+2010,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,24.69,0.731,0.35,-0.272,Winter
+2010,1,Goa,Arabian Sea,26.51,0.801,0.3,-0.104,Winter
+2010,1,Gujarat,Arabian Sea / Gulf region,24.31,0.907,0.38,-0.172,Winter
+2010,1,Karnataka,Arabian Sea,26.49,0.695,0.45,-0.161,Winter
+2010,1,Kerala,Arabian Sea,26.88,0.879,0.4,-0.121,Winter
+2010,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.51,0.113,0.47,-0.111,Winter
+2010,1,Maharashtra,Arabian Sea,25.5,0.879,0.22,-0.054,Winter
+2010,1,Odisha,Bay of Bengal,25.52,0.691,0.01,-0.149,Winter
+2010,1,Puducherry,Bay of Bengal,27.09,0.691,0.22,-0.061,Winter
+2010,1,Tamil Nadu,Bay of Bengal,27.1,0.654,0.43,-0.004,Winter
+2010,1,West Bengal,Bay of Bengal,25.4,0.863,0.35,-0.115,Winter
+2010,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.17,0.17,0.29,-0.089,Winter
+2010,2,Andhra Pradesh,Bay of Bengal,26.94,0.599,-0.01,-0.074,Winter
+2010,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.1,0.865,0.37,-0.103,Winter
+2010,2,Goa,Arabian Sea,27.27,0.89,0.24,-0.044,Winter
+2010,2,Gujarat,Arabian Sea / Gulf region,25.21,0.887,0.01,-0.15,Winter
+2010,2,Karnataka,Arabian Sea,27.17,0.821,0.43,-0.09,Winter
+2010,2,Kerala,Arabian Sea,27.51,0.854,0.28,-0.128,Winter
+2010,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.69,0.08,0.16,-0.174,Winter
+2010,2,Maharashtra,Arabian Sea,26.73,0.952,0.38,-0.038,Winter
+2010,2,Odisha,Bay of Bengal,26.47,0.84,0.03,-0.053,Winter
+2010,2,Puducherry,Bay of Bengal,27.98,0.492,0.51,-0.149,Winter
+2010,2,Tamil Nadu,Bay of Bengal,27.53,0.689,0.27,0.019,Winter
+2010,2,West Bengal,Bay of Bengal,26.11,0.886,0.2,-0.052,Winter
+2010,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.66,0.102,0.15,-0.115,Pre-monsoon
+2010,3,Andhra Pradesh,Bay of Bengal,28.36,0.734,0.18,0.04,Pre-monsoon
+2010,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,28.07,0.929,0.06,0.005,Pre-monsoon
+2010,3,Goa,Arabian Sea,28.39,0.871,0.23,-0.117,Pre-monsoon
+2010,3,Gujarat,Arabian Sea / Gulf region,28.01,0.874,0.22,-0.136,Pre-monsoon
+2010,3,Karnataka,Arabian Sea,28.32,0.667,0.35,-0.219,Pre-monsoon
+2010,3,Kerala,Arabian Sea,28.57,0.861,0.33,-0.169,Pre-monsoon
+2010,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.47,0.132,0.34,-0.052,Pre-monsoon
+2010,3,Maharashtra,Arabian Sea,28.27,0.785,0.26,-0.158,Pre-monsoon
+2010,3,Odisha,Bay of Bengal,27.72,0.658,-0.16,-0.176,Pre-monsoon
+2010,3,Puducherry,Bay of Bengal,29.24,0.808,0.65,0.041,Pre-monsoon
+2010,3,Tamil Nadu,Bay of Bengal,28.58,0.578,0.11,-0.106,Pre-monsoon
+2010,3,West Bengal,Bay of Bengal,27.78,0.791,0.07,-0.128,Pre-monsoon
+2010,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.78,0.206,0.48,-0.031,Pre-monsoon
+2010,4,Andhra Pradesh,Bay of Bengal,29.66,0.658,0.1,-0.001,Pre-monsoon
+2010,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.74,0.743,0.18,-0.156,Pre-monsoon
+2010,4,Goa,Arabian Sea,30.01,0.841,0.41,-0.123,Pre-monsoon
+2010,4,Gujarat,Arabian Sea / Gulf region,31.24,0.97,0.67,0.047,Pre-monsoon
+2010,4,Karnataka,Arabian Sea,29.8,0.735,0.25,-0.166,Pre-monsoon
+2010,4,Kerala,Arabian Sea,30.11,0.854,0.42,-0.185,Pre-monsoon
+2010,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.16,0.08,0.21,-0.106,Pre-monsoon
+2010,4,Maharashtra,Arabian Sea,30.0,0.858,0.11,-0.092,Pre-monsoon
+2010,4,Odisha,Bay of Bengal,29.82,0.622,0.05,-0.164,Pre-monsoon
+2010,4,Puducherry,Bay of Bengal,30.09,0.734,0.17,-0.018,Pre-monsoon
+2010,4,Tamil Nadu,Bay of Bengal,30.08,0.605,0.31,0.016,Pre-monsoon
+2010,4,West Bengal,Bay of Bengal,29.85,0.864,0.14,-0.047,Pre-monsoon
+2010,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.63,0.08,0.08,-0.155,Pre-monsoon
+2010,5,Andhra Pradesh,Bay of Bengal,30.92,0.725,0.52,-0.067,Pre-monsoon
+2010,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,32.05,0.951,0.1,-0.114,Pre-monsoon
+2010,5,Goa,Arabian Sea,30.8,1.109,0.33,-0.054,Pre-monsoon
+2010,5,Gujarat,Arabian Sea / Gulf region,32.47,1.063,0.35,0.032,Pre-monsoon
+2010,5,Karnataka,Arabian Sea,30.88,1.06,0.39,-0.022,Pre-monsoon
+2010,5,Kerala,Arabian Sea,30.42,1.238,0.14,-0.06,Pre-monsoon
+2010,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.64,0.08,0.04,-0.097,Pre-monsoon
+2010,5,Maharashtra,Arabian Sea,31.37,1.051,0.35,-0.149,Pre-monsoon
+2010,5,Odisha,Bay of Bengal,30.89,0.851,0.24,-0.102,Pre-monsoon
+2010,5,Puducherry,Bay of Bengal,30.64,0.915,0.07,0.08,Pre-monsoon
+2010,5,Tamil Nadu,Bay of Bengal,30.83,0.649,0.24,-0.135,Pre-monsoon
+2010,5,West Bengal,Bay of Bengal,30.37,0.988,-0.3,-0.131,Pre-monsoon
+2010,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.75,0.198,0.59,-0.173,Southwest_Monsoon
+2010,6,Andhra Pradesh,Bay of Bengal,29.74,0.886,0.3,-0.087,Southwest_Monsoon
+2010,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.95,1.207,0.46,-0.131,Southwest_Monsoon
+2010,6,Goa,Arabian Sea,29.72,1.388,0.12,-0.133,Southwest_Monsoon
+2010,6,Gujarat,Arabian Sea / Gulf region,30.67,1.166,0.16,-0.198,Southwest_Monsoon
+2010,6,Karnataka,Arabian Sea,29.87,1.239,0.36,-0.195,Southwest_Monsoon
+2010,6,Kerala,Arabian Sea,29.93,1.688,0.43,-0.028,Southwest_Monsoon
+2010,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.33,0.163,0.23,-0.075,Southwest_Monsoon
+2010,6,Maharashtra,Arabian Sea,29.95,1.513,0.18,-0.043,Southwest_Monsoon
+2010,6,Odisha,Bay of Bengal,29.71,1.25,0.12,-0.058,Southwest_Monsoon
+2010,6,Puducherry,Bay of Bengal,30.21,1.047,0.38,-0.098,Southwest_Monsoon
+2010,6,Tamil Nadu,Bay of Bengal,30.13,1.052,0.35,0.031,Southwest_Monsoon
+2010,6,West Bengal,Bay of Bengal,29.82,1.345,0.29,-0.109,Southwest_Monsoon
+2010,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.84,0.364,0.43,-0.039,Southwest_Monsoon
+2010,7,Andhra Pradesh,Bay of Bengal,28.34,1.151,0.27,-0.011,Southwest_Monsoon
+2010,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.98,1.587,0.34,-0.147,Southwest_Monsoon
+2010,7,Goa,Arabian Sea,28.53,1.51,0.41,-0.182,Southwest_Monsoon
+2010,7,Gujarat,Arabian Sea / Gulf region,27.67,1.665,0.27,-0.056,Southwest_Monsoon
+2010,7,Karnataka,Arabian Sea,28.22,1.616,0.32,-0.112,Southwest_Monsoon
+2010,7,Kerala,Arabian Sea,28.33,1.968,0.27,-0.007,Southwest_Monsoon
+2010,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.98,0.322,-0.11,-0.05,Southwest_Monsoon
+2010,7,Maharashtra,Arabian Sea,28.11,1.756,0.32,-0.076,Southwest_Monsoon
+2010,7,Odisha,Bay of Bengal,28.03,1.417,0.4,-0.131,Southwest_Monsoon
+2010,7,Puducherry,Bay of Bengal,28.94,1.336,0.43,0.089,Southwest_Monsoon
+2010,7,Tamil Nadu,Bay of Bengal,28.6,1.116,0.36,-0.092,Southwest_Monsoon
+2010,7,West Bengal,Bay of Bengal,27.45,1.768,-0.04,-0.024,Southwest_Monsoon
+2010,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.33,0.412,0.33,-0.03,Southwest_Monsoon
+2010,8,Andhra Pradesh,Bay of Bengal,27.07,1.222,-0.01,-0.039,Southwest_Monsoon
+2010,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.16,1.743,0.06,-0.158,Southwest_Monsoon
+2010,8,Goa,Arabian Sea,27.28,1.853,0.18,-0.005,Southwest_Monsoon
+2010,8,Gujarat,Arabian Sea / Gulf region,25.75,1.684,0.18,-0.156,Southwest_Monsoon
+2010,8,Karnataka,Arabian Sea,27.38,1.526,0.34,-0.246,Southwest_Monsoon
+2010,8,Kerala,Arabian Sea,27.72,1.964,0.4,-0.087,Southwest_Monsoon
+2010,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.32,0.272,-0.21,-0.13,Southwest_Monsoon
+2010,8,Maharashtra,Arabian Sea,26.79,1.679,0.05,-0.247,Southwest_Monsoon
+2010,8,Odisha,Bay of Bengal,27.14,1.58,0.39,-0.015,Southwest_Monsoon
+2010,8,Puducherry,Bay of Bengal,27.63,1.257,0.08,-0.08,Southwest_Monsoon
+2010,8,Tamil Nadu,Bay of Bengal,27.78,1.148,0.27,-0.06,Southwest_Monsoon
+2010,8,West Bengal,Bay of Bengal,26.31,1.642,0.09,-0.165,Southwest_Monsoon
+2010,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.03,0.287,0.29,-0.081,Southwest_Monsoon
+2010,9,Andhra Pradesh,Bay of Bengal,26.9,1.148,0.07,0.01,Southwest_Monsoon
+2010,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.93,1.582,0.39,-0.071,Southwest_Monsoon
+2010,9,Goa,Arabian Sea,27.31,1.626,0.42,-0.076,Southwest_Monsoon
+2010,9,Gujarat,Arabian Sea / Gulf region,25.42,1.677,0.38,-0.034,Southwest_Monsoon
+2010,9,Karnataka,Arabian Sea,27.13,1.421,0.54,-0.209,Southwest_Monsoon
+2010,9,Kerala,Arabian Sea,27.35,1.813,0.35,-0.073,Southwest_Monsoon
+2010,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.67,0.392,0.23,-0.004,Southwest_Monsoon
+2010,9,Maharashtra,Arabian Sea,26.17,1.646,0.09,-0.15,Southwest_Monsoon
+2010,9,Odisha,Bay of Bengal,26.58,1.541,0.27,0.007,Southwest_Monsoon
+2010,9,Puducherry,Bay of Bengal,27.63,1.083,0.3,-0.166,Southwest_Monsoon
+2010,9,Tamil Nadu,Bay of Bengal,27.46,1.124,0.23,-0.056,Southwest_Monsoon
+2010,9,West Bengal,Bay of Bengal,25.77,1.756,0.04,0.095,Southwest_Monsoon
+2010,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.49,0.187,0.45,-0.089,Post-monsoon
+2010,10,Andhra Pradesh,Bay of Bengal,28.02,0.84,0.58,-0.084,Post-monsoon
+2010,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.61,1.286,0.07,-0.023,Post-monsoon
+2010,10,Goa,Arabian Sea,27.67,1.219,0.27,-0.069,Post-monsoon
+2010,10,Gujarat,Arabian Sea / Gulf region,26.49,1.311,0.29,-0.112,Post-monsoon
+2010,10,Karnataka,Arabian Sea,27.48,1.211,0.26,-0.095,Post-monsoon
+2010,10,Kerala,Arabian Sea,28.19,1.368,0.47,-0.132,Post-monsoon
+2010,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.88,0.254,0.18,-0.059,Post-monsoon
+2010,10,Maharashtra,Arabian Sea,27.18,1.278,0.2,-0.069,Post-monsoon
+2010,10,Odisha,Bay of Bengal,27.05,1.12,0.08,-0.084,Post-monsoon
+2010,10,Puducherry,Bay of Bengal,28.3,0.934,0.32,-0.08,Post-monsoon
+2010,10,Tamil Nadu,Bay of Bengal,28.11,0.806,0.3,-0.087,Post-monsoon
+2010,10,West Bengal,Bay of Bengal,26.61,1.466,0.05,0.105,Post-monsoon
+2010,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.61,0.08,0.39,-0.171,Post-monsoon
+2010,11,Andhra Pradesh,Bay of Bengal,27.75,0.702,0.1,-0.07,Post-monsoon
+2010,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.35,0.86,0.2,-0.212,Post-monsoon
+2010,11,Goa,Arabian Sea,27.68,0.929,-0.01,-0.098,Post-monsoon
+2010,11,Gujarat,Arabian Sea / Gulf region,27.07,0.99,0.44,-0.122,Post-monsoon
+2010,11,Karnataka,Arabian Sea,27.97,0.966,0.4,-0.043,Post-monsoon
+2010,11,Kerala,Arabian Sea,28.29,0.767,0.53,-0.317,Post-monsoon
+2010,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.28,0.08,0.44,-0.184,Post-monsoon
+2010,11,Maharashtra,Arabian Sea,27.5,0.961,0.22,-0.066,Post-monsoon
+2010,11,Odisha,Bay of Bengal,27.27,0.912,0.1,-0.013,Post-monsoon
+2010,11,Puducherry,Bay of Bengal,28.35,0.762,0.3,-0.067,Post-monsoon
+2010,11,Tamil Nadu,Bay of Bengal,28.45,0.703,0.45,-0.016,Post-monsoon
+2010,11,West Bengal,Bay of Bengal,26.84,1.04,-0.15,-0.012,Post-monsoon
+2010,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.18,0.08,0.47,-0.104,Winter
+2010,12,Andhra Pradesh,Bay of Bengal,26.78,0.771,0.03,0.054,Winter
+2010,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.85,0.853,0.48,-0.208,Winter
+2010,12,Goa,Arabian Sea,26.97,1.045,0.22,0.014,Winter
+2010,12,Gujarat,Arabian Sea / Gulf region,25.1,0.946,0.31,-0.103,Winter
+2010,12,Karnataka,Arabian Sea,26.86,0.881,0.27,-0.043,Winter
+2010,12,Kerala,Arabian Sea,27.3,0.992,0.24,-0.084,Winter
+2010,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.27,0.24,-0.07,-0.018,Winter
+2010,12,Maharashtra,Arabian Sea,26.29,0.983,0.18,-0.032,Winter
+2010,12,Odisha,Bay of Bengal,26.25,0.823,0.07,-0.086,Winter
+2010,12,Puducherry,Bay of Bengal,27.71,0.686,0.46,-0.047,Winter
+2010,12,Tamil Nadu,Bay of Bengal,27.07,0.783,-0.06,0.031,Winter
+2010,12,West Bengal,Bay of Bengal,25.93,0.926,0.15,-0.053,Winter
+2011,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.35,0.308,-0.12,0.061,Winter
+2011,1,Andhra Pradesh,Bay of Bengal,26.34,0.763,0.06,0.042,Winter
+2011,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,24.15,1.125,-0.2,0.122,Winter
+2011,1,Goa,Arabian Sea,25.84,0.767,-0.37,-0.138,Winter
+2011,1,Gujarat,Arabian Sea / Gulf region,23.51,1.167,-0.42,0.088,Winter
+2011,1,Karnataka,Arabian Sea,25.63,0.906,-0.41,0.05,Winter
+2011,1,Kerala,Arabian Sea,26.16,0.869,-0.32,-0.131,Winter
+2011,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,26.53,0.377,-0.51,0.153,Winter
+2011,1,Maharashtra,Arabian Sea,25.03,1.075,-0.25,0.142,Winter
+2011,1,Odisha,Bay of Bengal,25.57,0.891,0.06,0.051,Winter
+2011,1,Puducherry,Bay of Bengal,26.75,0.872,-0.12,0.12,Winter
+2011,1,Tamil Nadu,Bay of Bengal,26.35,0.705,-0.32,0.047,Winter
+2011,1,West Bengal,Bay of Bengal,24.84,1.105,-0.21,0.127,Winter
+2011,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.62,0.409,-0.26,0.15,Winter
+2011,2,Andhra Pradesh,Bay of Bengal,26.46,0.813,-0.49,0.14,Winter
+2011,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.31,0.976,-0.42,0.008,Winter
+2011,2,Goa,Arabian Sea,26.47,1.025,-0.56,0.09,Winter
+2011,2,Gujarat,Arabian Sea / Gulf region,25.04,1.067,-0.16,0.03,Winter
+2011,2,Karnataka,Arabian Sea,26.78,0.962,0.04,0.051,Winter
+2011,2,Kerala,Arabian Sea,27.22,1.005,-0.01,0.023,Winter
+2011,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.31,0.267,-0.22,0.014,Winter
+2011,2,Maharashtra,Arabian Sea,26.09,1.013,-0.26,0.023,Winter
+2011,2,Odisha,Bay of Bengal,26.23,0.909,-0.21,0.016,Winter
+2011,2,Puducherry,Bay of Bengal,27.23,0.773,-0.24,0.132,Winter
+2011,2,Tamil Nadu,Bay of Bengal,27.42,0.806,0.16,0.136,Winter
+2011,2,West Bengal,Bay of Bengal,25.68,0.95,-0.23,0.012,Winter
+2011,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.65,0.235,0.14,0.018,Pre-monsoon
+2011,3,Andhra Pradesh,Bay of Bengal,27.73,0.584,-0.45,-0.11,Pre-monsoon
+2011,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.71,0.986,-0.3,0.062,Pre-monsoon
+2011,3,Goa,Arabian Sea,27.93,1.03,-0.23,0.042,Pre-monsoon
+2011,3,Gujarat,Arabian Sea / Gulf region,27.42,1.11,-0.37,0.1,Pre-monsoon
+2011,3,Karnataka,Arabian Sea,27.76,1.027,-0.21,0.141,Pre-monsoon
+2011,3,Kerala,Arabian Sea,28.2,0.973,-0.04,-0.057,Pre-monsoon
+2011,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.82,0.257,-0.3,0.073,Pre-monsoon
+2011,3,Maharashtra,Arabian Sea,27.8,0.987,-0.21,0.044,Pre-monsoon
+2011,3,Odisha,Bay of Bengal,27.8,0.985,-0.08,0.151,Pre-monsoon
+2011,3,Puducherry,Bay of Bengal,28.33,0.945,-0.26,0.178,Pre-monsoon
+2011,3,Tamil Nadu,Bay of Bengal,28.25,0.545,-0.22,-0.139,Pre-monsoon
+2011,3,West Bengal,Bay of Bengal,27.41,1.0,-0.3,0.081,Pre-monsoon
+2011,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.24,0.356,-0.06,0.119,Pre-monsoon
+2011,4,Andhra Pradesh,Bay of Bengal,29.33,0.607,-0.23,-0.052,Pre-monsoon
+2011,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.33,0.867,-0.23,-0.032,Pre-monsoon
+2011,4,Goa,Arabian Sea,29.04,1.044,-0.56,0.08,Pre-monsoon
+2011,4,Gujarat,Arabian Sea / Gulf region,29.87,1.022,-0.7,0.099,Pre-monsoon
+2011,4,Karnataka,Arabian Sea,29.56,0.993,0.01,0.092,Pre-monsoon
+2011,4,Kerala,Arabian Sea,29.37,1.089,-0.32,0.05,Pre-monsoon
+2011,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.66,0.332,-0.29,0.146,Pre-monsoon
+2011,4,Maharashtra,Arabian Sea,29.72,0.92,-0.18,-0.03,Pre-monsoon
+2011,4,Odisha,Bay of Bengal,29.54,0.792,-0.23,0.006,Pre-monsoon
+2011,4,Puducherry,Bay of Bengal,29.64,0.838,-0.28,0.086,Pre-monsoon
+2011,4,Tamil Nadu,Bay of Bengal,29.72,0.6,-0.05,0.011,Pre-monsoon
+2011,4,West Bengal,Bay of Bengal,29.28,0.946,-0.43,0.035,Pre-monsoon
+2011,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.07,0.432,-0.48,0.197,Pre-monsoon
+2011,5,Andhra Pradesh,Bay of Bengal,29.96,0.604,-0.44,-0.188,Pre-monsoon
+2011,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,31.99,1.115,0.04,0.05,Pre-monsoon
+2011,5,Goa,Arabian Sea,30.04,1.3,-0.43,0.137,Pre-monsoon
+2011,5,Gujarat,Arabian Sea / Gulf region,31.91,1.045,-0.21,0.014,Pre-monsoon
+2011,5,Karnataka,Arabian Sea,30.38,1.119,-0.11,0.036,Pre-monsoon
+2011,5,Kerala,Arabian Sea,30.18,1.165,-0.1,-0.133,Pre-monsoon
+2011,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.27,0.238,-0.33,0.06,Pre-monsoon
+2011,5,Maharashtra,Arabian Sea,30.48,1.412,-0.54,0.212,Pre-monsoon
+2011,5,Odisha,Bay of Bengal,30.38,1.036,-0.27,0.083,Pre-monsoon
+2011,5,Puducherry,Bay of Bengal,30.46,0.95,-0.11,0.115,Pre-monsoon
+2011,5,Tamil Nadu,Bay of Bengal,30.28,0.904,-0.31,0.12,Pre-monsoon
+2011,5,West Bengal,Bay of Bengal,30.61,1.16,-0.06,0.041,Pre-monsoon
+2011,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.75,0.412,-0.41,0.041,Southwest_Monsoon
+2011,6,Andhra Pradesh,Bay of Bengal,29.0,0.983,-0.43,0.01,Southwest_Monsoon
+2011,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.2,1.446,-0.29,0.107,Southwest_Monsoon
+2011,6,Goa,Arabian Sea,29.02,1.616,-0.58,0.095,Southwest_Monsoon
+2011,6,Gujarat,Arabian Sea / Gulf region,30.13,1.455,-0.38,0.091,Southwest_Monsoon
+2011,6,Karnataka,Arabian Sea,29.07,1.57,-0.44,0.136,Southwest_Monsoon
+2011,6,Kerala,Arabian Sea,29.14,1.605,-0.36,-0.111,Southwest_Monsoon
+2011,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.83,0.198,-0.27,-0.04,Southwest_Monsoon
+2011,6,Maharashtra,Arabian Sea,29.3,1.635,-0.47,0.079,Southwest_Monsoon
+2011,6,Odisha,Bay of Bengal,29.46,1.387,-0.13,0.079,Southwest_Monsoon
+2011,6,Puducherry,Bay of Bengal,29.47,1.236,-0.36,0.091,Southwest_Monsoon
+2011,6,Tamil Nadu,Bay of Bengal,29.26,1.015,-0.52,-0.006,Southwest_Monsoon
+2011,6,West Bengal,Bay of Bengal,29.14,1.515,-0.39,0.061,Southwest_Monsoon
+2011,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.41,0.503,-0.0,0.1,Southwest_Monsoon
+2011,7,Andhra Pradesh,Bay of Bengal,27.84,1.231,-0.23,0.069,Southwest_Monsoon
+2011,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.55,1.791,-0.09,0.057,Southwest_Monsoon
+2011,7,Goa,Arabian Sea,27.68,1.793,-0.44,0.101,Southwest_Monsoon
+2011,7,Gujarat,Arabian Sea / Gulf region,26.98,1.686,-0.43,-0.035,Southwest_Monsoon
+2011,7,Karnataka,Arabian Sea,27.19,1.899,-0.71,0.171,Southwest_Monsoon
+2011,7,Kerala,Arabian Sea,27.76,1.919,-0.3,-0.056,Southwest_Monsoon
+2011,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.87,0.43,-0.22,0.058,Southwest_Monsoon
+2011,7,Maharashtra,Arabian Sea,27.2,1.871,-0.59,0.039,Southwest_Monsoon
+2011,7,Odisha,Bay of Bengal,27.34,1.526,-0.29,-0.022,Southwest_Monsoon
+2011,7,Puducherry,Bay of Bengal,28.32,1.305,-0.19,0.058,Southwest_Monsoon
+2011,7,Tamil Nadu,Bay of Bengal,28.09,1.319,-0.16,0.111,Southwest_Monsoon
+2011,7,West Bengal,Bay of Bengal,26.86,1.864,-0.63,0.072,Southwest_Monsoon
+2011,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.85,0.561,-0.15,0.119,Southwest_Monsoon
+2011,8,Andhra Pradesh,Bay of Bengal,27.14,1.206,0.06,-0.055,Southwest_Monsoon
+2011,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.0,1.963,-0.1,0.062,Southwest_Monsoon
+2011,8,Goa,Arabian Sea,26.86,1.859,-0.24,0.001,Southwest_Monsoon
+2011,8,Gujarat,Arabian Sea / Gulf region,25.25,1.9,-0.32,0.06,Southwest_Monsoon
+2011,8,Karnataka,Arabian Sea,26.61,1.891,-0.43,0.119,Southwest_Monsoon
+2011,8,Kerala,Arabian Sea,27.0,2.061,-0.32,0.01,Southwest_Monsoon
+2011,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.36,0.429,-0.17,0.027,Southwest_Monsoon
+2011,8,Maharashtra,Arabian Sea,26.67,1.901,-0.07,-0.025,Southwest_Monsoon
+2011,8,Odisha,Bay of Bengal,26.48,1.773,-0.27,0.178,Southwest_Monsoon
+2011,8,Puducherry,Bay of Bengal,27.39,1.392,-0.16,0.055,Southwest_Monsoon
+2011,8,Tamil Nadu,Bay of Bengal,27.44,1.185,-0.07,-0.023,Southwest_Monsoon
+2011,8,West Bengal,Bay of Bengal,25.95,2.013,-0.27,0.206,Southwest_Monsoon
+2011,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.66,0.521,-0.08,0.153,Southwest_Monsoon
+2011,9,Andhra Pradesh,Bay of Bengal,26.64,1.28,-0.19,0.142,Southwest_Monsoon
+2011,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.36,1.692,-0.18,0.039,Southwest_Monsoon
+2011,9,Goa,Arabian Sea,26.29,1.792,-0.6,0.09,Southwest_Monsoon
+2011,9,Gujarat,Arabian Sea / Gulf region,24.37,1.865,-0.67,0.154,Southwest_Monsoon
+2011,9,Karnataka,Arabian Sea,26.33,1.729,-0.27,0.099,Southwest_Monsoon
+2011,9,Kerala,Arabian Sea,26.63,1.909,-0.38,0.023,Southwest_Monsoon
+2011,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.09,0.495,-0.35,0.099,Southwest_Monsoon
+2011,9,Maharashtra,Arabian Sea,25.45,1.971,-0.63,0.175,Southwest_Monsoon
+2011,9,Odisha,Bay of Bengal,25.79,1.698,-0.52,0.164,Southwest_Monsoon
+2011,9,Puducherry,Bay of Bengal,27.23,1.403,-0.1,0.154,Southwest_Monsoon
+2011,9,Tamil Nadu,Bay of Bengal,27.04,1.291,-0.19,0.111,Southwest_Monsoon
+2011,9,West Bengal,Bay of Bengal,25.43,1.712,-0.3,0.051,Southwest_Monsoon
+2011,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.04,0.448,-0.0,0.172,Post-monsoon
+2011,10,Andhra Pradesh,Bay of Bengal,27.1,1.057,-0.34,0.133,Post-monsoon
+2011,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.38,1.296,-0.16,-0.013,Post-monsoon
+2011,10,Goa,Arabian Sea,27.09,1.281,-0.31,-0.007,Post-monsoon
+2011,10,Gujarat,Arabian Sea / Gulf region,25.79,1.576,-0.41,0.153,Post-monsoon
+2011,10,Karnataka,Arabian Sea,27.12,1.316,-0.1,0.01,Post-monsoon
+2011,10,Kerala,Arabian Sea,27.42,1.449,-0.3,-0.051,Post-monsoon
+2011,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.47,0.367,-0.23,0.054,Post-monsoon
+2011,10,Maharashtra,Arabian Sea,26.66,1.451,-0.32,0.104,Post-monsoon
+2011,10,Odisha,Bay of Bengal,26.94,1.204,-0.03,0.0,Post-monsoon
+2011,10,Puducherry,Bay of Bengal,28.08,0.973,0.1,-0.041,Post-monsoon
+2011,10,Tamil Nadu,Bay of Bengal,27.48,0.851,-0.33,-0.042,Post-monsoon
+2011,10,West Bengal,Bay of Bengal,26.46,1.259,-0.1,-0.102,Post-monsoon
+2011,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.93,0.431,-0.29,0.18,Post-monsoon
+2011,11,Andhra Pradesh,Bay of Bengal,27.57,0.774,-0.08,0.002,Post-monsoon
+2011,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.64,1.109,-0.51,0.037,Post-monsoon
+2011,11,Goa,Arabian Sea,27.26,1.256,-0.43,0.229,Post-monsoon
+2011,11,Gujarat,Arabian Sea / Gulf region,26.23,1.22,-0.4,0.108,Post-monsoon
+2011,11,Karnataka,Arabian Sea,27.08,0.946,-0.49,-0.063,Post-monsoon
+2011,11,Kerala,Arabian Sea,27.36,1.065,-0.4,-0.019,Post-monsoon
+2011,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.31,0.303,-0.53,0.039,Post-monsoon
+2011,11,Maharashtra,Arabian Sea,26.72,1.203,-0.56,0.176,Post-monsoon
+2011,11,Odisha,Bay of Bengal,27.01,0.943,-0.16,0.018,Post-monsoon
+2011,11,Puducherry,Bay of Bengal,27.81,0.88,-0.24,0.051,Post-monsoon
+2011,11,Tamil Nadu,Bay of Bengal,27.5,0.692,-0.5,-0.027,Post-monsoon
+2011,11,West Bengal,Bay of Bengal,26.62,1.172,-0.37,0.12,Post-monsoon
+2011,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.48,0.216,-0.23,0.032,Winter
+2011,12,Andhra Pradesh,Bay of Bengal,26.51,0.563,-0.24,-0.154,Winter
+2011,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.01,1.1,-0.36,0.039,Winter
+2011,12,Goa,Arabian Sea,26.3,1.188,-0.45,0.157,Winter
+2011,12,Gujarat,Arabian Sea / Gulf region,24.24,1.171,-0.55,0.122,Winter
+2011,12,Karnataka,Arabian Sea,26.1,0.992,-0.49,0.068,Winter
+2011,12,Kerala,Arabian Sea,26.85,0.944,-0.21,-0.132,Winter
+2011,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.21,0.285,-0.13,0.027,Winter
+2011,12,Maharashtra,Arabian Sea,25.83,1.024,-0.28,0.009,Winter
+2011,12,Odisha,Bay of Bengal,26.05,1.08,-0.13,0.171,Winter
+2011,12,Puducherry,Bay of Bengal,27.17,0.829,-0.08,0.096,Winter
+2011,12,Tamil Nadu,Bay of Bengal,26.78,0.771,-0.35,0.019,Winter
+2011,12,West Bengal,Bay of Bengal,25.62,1.033,-0.16,0.054,Winter
+2012,1,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.2,0.297,-0.27,0.05,Winter
+2012,1,Andhra Pradesh,Bay of Bengal,25.98,0.709,-0.3,-0.012,Winter
+2012,1,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,24.27,1.025,-0.07,0.022,Winter
+2012,1,Goa,Arabian Sea,26.0,1.104,-0.21,0.199,Winter
+2012,1,Gujarat,Arabian Sea / Gulf region,23.57,1.177,-0.36,0.098,Winter
+2012,1,Karnataka,Arabian Sea,26.05,0.87,0.01,0.014,Winter
+2012,1,Kerala,Arabian Sea,26.53,0.994,0.05,-0.006,Winter
+2012,1,Lakshadweep,Arabian Sea / Lakshadweep Sea,26.72,0.239,-0.32,0.015,Winter
+2012,1,Maharashtra,Arabian Sea,25.03,1.066,-0.25,0.133,Winter
+2012,1,Odisha,Bay of Bengal,25.38,0.947,-0.13,0.107,Winter
+2012,1,Puducherry,Bay of Bengal,26.54,0.797,-0.33,0.045,Winter
+2012,1,Tamil Nadu,Bay of Bengal,26.46,0.622,-0.21,-0.036,Winter
+2012,1,West Bengal,Bay of Bengal,24.87,1.031,-0.18,0.053,Winter
+2012,2,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.67,0.218,-0.21,-0.041,Winter
+2012,2,Andhra Pradesh,Bay of Bengal,26.85,0.737,-0.1,0.064,Winter
+2012,2,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.45,1.155,-0.28,0.187,Winter
+2012,2,Goa,Arabian Sea,26.96,1.047,-0.07,0.112,Winter
+2012,2,Gujarat,Arabian Sea / Gulf region,24.84,1.106,-0.36,0.069,Winter
+2012,2,Karnataka,Arabian Sea,26.56,1.187,-0.18,0.277,Winter
+2012,2,Kerala,Arabian Sea,26.98,1.071,-0.25,0.089,Winter
+2012,2,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.05,0.293,-0.48,0.039,Winter
+2012,2,Maharashtra,Arabian Sea,25.86,1.166,-0.49,0.176,Winter
+2012,2,Odisha,Bay of Bengal,26.5,1.096,0.06,0.203,Winter
+2012,2,Puducherry,Bay of Bengal,27.13,0.772,-0.34,0.131,Winter
+2012,2,Tamil Nadu,Bay of Bengal,27.0,0.731,-0.26,0.061,Winter
+2012,2,West Bengal,Bay of Bengal,25.71,0.898,-0.2,-0.04,Winter
+2012,3,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.45,0.358,-0.06,0.141,Pre-monsoon
+2012,3,Andhra Pradesh,Bay of Bengal,28.07,0.71,-0.11,0.016,Pre-monsoon
+2012,3,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.94,0.886,-0.07,-0.038,Pre-monsoon
+2012,3,Goa,Arabian Sea,28.05,1.101,-0.11,0.113,Pre-monsoon
+2012,3,Gujarat,Arabian Sea / Gulf region,27.62,0.995,-0.17,-0.015,Pre-monsoon
+2012,3,Karnataka,Arabian Sea,27.75,0.99,-0.22,0.104,Pre-monsoon
+2012,3,Kerala,Arabian Sea,28.15,1.102,-0.09,0.072,Pre-monsoon
+2012,3,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.98,0.222,-0.14,0.038,Pre-monsoon
+2012,3,Maharashtra,Arabian Sea,27.7,1.023,-0.31,0.08,Pre-monsoon
+2012,3,Odisha,Bay of Bengal,27.37,0.898,-0.51,0.064,Pre-monsoon
+2012,3,Puducherry,Bay of Bengal,28.18,0.799,-0.41,0.032,Pre-monsoon
+2012,3,Tamil Nadu,Bay of Bengal,28.48,0.81,0.01,0.126,Pre-monsoon
+2012,3,West Bengal,Bay of Bengal,27.79,0.839,0.08,-0.08,Pre-monsoon
+2012,4,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.15,0.229,-0.15,-0.008,Pre-monsoon
+2012,4,Andhra Pradesh,Bay of Bengal,29.45,0.686,-0.11,0.027,Pre-monsoon
+2012,4,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.61,0.978,0.05,0.079,Pre-monsoon
+2012,4,Goa,Arabian Sea,29.62,1.176,0.02,0.212,Pre-monsoon
+2012,4,Gujarat,Arabian Sea / Gulf region,30.51,0.935,-0.06,0.012,Pre-monsoon
+2012,4,Karnataka,Arabian Sea,29.21,1.068,-0.34,0.167,Pre-monsoon
+2012,4,Kerala,Arabian Sea,29.68,1.159,-0.01,0.12,Pre-monsoon
+2012,4,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.75,0.213,-0.2,0.027,Pre-monsoon
+2012,4,Maharashtra,Arabian Sea,29.57,1.089,-0.32,0.139,Pre-monsoon
+2012,4,Odisha,Bay of Bengal,29.48,1.005,-0.29,0.219,Pre-monsoon
+2012,4,Puducherry,Bay of Bengal,29.83,0.838,-0.09,0.086,Pre-monsoon
+2012,4,Tamil Nadu,Bay of Bengal,29.42,0.569,-0.35,-0.02,Pre-monsoon
+2012,4,West Bengal,Bay of Bengal,29.58,0.942,-0.13,0.031,Pre-monsoon
+2012,5,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.41,0.299,-0.14,0.064,Pre-monsoon
+2012,5,Andhra Pradesh,Bay of Bengal,29.96,0.843,-0.44,0.051,Pre-monsoon
+2012,5,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,31.86,1.191,-0.09,0.127,Pre-monsoon
+2012,5,Goa,Arabian Sea,30.21,1.337,-0.26,0.174,Pre-monsoon
+2012,5,Gujarat,Arabian Sea / Gulf region,31.77,0.944,-0.35,-0.087,Pre-monsoon
+2012,5,Karnataka,Arabian Sea,30.36,1.119,-0.13,0.036,Pre-monsoon
+2012,5,Kerala,Arabian Sea,30.12,1.42,-0.16,0.121,Pre-monsoon
+2012,5,Lakshadweep,Arabian Sea / Lakshadweep Sea,29.43,0.188,-0.17,0.011,Pre-monsoon
+2012,5,Maharashtra,Arabian Sea,30.65,1.269,-0.37,0.068,Pre-monsoon
+2012,5,Odisha,Bay of Bengal,30.49,1.103,-0.16,0.15,Pre-monsoon
+2012,5,Puducherry,Bay of Bengal,30.56,0.786,-0.02,-0.049,Pre-monsoon
+2012,5,Tamil Nadu,Bay of Bengal,30.5,0.808,-0.09,0.024,Pre-monsoon
+2012,5,West Bengal,Bay of Bengal,30.82,1.059,0.15,-0.06,Pre-monsoon
+2012,6,Andaman & Nicobar,Andaman Sea / Bay of Bengal,29.04,0.426,-0.12,0.055,Southwest_Monsoon
+2012,6,Andhra Pradesh,Bay of Bengal,29.33,0.925,-0.11,-0.048,Southwest_Monsoon
+2012,6,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,30.24,1.442,-0.25,0.103,Southwest_Monsoon
+2012,6,Goa,Arabian Sea,29.61,1.512,0.01,-0.009,Southwest_Monsoon
+2012,6,Gujarat,Arabian Sea / Gulf region,30.37,1.372,-0.14,0.008,Southwest_Monsoon
+2012,6,Karnataka,Arabian Sea,29.34,1.469,-0.17,0.035,Southwest_Monsoon
+2012,6,Kerala,Arabian Sea,29.22,1.627,-0.28,-0.089,Southwest_Monsoon
+2012,6,Lakshadweep,Arabian Sea / Lakshadweep Sea,28.94,0.42,-0.16,0.182,Southwest_Monsoon
+2012,6,Maharashtra,Arabian Sea,29.69,1.762,-0.08,0.206,Southwest_Monsoon
+2012,6,Odisha,Bay of Bengal,29.46,1.328,-0.13,0.02,Southwest_Monsoon
+2012,6,Puducherry,Bay of Bengal,29.58,1.167,-0.25,0.022,Southwest_Monsoon
+2012,6,Tamil Nadu,Bay of Bengal,29.86,1.134,0.08,0.113,Southwest_Monsoon
+2012,6,West Bengal,Bay of Bengal,29.45,1.504,-0.08,0.05,Southwest_Monsoon
+2012,7,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.14,0.294,-0.27,-0.109,Southwest_Monsoon
+2012,7,Andhra Pradesh,Bay of Bengal,27.45,1.27,-0.62,0.108,Southwest_Monsoon
+2012,7,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.54,1.78,-0.1,0.046,Southwest_Monsoon
+2012,7,Goa,Arabian Sea,27.98,1.804,-0.14,0.112,Southwest_Monsoon
+2012,7,Gujarat,Arabian Sea / Gulf region,26.99,1.8,-0.42,0.079,Southwest_Monsoon
+2012,7,Karnataka,Arabian Sea,27.79,1.732,-0.11,0.004,Southwest_Monsoon
+2012,7,Kerala,Arabian Sea,27.96,2.102,-0.1,0.127,Southwest_Monsoon
+2012,7,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.93,0.406,-0.16,0.034,Southwest_Monsoon
+2012,7,Maharashtra,Arabian Sea,27.65,1.908,-0.14,0.076,Southwest_Monsoon
+2012,7,Odisha,Bay of Bengal,27.38,1.686,-0.25,0.138,Southwest_Monsoon
+2012,7,Puducherry,Bay of Bengal,28.25,1.293,-0.26,0.046,Southwest_Monsoon
+2012,7,Tamil Nadu,Bay of Bengal,27.96,1.303,-0.29,0.095,Southwest_Monsoon
+2012,7,West Bengal,Bay of Bengal,27.54,1.711,0.05,-0.081,Southwest_Monsoon
+2012,8,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.82,0.367,-0.18,-0.075,Southwest_Monsoon
+2012,8,Andhra Pradesh,Bay of Bengal,26.74,1.343,-0.34,0.082,Southwest_Monsoon
+2012,8,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.77,1.979,-0.33,0.078,Southwest_Monsoon
+2012,8,Goa,Arabian Sea,26.71,1.949,-0.39,0.091,Southwest_Monsoon
+2012,8,Gujarat,Arabian Sea / Gulf region,25.13,1.968,-0.44,0.128,Southwest_Monsoon
+2012,8,Karnataka,Arabian Sea,26.91,1.793,-0.13,0.021,Southwest_Monsoon
+2012,8,Kerala,Arabian Sea,27.14,2.015,-0.18,-0.035,Southwest_Monsoon
+2012,8,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.25,0.529,-0.28,0.127,Southwest_Monsoon
+2012,8,Maharashtra,Arabian Sea,26.48,2.059,-0.26,0.133,Southwest_Monsoon
+2012,8,Odisha,Bay of Bengal,26.56,1.517,-0.19,-0.078,Southwest_Monsoon
+2012,8,Puducherry,Bay of Bengal,27.3,1.478,-0.25,0.141,Southwest_Monsoon
+2012,8,Tamil Nadu,Bay of Bengal,27.54,1.073,0.03,-0.135,Southwest_Monsoon
+2012,8,West Bengal,Bay of Bengal,26.06,1.945,-0.16,0.138,Southwest_Monsoon
+2012,9,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.67,0.315,-0.07,-0.053,Southwest_Monsoon
+2012,9,Andhra Pradesh,Bay of Bengal,26.59,1.111,-0.24,-0.027,Southwest_Monsoon
+2012,9,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.52,1.662,-0.02,0.009,Southwest_Monsoon
+2012,9,Goa,Arabian Sea,26.85,1.729,-0.04,0.027,Southwest_Monsoon
+2012,9,Gujarat,Arabian Sea / Gulf region,24.75,1.884,-0.29,0.173,Southwest_Monsoon
+2012,9,Karnataka,Arabian Sea,26.64,1.76,0.05,0.13,Southwest_Monsoon
+2012,9,Kerala,Arabian Sea,26.7,1.895,-0.3,0.009,Southwest_Monsoon
+2012,9,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.18,0.361,-0.26,-0.035,Southwest_Monsoon
+2012,9,Maharashtra,Arabian Sea,26.0,1.782,-0.08,-0.014,Southwest_Monsoon
+2012,9,Odisha,Bay of Bengal,26.03,1.559,-0.28,0.025,Southwest_Monsoon
+2012,9,Puducherry,Bay of Bengal,27.11,1.235,-0.22,-0.014,Southwest_Monsoon
+2012,9,Tamil Nadu,Bay of Bengal,26.89,1.238,-0.34,0.058,Southwest_Monsoon
+2012,9,West Bengal,Bay of Bengal,25.6,1.566,-0.13,-0.095,Southwest_Monsoon
+2012,10,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.98,0.347,-0.06,0.071,Post-monsoon
+2012,10,Andhra Pradesh,Bay of Bengal,27.13,0.944,-0.31,0.02,Post-monsoon
+2012,10,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,26.56,1.325,0.02,0.016,Post-monsoon
+2012,10,Goa,Arabian Sea,27.29,1.429,-0.11,0.141,Post-monsoon
+2012,10,Gujarat,Arabian Sea / Gulf region,25.82,1.455,-0.38,0.032,Post-monsoon
+2012,10,Karnataka,Arabian Sea,26.93,1.405,-0.29,0.099,Post-monsoon
+2012,10,Kerala,Arabian Sea,27.76,1.547,0.04,0.046,Post-monsoon
+2012,10,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.44,0.314,-0.26,0.001,Post-monsoon
+2012,10,Maharashtra,Arabian Sea,26.77,1.417,-0.21,0.07,Post-monsoon
+2012,10,Odisha,Bay of Bengal,26.71,1.331,-0.26,0.127,Post-monsoon
+2012,10,Puducherry,Bay of Bengal,27.76,1.173,-0.22,0.159,Post-monsoon
+2012,10,Tamil Nadu,Bay of Bengal,27.68,0.967,-0.13,0.074,Post-monsoon
+2012,10,West Bengal,Bay of Bengal,26.5,1.413,-0.06,0.052,Post-monsoon
+2012,11,Andaman & Nicobar,Andaman Sea / Bay of Bengal,28.18,0.294,-0.04,0.043,Post-monsoon
+2012,11,Andhra Pradesh,Bay of Bengal,27.27,0.659,-0.38,-0.113,Post-monsoon
+2012,11,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,27.04,1.101,-0.11,0.029,Post-monsoon
+2012,11,Goa,Arabian Sea,27.7,1.161,0.01,0.134,Post-monsoon
+2012,11,Gujarat,Arabian Sea / Gulf region,26.41,1.055,-0.22,-0.057,Post-monsoon
+2012,11,Karnataka,Arabian Sea,27.54,1.073,-0.03,0.064,Post-monsoon
+2012,11,Kerala,Arabian Sea,27.48,1.26,-0.28,0.176,Post-monsoon
+2012,11,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.5,0.414,-0.34,0.15,Post-monsoon
+2012,11,Maharashtra,Arabian Sea,27.03,1.036,-0.25,0.009,Post-monsoon
+2012,11,Odisha,Bay of Bengal,27.16,1.049,-0.01,0.124,Post-monsoon
+2012,11,Puducherry,Bay of Bengal,27.87,1.001,-0.18,0.172,Post-monsoon
+2012,11,Tamil Nadu,Bay of Bengal,27.89,0.838,-0.11,0.119,Post-monsoon
+2012,11,West Bengal,Bay of Bengal,26.89,1.061,-0.1,0.009,Post-monsoon
+2012,12,Andaman & Nicobar,Andaman Sea / Bay of Bengal,27.69,0.301,-0.02,0.117,Winter
+2012,12,Andhra Pradesh,Bay of Bengal,26.72,0.741,-0.03,0.024,Winter
+2012,12,Daman & Diu,Arabian Sea / Gulf of Khambhat influence,25.11,1.131,-0.26,0.07,Winter
+2012,12,Goa,Arabian Sea,26.6,1.142,-0.15,0.111,Winter
+2012,12,Gujarat,Arabian Sea / Gulf region,24.72,0.903,-0.07,-0.146,Winter
+2012,12,Karnataka,Arabian Sea,26.53,0.987,-0.06,0.063,Winter
+2012,12,Kerala,Arabian Sea,27.08,1.074,0.02,-0.002,Winter
+2012,12,Lakshadweep,Arabian Sea / Lakshadweep Sea,27.07,0.36,-0.27,0.102,Winter
+2012,12,Maharashtra,Arabian Sea,25.9,1.057,-0.21,0.042,Winter
+2012,12,Odisha,Bay of Bengal,25.99,0.942,-0.19,0.033,Winter
+2012,12,Puducherry,Bay of Bengal,26.9,0.715,-0.35,-0.018,Winter
+2012,12,Tamil Nadu,Bay of Bengal,27.07,0.788,-0.06,0.036,Winter
+2012,12,West Bengal,Bay of Bengal,25.63,0.949,-0.15,-0.03,Winter
