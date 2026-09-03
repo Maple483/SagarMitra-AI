@@ -4,9 +4,10 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Ship, Anchor, Layers, X, Activity, ShieldAlert, Download, Upload, MapPin, Trash2, Info, ExternalLink, Plus, MoreVertical, Search, Navigation, Wind } from 'lucide-react';
+import { Send, Ship, Anchor, Layers, X, Activity, ShieldAlert, Download, Upload, MapPin, Trash2, Info, ExternalLink, Plus, MoreVertical, Search, Navigation, Wind, Fish } from 'lucide-react';
 import { WeatherQuickWidget } from './components/WeatherQuickWidget';
 import { WeatherMapDrawer } from './components/WeatherMapDrawer';
+import { MarineProductivityModal } from './components/marine_productivity';
 
 declare global {
   interface Window {
@@ -67,6 +68,7 @@ export default function App() {
   
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [showLayerControl, setShowLayerControl] = useState(false);
+  const [isProductivityModalOpen, setIsProductivityModalOpen] = useState(false);
   
   const [mouseCoords, setMouseCoords] = useState({ lat: 0, lng: 0 });
   const [customMarkers, setCustomMarkers] = useState<CustomMarker[]>([]);
@@ -85,6 +87,8 @@ export default function App() {
   
   const [routes, setRoutes] = useState<any[]>([]);
   const routesLayerRef = useRef<any>(null);
+  const [activeMarkerId, setActiveMarkerId] = useState<string | null>(null);
+  const [showAllRoutes, setShowAllRoutes] = useState<boolean>(true);
 
   const [isWeatherDrawerOpen, setIsWeatherDrawerOpen] = useState(false);
   const [weatherCoords, setWeatherCoords] = useState({ lat: 18.95, lon: 72.85 });
@@ -154,19 +158,19 @@ export default function App() {
       });
 
       // 2. High Waves
-      window.L.circle([16.0, 71.0], {
+      window.L.circle([15.5, 71.0], {
         color: '#ef4444',
         fillColor: '#ef4444',
         fillOpacity: 0.2,
-        radius: 120000
-      }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 4.5m swells</div>').addTo(wavesGrp);
+        radius: 180000
+      }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 4.5m swells (180 km radius)</div>').addTo(wavesGrp);
 
       window.L.circle([11.5, 81.5], {
         color: '#ef4444',
         fillColor: '#ef4444',
         fillOpacity: 0.2,
-        radius: 80000
-      }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 3.2m swells</div>').addTo(wavesGrp);
+        radius: 160000
+      }).bindPopup('<div class="font-bold text-red-600">High Wave Alert: 3.2m swells (160 km radius)</div>').addTo(wavesGrp);
 
       // 3. Indian EEZ & IMBL Maritime Boundaries (Matching Official Marine Regions / UNCLOS Dataset)
       const eezOuterBoundary: [number, number][] = [
@@ -360,17 +364,23 @@ export default function App() {
     routesLayerRef.current.clearLayers();
     
     routes.forEach(route => {
+      const isRouteActive = activeMarkerId ? (route.id === activeMarkerId || route.markerId === activeMarkerId) : true;
+      if (!showAllRoutes && !isRouteActive) return;
+
+      const baseOpacity = isRouteActive ? 0.95 : 0.45;
+      const baseWeight = isRouteActive ? 5 : 2.5;
+
       // If full multi-segment RouteResponse from backend
       if (route.segments && route.segments.length > 0) {
         route.segments.forEach((seg: any) => {
-          const color = seg.risk_level === 'HIGH' ? '#ef4444' : (seg.risk_level === 'MEDIUM' ? '#f59e0b' : '#10b981');
+          const color = seg.risk_level === 'HIGH' ? '#ef4444' : (seg.risk_level === 'MEDIUM' ? '#f59e0b' : (isRouteActive ? '#10b981' : '#06b6d4'));
           const polyline = window.L.polyline([
             [seg.start_lat, seg.start_lon],
             [seg.end_lat, seg.end_lon]
           ], {
             color: color,
-            weight: 4,
-            opacity: 0.9,
+            weight: baseWeight,
+            opacity: baseOpacity,
             dashArray: seg.risk_level === 'HIGH' ? '6, 6' : undefined
           }).addTo(routesLayerRef.current);
 
@@ -380,7 +390,7 @@ export default function App() {
               <b>Leg Distance:</b> ${seg.distance_nm} NM<br/>
               <b>Compass Bearing:</b> ${seg.bearing_deg}°<br/>
               <b>Leg ETE:</b> ${seg.nominal_ete_hours} hrs (at 10 kts)<br/>
-              <b>Overall Route:</b> ${route.total_dist_nm} NM (Nominal ETE: ${route.nominal_ete_hours} hrs)
+              <b>Overall Route (${route.alias || route.vesselName || 'Vessel'}):</b> ${route.total_dist_nm} NM (Nominal ETE: ${route.nominal_ete_hours} hrs)
             </div>
           `);
         });
@@ -391,19 +401,20 @@ export default function App() {
             const isStart = idx === 0;
             const isEnd = idx === route.waypoints.length - 1;
             const markerColor = isStart ? '#10b981' : (isEnd ? '#06b6d4' : '#f59e0b');
+            const size = isRouteActive ? 24 : 18;
             
             const icon = window.L.divIcon({
               className: 'bg-transparent',
-              html: `<div class="flex items-center justify-center w-6 h-6 rounded-full text-white font-bold text-[10px] shadow-md border-2 border-white" style="background-color: ${markerColor}">
+              html: `<div class="flex items-center justify-center rounded-full text-white font-bold text-[10px] shadow-md border-2 border-white ${isRouteActive ? 'ring-2 ring-cyan-400' : 'opacity-70'}" style="width: ${size}px; height: ${size}px; background-color: ${markerColor}">
                 ${isStart ? 'S' : (isEnd ? 'D' : idx)}
               </div>`,
-              iconSize: [24, 24],
-              iconAnchor: [12, 12]
+              iconSize: [size, size],
+              iconAnchor: [size / 2, size / 2]
             });
 
             window.L.marker([wp.lat, wp.lon], { icon }).addTo(routesLayerRef.current)
               .bindPopup(`
-                <div class="font-bold text-slate-800 text-xs">${wp.name}</div>
+                <div class="font-bold text-slate-800 text-xs">${wp.name} ${route.alias ? `· ${route.alias}` : ''}</div>
                 <div class="text-[11px] text-slate-600">
                   Lat: ${wp.lat}, Lon: ${wp.lon}<br/>
                   Cumulative Distance: ${wp.cumulative_distance_nm} NM
@@ -414,17 +425,17 @@ export default function App() {
       } else if (route.start && route.end) {
         // Fallback for simple 2-point routes
         const polyline = window.L.polyline([route.start, route.end], {
-          color: '#10b981',
+          color: isRouteActive ? '#10b981' : '#06b6d4',
           dashArray: '8, 8',
-          weight: 3,
-          opacity: 0.8
+          weight: baseWeight,
+          opacity: baseOpacity
         }).addTo(routesLayerRef.current);
         
-        polyline.bindPopup(`<div class="font-bold text-emerald-600">Active Route</div>
+        polyline.bindPopup(`<div class="font-bold text-emerald-600">Active Route (${route.alias || route.vesselName || 'Vessel'})</div>
         <div class="text-xs text-slate-700 mt-1">From: ${route.vesselName || 'Vessel'}<br/>Distance: ${route.distNm || ''} NM<br/>ETA: ${route.time || ''}</div>`);
       }
     });
-  }, [routes]);
+  }, [routes, activeMarkerId, showAllRoutes]);
 
   // Sync Temp Marker to Leaflet
   useEffect(() => {
@@ -485,20 +496,69 @@ export default function App() {
     customMarkersLayerRef.current.clearLayers();
     
     customMarkers.forEach(cm => {
+      const isSelected = activeMarkerId === cm.id;
+      const associatedRoute = routes.find(r => r.id === cm.id || r.markerId === cm.id);
+
       const icon = window.L.divIcon({
         className: 'bg-transparent',
-        html: `<div class="relative flex items-center justify-center w-6 h-6 group">
-                 <span class="absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-50 animate-pulse"></span>
-                 <span class="relative inline-flex rounded-full h-4 w-4 bg-yellow-500 border-2 border-slate-900 shadow-md"></span>
+        html: `<div class="relative flex items-center justify-center w-7 h-7 group cursor-pointer">
+                 <span class="absolute inline-flex h-full w-full rounded-full ${isSelected ? 'bg-cyan-400 opacity-80 animate-ping' : 'bg-yellow-400 opacity-50 animate-pulse'}"></span>
+                 <span class="relative inline-flex items-center justify-center rounded-full h-5 w-5 ${isSelected ? 'bg-cyan-500 border-2 border-white text-white' : 'bg-yellow-500 border-2 border-slate-900 text-slate-900'} shadow-md text-[10px] font-bold">
+                   📍
+                 </span>
                </div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
-      window.L.marker([cm.lat, cm.lng], { icon })
-        .bindPopup(`<div class="font-bold text-yellow-600">${cm.alias}</div><div class="text-xs text-slate-500 mt-1">${cm.lat.toFixed(4)}, ${cm.lng.toFixed(4)}</div>`)
-        .addTo(customMarkersLayerRef.current);
+
+      const marker = window.L.marker([cm.lat, cm.lng], { icon });
+
+      const container = document.createElement('div');
+      container.className = 'p-1';
+      container.innerHTML = `
+        <div class="font-bold text-sm ${isSelected ? 'text-cyan-600' : 'text-slate-800'}">${cm.alias}</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">${cm.lat.toFixed(4)}, ${cm.lng.toFixed(4)}</div>
+        ${associatedRoute ? `
+          <div class="mt-2 p-1.5 bg-slate-100 rounded text-[11px] text-slate-700">
+            <div><b>Route Distance:</b> ${associatedRoute.total_dist_nm} NM</div>
+            <div><b>Nominal ETE:</b> ${associatedRoute.nominal_ete_hours} hrs (${associatedRoute.vesselName || 'Vessel'})</div>
+            ${associatedRoute.max_risk_level ? `<div><b>Risk Level:</b> <span class="font-bold ${associatedRoute.max_risk_level === 'HIGH' ? 'text-rose-600' : 'text-emerald-600'}">${associatedRoute.max_risk_level}</span></div>` : ''}
+          </div>
+        ` : '<div class="mt-1 text-[10px] text-slate-400 italic">No route calculated yet</div>'}
+        <div class="mt-2.5 flex gap-1.5">
+          <button id="btn-focus-${cm.id}" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-1 px-2 rounded text-[11px] transition">
+            ${associatedRoute ? 'Focus Route' : 'Compute Route'}
+          </button>
+          <button id="btn-del-${cm.id}" class="bg-rose-100 hover:bg-rose-200 text-rose-700 py-1 px-2 rounded text-[11px] transition">
+            Delete
+          </button>
+        </div>
+      `;
+
+      marker.bindPopup(container);
+
+      marker.on('popupopen', () => {
+        const focusBtn = document.getElementById(`btn-focus-${cm.id}`);
+        const delBtn = document.getElementById(`btn-del-${cm.id}`);
+        if (focusBtn) {
+          focusBtn.onclick = () => {
+            computeRouteForMarker(cm);
+          };
+        }
+        if (delBtn) {
+          delBtn.onclick = () => {
+            deleteCustomMarker(cm.id);
+          };
+        }
+      });
+
+      marker.on('click', () => {
+        setActiveMarkerId(cm.id);
+      });
+
+      marker.addTo(customMarkersLayerRef.current);
     });
-  }, [customMarkers]);
+  }, [customMarkers, activeMarkerId, routes]);
 
   // Chat-to-Map Bridge
   const triggerMapEvent = (lat: number, lng: number, label: string) => {
@@ -572,14 +632,14 @@ export default function App() {
     // Context Injection for LLM Awareness
     let contextStr = `\n\n[SYSTEM CONTEXT: Do not acknowledge this block directly. Known Custom Markers: `;
     if (customMarkers.length > 0) {
-      contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}, Lng ${m.lng.toFixed(4)}`).join('; ');
+contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}, Lng ${m.lng.toFixed(4)}`).join('; ');
     } else {
       contextStr += `None.`;
     }
     if (routes.length > 0) {
       contextStr += ` | Active Routes: ` + routes.map(r => `From ${r.vesselName} to ${r.distNm} NM away (ETA: ${r.time})`).join('; ');
     }
-    contextStr += ` | Map Hazards: High wave alert (4.5m swells) at Lat 16.0, Lng 71.0; High wave alert (3.2m swells) at Lat 11.5, Lng 81.5.]`;
+    contextStr += ` | Map Hazards: Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0; Active Wave alert (3.2m swells, radius 160km) at Lat 11.5, Lng 81.5.]`;
     
     const payloadText = queryText + contextStr;
 
@@ -591,9 +651,9 @@ export default function App() {
       });
       const data = await res.json();
       
-      setMessages((prev) => [...prev, { role: 'system', content: data.reply }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       
-      if (data.route && data.route.status === "SUCCESS") {
+      if (data.route) {
         setRoutes([data.route]);
       }
       
@@ -602,7 +662,7 @@ export default function App() {
       }
     } catch (err) {
       console.error(err);
-      setMessages((prev) => [...prev, { role: 'system', content: 'Error connecting to backend. Ensure backend is running at http://localhost:8000. (Check console for details)' }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Offline / Gateway Error: Backend not reachable.' }]);
     } finally {
       setLoading(false);
     }
@@ -617,6 +677,70 @@ export default function App() {
     setLayers(prev => ({ ...prev, [layer]: !prev[layer] }));
   };
 
+  // Compute / Focus Route for an existing custom marker
+  const computeRouteForMarker = async (marker: CustomMarker) => {
+    setActiveMarkerId(marker.id);
+    if (mapRef.current) mapRef.current.flyTo([marker.lat, marker.lng], 7);
+
+    // If route already exists in routes state, notify user
+    const existing = routes.find(r => r.id === marker.id || r.markerId === marker.id);
+    if (existing) {
+      setMessages(prev => [...prev, {
+        role: 'system',
+        content: `Activated route to ${marker.alias}: ${existing.total_dist_nm} NM (Nominal ETE: ${existing.nominal_ete_hours} hrs from ${existing.vesselName || 'Vessel'}).`
+      }]);
+      return;
+    }
+
+    const target = window.L.latLng(marker.lat, marker.lng);
+    let nearestVessel = MOCK_VESSELS[0];
+    let minDist = Infinity;
+    MOCK_VESSELS.forEach(v => {
+      const dist = target.distanceTo(window.L.latLng(v.lat, v.lng));
+      if (dist < minDist) {
+        minDist = dist;
+        nearestVessel = v;
+      }
+    });
+
+    const speed = parseInt(nearestVessel.speed) || 12;
+
+    try {
+      const res = await fetch("http://localhost:8000/api/route", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start_lat: nearestVessel.lat,
+          start_lon: nearestVessel.lng,
+          target_lat: marker.lat,
+          target_lon: marker.lng,
+          vessel_name: nearestVessel.name,
+          speed_knots: speed,
+          system_context: "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0; Active Wave alert (3.2m swells, radius 160km) at Lat 11.5, Lng 81.5"
+        })
+      });
+      const routeData = await res.json();
+      if (routeData.status === "SUCCESS") {
+        setRoutes(prev => [
+          ...prev.filter(r => r.id !== marker.id && r.markerId !== marker.id),
+          { ...routeData, id: marker.id, markerId: marker.id, alias: marker.alias, vesselName: nearestVessel.name }
+        ]);
+        const advisory = routeData.message ? `${routeData.message} ` : '';
+        setMessages(prev => [...prev, {
+          role: 'system',
+          content: `${advisory}Route to ${marker.alias}: ${routeData.total_dist_nm} NM (Nominal ETE: ${routeData.nominal_ete_hours} hrs from ${nearestVessel.name}).`
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'system',
+          content: `Warning: Unable to resolve route to ${marker.alias}: ${routeData.message || 'Target lies outside Indian EEZ jurisdiction'}.`
+        }]);
+      }
+    } catch (err) {
+      console.error("Failed to compute route for marker:", err);
+    }
+  };
+
   // Add Custom Marker with Dynamic A* Pathfinding
   const handleAddCustomMarker = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -627,6 +751,7 @@ export default function App() {
     const newMarkerId = Date.now().toString();
     const markerAlias = markerInput.alias;
     setCustomMarkers(prev => [...prev, { id: newMarkerId, lat, lng, alias: markerAlias }]);
+    setActiveMarkerId(newMarkerId);
     setMarkerInput({ lat: '', lng: '', alias: '' });
     setShowAddMarker(false);
     setTempMarker(null);
@@ -657,18 +782,21 @@ export default function App() {
           target_lon: lng,
           vessel_name: nearestVessel.name,
           speed_knots: speed,
-          system_context: "Active Wave alert (4.5m swells) at Lat 16.0, Lng 71.0"
+          system_context: "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0; Active Wave alert (3.2m swells, radius 160km) at Lat 11.5, Lng 81.5"
         })
       });
       const routeData = await res.json();
       if (routeData.status === "SUCCESS") {
-        setRoutes([{ ...routeData, id: newMarkerId, vesselName: nearestVessel.name }]);
+        setRoutes(prev => [
+          ...prev.filter(r => r.id !== newMarkerId && r.markerId !== newMarkerId),
+          { ...routeData, id: newMarkerId, markerId: newMarkerId, alias: markerAlias, vesselName: nearestVessel.name }
+        ]);
+        const advisory = routeData.message ? `${routeData.message} ` : '';
         setMessages(prev => [...prev, {
           role: 'system',
-          content: `Safe nautical route computed from ${nearestVessel.name} to ${markerAlias} avoiding obstacles. Total Distance: ${routeData.total_dist_nm} NM. Nominal ETE: ${routeData.nominal_ete_hours} hrs at ${speed} knots.`
+          content: `${advisory}Safe nautical route computed from ${nearestVessel.name} to ${markerAlias}. Total Distance: ${routeData.total_dist_nm} NM. Nominal ETE: ${routeData.nominal_ete_hours} hrs at ${speed} knots.`
         }]);
       } else {
-        setRoutes([]); // Clear invalid/stale routes so no ghost lines persist on the map
         setMessages(prev => [...prev, {
           role: 'system',
           content: `Warning: Unable to resolve a route from ${nearestVessel.name} to ${markerAlias}: ${routeData.message || 'Target lies outside Indian EEZ jurisdiction'}.`
@@ -681,7 +809,10 @@ export default function App() {
 
   const deleteCustomMarker = (id: string) => {
     setCustomMarkers(prev => prev.filter(m => m.id !== id));
-    setRoutes(prev => prev.filter(r => r.id !== id));
+    setRoutes(prev => prev.filter(r => r.id !== id && r.markerId !== id));
+    if (activeMarkerId === id) {
+      setActiveMarkerId(null);
+    }
   };
 
   // Import / Export Chat
@@ -728,8 +859,16 @@ export default function App() {
               <p className="text-blue-400/60 text-xs font-medium tracking-wider uppercase">Marine Intelligence</p>
             </div>
           </div>
-          <div className="flex gap-2 relative">
-            <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors" title="Settings">
+          <div className="flex items-center gap-2 relative">
+            <button
+              onClick={() => setIsProductivityModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer"
+              title="Open Marine Productivity & Fisheries Analyst"
+            >
+              <Fish className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Productivity</span>
+            </button>
+            <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer" title="Settings">
               <MoreVertical className="w-5 h-5" />
             </button>
             {showSettingsMenu && (
@@ -832,65 +971,81 @@ export default function App() {
           }}
         />
         
-        {/* Search Bar (Top Center) */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] w-full max-w-sm px-4 sm:px-0">
-          <form onSubmit={handleSearch} className="relative flex items-center">
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search locations or coordinates..." 
-              className="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/50 rounded-full py-3 pl-4 pr-12 text-sm text-white shadow-lg focus:outline-none focus:border-blue-500 transition-all"
-            />
-            <button type="submit" className="absolute right-2 p-2 text-slate-400 hover:text-white">
-              <Search className="w-4 h-4" />
-            </button>
-          </form>
-          {searchResults.length > 0 && (
-            <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
-              <ul className="divide-y divide-slate-800">
-                {searchResults.map((res: any, idx) => (
-                  <li key={idx}>
-                    <button onClick={() => handleSelectSearchResult(res)} className="w-full text-left px-4 py-3 hover:bg-slate-800 transition-colors">
-                      <p className="text-sm font-medium text-slate-200 truncate">{res.display_name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Lat: {parseFloat(res.lat).toFixed(4)}, Lng: {parseFloat(res.lon).toFixed(4)}</p>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Map Overlay Stats (Top Left) */}
-        <div className="absolute top-4 left-4 z-[400] flex flex-col gap-2 hidden sm:flex">
-          <div onClick={() => setShowDataSources(true)} className="bg-slate-900/80 backdrop-blur-md border border-slate-700/50 p-3 rounded-xl shadow-lg flex items-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer group">
-            <Ship className="text-blue-400 w-5 h-5" />
-            <div>
-              <p className="text-xs text-slate-400 font-medium flex items-center gap-1">Active Vessels <Info className="w-3 h-3 group-hover:text-blue-400" /></p>
-              <p className="text-slate-100 font-bold text-lg leading-none mt-0.5">1,204</p>
+        {/* Top Floating Action Bar: Non-Colliding Responsive Layout */}
+        <div className="absolute top-4 inset-x-4 z-[450] flex items-center justify-between pointer-events-none gap-3">
+          {/* Top Left: Active Vessels Badge */}
+          <div className="pointer-events-auto shrink-0 hidden sm:block">
+            <div onClick={() => setShowDataSources(true)} className="bg-slate-900/90 backdrop-blur-md border border-slate-700/60 px-3 py-2 rounded-xl shadow-lg flex items-center gap-2.5 hover:bg-slate-800 transition-colors cursor-pointer group">
+              <Ship className="text-blue-400 w-4 h-4" />
+              <div>
+                <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1">Active Vessels <Info className="w-2.5 h-2.5 group-hover:text-blue-400" /></p>
+                <p className="text-slate-100 font-bold text-sm leading-none mt-0.5">1,204</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Floating Controls (Top Right) */}
-        <div className="absolute top-4 right-4 z-[400] flex flex-col items-end gap-2">
-          <div className="flex gap-2">
+          {/* Top Center: Search Bar */}
+          <div className="pointer-events-auto flex-1 max-w-xs md:max-w-sm">
+            <form onSubmit={handleSearch} className="relative flex items-center">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search locations or coordinates..." 
+                className="w-full bg-slate-900/90 backdrop-blur-md border border-slate-700/60 rounded-full py-2 pl-3.5 pr-9 text-xs text-white shadow-lg focus:outline-none focus:border-blue-500 transition-all"
+              />
+              <button type="submit" className="absolute right-2 p-1 text-slate-400 hover:text-white">
+                <Search className="w-3.5 h-3.5" />
+              </button>
+            </form>
+            {searchResults.length > 0 && (
+              <div className="mt-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+                <ul className="divide-y divide-slate-800">
+                  {searchResults.map((res: any, idx) => (
+                    <li key={idx}>
+                      <button onClick={() => handleSelectSearchResult(res)} className="w-full text-left px-4 py-3 hover:bg-slate-800 transition-colors">
+                        <p className="text-sm font-medium text-slate-200 truncate">{res.display_name}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Lat: {parseFloat(res.lat).toFixed(4)}, Lng: {parseFloat(res.lon).toFixed(4)}</p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Top Right: Floating Action Buttons */}
+          <div className="pointer-events-auto flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                console.log("[ORCA] Opening Marine Productivity Modal");
+                setIsProductivityModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 bg-slate-900/95 backdrop-blur-md border border-cyan-400/60 px-3.5 py-2 rounded-full shadow-xl text-cyan-300 hover:text-white hover:bg-slate-800 transition-all font-semibold text-xs ring-2 ring-cyan-500/30 cursor-pointer"
+              title="Marine Productivity & Fisheries Analyst"
+            >
+              <Fish className="w-4 h-4 text-cyan-400" />
+              <span className="hidden sm:inline">Marine Productivity</span>
+            </button>
             <button 
               onClick={() => setShowAddMarker(!showAddMarker)}
-              className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-3 rounded-full shadow-lg text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+              className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-2.5 rounded-full shadow-lg text-slate-200 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               title="Add Custom Marker"
             >
-              <MapPin className="w-5 h-5" />
+              <MapPin className="w-4 h-4" />
             </button>
             <button 
               onClick={() => setShowLayerControl(!showLayerControl)}
-              className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-3 rounded-full shadow-lg text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+              className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-2.5 rounded-full shadow-lg text-slate-200 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               title="Toggle Layers"
             >
-              <Layers className="w-5 h-5" />
+              <Layers className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* Layer Controls Dropdown Menu (Top Right) */}
+        <div className="absolute top-16 right-4 z-[450] flex flex-col items-end gap-2">
           
           {showLayerControl && (
             <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-2xl p-4 w-56 flex flex-col gap-3">
@@ -942,22 +1097,75 @@ export default function App() {
                   <Plus className="w-4 h-4" /> Add to Map
                 </button>
               </form>
-              <div className="max-h-40 overflow-y-auto">
+              <div className="flex items-center justify-between px-3.5 py-2 bg-slate-950/80 border-b border-slate-800 text-[11px]">
+                <span className="text-slate-400 font-medium">Pointers ({customMarkers.length})</span>
+                {customMarkers.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllRoutes(prev => !prev)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold border transition ${
+                      showAllRoutes 
+                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' 
+                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+                    }`}
+                  >
+                    {showAllRoutes ? 'All Routes' : 'Single Route'}
+                  </button>
+                )}
+              </div>
+              <div className="max-h-56 overflow-y-auto">
                 {customMarkers.length === 0 ? (
-                  <p className="p-4 text-xs text-slate-500 text-center">No custom markers added yet.</p>
+                  <p className="p-4 text-xs text-slate-500 text-center">No custom markers added yet. Right-click map or use form above.</p>
                 ) : (
-                  <ul className="divide-y divide-slate-800">
-                    {customMarkers.map(cm => (
-                      <li key={cm.id} className="p-3 flex justify-between items-center hover:bg-slate-800/50">
-                        <div>
-                          <p className="text-sm font-bold text-yellow-500">{cm.alias}</p>
-                          <p className="text-[10px] text-slate-400">{cm.lat.toFixed(4)}, {cm.lng.toFixed(4)}</p>
-                        </div>
-                        <button onClick={() => deleteCustomMarker(cm.id)} className="text-slate-500 hover:text-red-400 p-1">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </li>
-                    ))}
+                  <ul className="divide-y divide-slate-800/80">
+                    {customMarkers.map(cm => {
+                      const isSelected = activeMarkerId === cm.id;
+                      const associatedRoute = routes.find(r => r.id === cm.id || r.markerId === cm.id);
+                      return (
+                        <li 
+                          key={cm.id} 
+                          onClick={() => computeRouteForMarker(cm)}
+                          className={`p-3 flex justify-between items-center cursor-pointer transition ${
+                            isSelected 
+                              ? 'bg-cyan-950/40 border-l-2 border-cyan-400 text-cyan-200' 
+                              : 'hover:bg-slate-800/50 text-slate-300'
+                          }`}
+                        >
+                          <div className="flex-1 min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs">📍</span>
+                              <p className={`text-xs font-bold truncate ${isSelected ? 'text-cyan-300' : 'text-yellow-400'}`}>
+                                {cm.alias}
+                              </p>
+                              {associatedRoute && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                                  {associatedRoute.total_dist_nm} NM
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5 ml-4">{cm.lat.toFixed(4)}, {cm.lng.toFixed(4)}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); computeRouteForMarker(cm); }}
+                              title="Focus Route"
+                              className={`p-1.5 rounded transition ${isSelected ? 'bg-cyan-500/30 text-cyan-300' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'}`}
+                            >
+                              <Navigation className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); deleteCustomMarker(cm.id); }}
+                              title="Delete Marker"
+                              className="p-1.5 rounded text-slate-500 hover:text-red-400 hover:bg-slate-800 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -1089,6 +1297,12 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Marine Productivity & Fisheries Analyst Modal */}
+      <MarineProductivityModal
+        isOpen={isProductivityModalOpen}
+        onClose={() => setIsProductivityModalOpen(false)}
+      />
 
     </div>
   );

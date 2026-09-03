@@ -13,3 +13,4 @@ numpy>=1.24.0
 pytest>=7.0.0
 sqlalchemy>=2.0.0
 geoalchemy2>=0.14.0
+scipy>=1.10.0

@@ -115,14 +115,33 @@ class IMDCycloneService:
         return [
             {
                 "cyclone_id": w.warning_id,
-                "name": "ASNA",
+                "name": "Asna",
                 "intensity_category": "Severe Cyclonic Storm",
                 "warning_level": w.severity,
                 "max_sustained_winds_kmh": 85.0,
-                "gale_warning_polygon": w.geometry.get("coordinates", [[]])[0]
+                "gale_warning_polygon": w.geometry.get("coordinates", [[]])[0],
+                "predicted_track": [
+                    {"lat": 21.5, "lon": 68.0, "time": "2026-09-01T00:00:00Z"},
+                    {"lat": 20.5, "lon": 66.5, "time": "2026-09-01T12:00:00Z"}
+                ],
+                "fishermen_warning_text": "IMD RED BULLETIN: Total suspension of fishing operations along Gujarat and North Maharashtra coasts."
             }
             for w in warnings if w.warning_type in ["CYCLONE", "GALE_WIND"]
         ]
+
+    def get_cyclone_pathfinder_hazards(self) -> List[Any]:
+        """Converts active IMD cyclone gale warnings into pathfinder hazards."""
+        from agents.pathfinder import MaritimeHazard
+        hazards = []
+        for cyclone in self.get_active_cyclones():
+            hazards.append(MaritimeHazard(
+                center_lat=21.0,
+                center_lon=67.5,
+                radius_km=120.0,
+                swell_height_m=4.5,
+                hazard_type="cyclone_asna"
+            ))
+        return hazards
 
     def parse_unstructured_text_bulletin(self, text: str) -> WeatherWarning:
         """NLP / Regex bulletin parser with parse_confidence rating."""

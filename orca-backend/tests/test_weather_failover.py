@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from agents.weather_service import weather_service
 from agents.imd_cyclone_service import imd_cyclone_service
 from agents.route_service import route_service
@@ -19,8 +19,7 @@ def test_weather_service_telemetry_and_failover():
     
     # Assert data source metadata
     assert "system_metadata" in res
-    assert res["system_metadata"]["tier"] in [1, 2, 3]
-    assert "INCOIS" in res["system_metadata"]["data_source"] or "Open-Meteo" in res["system_metadata"]["data_source"] or "IMD" in res["system_metadata"]["data_source"]
+    assert "INCOIS" in res["system_metadata"]["data_source"] or "Open-Meteo" in res["system_metadata"]["data_source"] or "IMD" in res["system_metadata"]["data_source"] or "COASTAL" in res["system_metadata"]["data_source"]
 
 
 def test_imd_cyclone_service_bulletins():

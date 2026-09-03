@@ -95,6 +95,7 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
   );
   const windSpeed = weatherData?.wind?.speed_kt ?? weatherData?.telemetry?.wind_speed_knots ?? weatherData?.telemetry?.wind_speed_kt ?? (isLand || isOutsideEEZ ? 0.0 : 12.0);
   const waveHeight = isLand || isOutsideEEZ ? 0.0 : (weatherData?.waves?.wave_height_m ?? weatherData?.telemetry?.wave_height_m ?? 1.2);
+  const swellHeight = isLand || isOutsideEEZ ? 0.0 : (weatherData?.waves?.swell_height_m ?? weatherData?.telemetry?.swell_height_m ?? 0.9);
 
   const getStatusBadge = () => {
     if (isOutsideEEZ) {
@@ -141,7 +142,7 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
 
   return (
     <>
-      <div className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-white rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[280px]">
+      <div className="absolute bottom-16 left-4 z-[400] bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 text-white rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[280px]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
           <div className="flex items-center gap-2">
@@ -198,10 +199,11 @@ export const WeatherQuickWidget: React.FC<WeatherQuickWidgetProps> = ({ coords: 
             <div className="bg-slate-800/60 p-2 rounded-lg border border-slate-700/40">
               <div className="flex items-center gap-1 text-[10px] text-slate-400">
                 <Navigation className="w-3 h-3 text-blue-400" />
-                <span>WAVE SWELL</span>
+                <span>TOTAL WAVE / SWELL</span>
               </div>
-              <div className="text-sm font-bold text-white mt-0.5">
-                {round(waveHeight, 2)} <span className="text-[10px] font-normal text-slate-400">m</span>
+              <div className="text-sm font-bold text-white mt-0.5 flex items-baseline gap-1">
+                <span>{round(waveHeight, 2)} <span className="text-[10px] font-normal text-slate-400">m</span></span>
+                <span className="text-[10px] font-normal text-cyan-400">({round(swellHeight, 1)}m swell)</span>
               </div>
             </div>
           </div>

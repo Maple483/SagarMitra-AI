@@ -129,9 +129,9 @@ def compute_2d_vector_sog_and_cog(
 ACTIVE_HAZARD_CIRCLES = [
     {
         "name": "High Wave Alert (Central Arabian Sea / Off Panaji-Goa)",
-        "center_lat": 16.0,
+        "center_lat": 15.5,
         "center_lon": 71.0,
-        "radius_km": 120.0,
+        "radius_km": 250.0,
         "wave_height_m": 4.5,
         "wind_speed_kt": 32.0,
         "wave_dir": 240.0,
@@ -141,7 +141,7 @@ ACTIVE_HAZARD_CIRCLES = [
         "name": "High Wave Alert (Bay of Bengal / Off Chennai)",
         "center_lat": 11.5,
         "center_lon": 81.5,
-        "radius_km": 80.0,
+        "radius_km": 200.0,
         "wave_height_m": 3.2,
         "wind_speed_kt": 26.0,
         "wave_dir": 110.0,
@@ -427,7 +427,7 @@ class WeatherService:
             lon=round(lon, 4),
             timestamp_utc=timestamp_utc,
             wind=WindMetrics(speed_kt=wind_speed_kt, gust_kt=round(wind_speed_kt * 1.3, 1), direction_deg=wind_dir_deg),
-            waves=WaveMetrics(wave_height_m=wave_height, swell_height_m=round(wave_height * 0.8, 1), wave_direction_deg=wave_dir, wave_period_s=wave_period),
+            waves=WaveMetrics(wave_height_m=wave_height, swell_height_m=wave_height if active_circle else round(wave_height * 0.8, 1), wave_direction_deg=wave_dir, wave_period_s=wave_period),
             currents=CurrentMetrics(speed_kt=round(math.sqrt(u_curr**2 + v_curr**2), 2), direction_deg=round((math.degrees(math.atan2(u_curr, v_curr)) + 360) % 360, 1), u_current_kt=u_curr, v_current_kt=v_curr),
             is_cross_sea=is_cross_sea,
             air_temp_c=28.5,
@@ -494,6 +494,7 @@ class WeatherService:
                 "advisory": advisory
             },
             "system_metadata": {
+                "tier": 1,
                 "data_source": state.provenance.marine_source,
                 "timestamp_utc": state.timestamp_utc.isoformat()
             }

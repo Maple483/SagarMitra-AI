@@ -19,8 +19,10 @@ from models import User, Vessel, TelemetryLog, Geofence, ProactiveAlertLog
 from agents.orchestrator import app as agent_brain
 from agents.weather_service import weather_service
 from agents.weather_schema import RouteWeatherRequest, RouteWeatherResponse
+from marine_productivity import marine_productivity_router
 
 app = FastAPI(title="SagarMitra AI Backend Gateway")
+app.include_router(marine_productivity_router)
 
 # Enable CORS for frontend dashboard access
 app.add_middleware(

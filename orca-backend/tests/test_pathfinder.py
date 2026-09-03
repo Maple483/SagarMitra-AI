@@ -181,5 +181,33 @@ def test_strict_eez_geofencing():
     assert "outside the Indian Exclusive Economic Zone" in resp.message
 
 
+def test_strict_non_penetration_of_external_hazards():
+    """Test 9: Routes between external coordinates strictly curve around hazard perimeters."""
+    rs = RouteService()
+    start = {"lat": 15.4, "lon": 73.8}
+    target = {"lat": 14.3, "lon": 69.8}
+    ctx = "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0"
+    
+    resp = rs.calculate_safe_route(start, target, ctx)
+    assert resp.status == "SUCCESS"
+    for wp in resp.waypoints:
+        d = haversine_km(wp.lat, wp.lon, 15.5, 71.0)
+        assert d >= 180.0, f"Waypoint ({wp.lat}, {wp.lon}) penetrated hazard circle (dist={d:.1f} km < 180 km)"
+
+
+def test_terminal_hazard_zone_routing():
+    """Test 10: Routes to destinations inside a high-wave hazard zone succeed with tactical advisory message."""
+    rs = RouteService()
+    start = {"lat": 15.4, "lon": 73.8}
+    # Target directly inside the 180km hazard at Lat 15.5, Lon 71.2 (~21 km from center)
+    target_inside = {"lat": 15.5, "lon": 71.2}
+    ctx = "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0"
+    
+    resp = rs.calculate_safe_route(start, target_inside, ctx)
+    assert resp.status == "SUCCESS"
+    assert "Destination is located inside active 4.5m swell hazard zone" in resp.message
+    assert resp.max_risk_level == "HIGH"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
