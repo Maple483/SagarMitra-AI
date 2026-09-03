@@ -484,9 +484,15 @@ async def handle_conversational_query(
             "final_risk_level": "UNKNOWN"
         }
 
-    # 3. Translate query to English
-    english_query = await mock_bhashini_translate(payload.message, source_lang="regional", target_lang="en")
-    
+    # 3. Language barrier resolution (auto-detect Indic vs English)
+    is_indic = any(0x0900 <= ord(c) <= 0x0DFF for c in payload.message)
+    source_lang = "en"
+    if is_indic:
+        source_lang = detect_indic_language(payload.message)
+        english_query = await mock_bhashini_translate(payload.message, source_lang, "en")
+    else:
+        english_query = payload.message
+
     # 4. Invoke LangGraph Orchestration
     initial_state = {
         "messages": [HumanMessage(content=english_query)],
@@ -498,8 +504,12 @@ async def handle_conversational_query(
     config = {"configurable": {"thread_id": f"vessel_{vessel_id}"}}
     result = await agent_brain.ainvoke(initial_state, config=config)
     
-    # 5. Translate advice back
-    advice_local = await mock_bhashini_translate(result["consensus_advice"], source_lang="en", target_lang="regional")
+    # 5. Translate advice back only if input was an Indic language
+    consensus_advice = result.get("consensus_advice")
+    if is_indic:
+        consensus_advice = await mock_bhashini_translate(consensus_advice, "en", source_lang)
+    
+    advice_local = consensus_advice
     
     return {
         "consensus_advice": advice_local,

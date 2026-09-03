@@ -844,11 +844,31 @@ contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}
     reader.readAsText(file);
   };
 
+  const getMessageColorClass = (text: string) => {
+    if (!text) return "chat-normal";
+    const upperText = text.toUpperCase();
+    
+    if (upperText.includes("HAZARD") || upperText.includes("DANGER") || upperText.includes("RED BULLETIN")) {
+        return "chat-hazard";
+    }
+    if (upperText.includes("WARNING") || upperText.includes("ALERT")) {
+        return "chat-warning";
+    }
+    if (upperText.includes("SAFE") || upperText.includes("OPTIMIZED") || upperText.includes("CLEAR SAILING")) {
+        return "chat-safe";
+    }
+    if (upperText.includes("ERROR") || upperText.includes("FAILED") || upperText.includes("OFFLINE")) {
+        return "chat-error";
+    }
+    
+    return "chat-normal";
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-slate-950 font-sans overflow-hidden">
       
       {/* Left Chat Panel */}
-      <div className="w-full md:w-96 lg:w-[400px] h-[50vh] md:h-full flex flex-col bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 shadow-2xl z-10 shrink-0">
+      <div className="w-full md:w-96 lg:w-[400px] h-[50vh] md:h-full flex flex-col bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 shadow-2xl z-10 shrink-0 resizable-sidebar">
         <div className="p-4 bg-slate-950 flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
@@ -860,14 +880,14 @@ contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}
             </div>
           </div>
           <div className="flex items-center gap-2 relative">
-            <button
+            {/* <button
               onClick={() => setIsProductivityModalOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer"
               title="Open Marine Productivity & Fisheries Analyst"
             >
               <Fish className="w-3.5 h-3.5 text-cyan-400" />
               <span>Productivity</span>
-            </button>
+            </button> */}
             <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors cursor-pointer" title="Settings">
               <MoreVertical className="w-5 h-5" />
             </button>
@@ -878,6 +898,11 @@ contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}
                 </button>
                 <button onClick={() => { fileInputRef.current?.click(); setShowSettingsMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2">
                   <Upload className="w-4 h-4" /> Import Chat
+                </button>
+                <button 
+                    onClick={() => { alert("Chat Legend:\n🟢 Green: Safe / Optimized\n🟡 Yellow: Warning / Alert\n🔴 Red: Hazard / Danger\n⚪ Normal: Standard Info"); setShowSettingsMenu(false); }} 
+                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded flex items-center gap-2">
+                    <span>📊</span> Chat Legend
                 </button>
               </div>
             )}
@@ -892,7 +917,8 @@ contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}
                 max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed relative
                 ${msg.role === 'user' 
                   ? 'bg-blue-600 text-white rounded-br-sm shadow-[0_0_15px_rgba(37,99,235,0.2)]' 
-                  : 'bg-slate-800 text-slate-200 rounded-bl-sm border border-slate-700'}
+                  // : 'bg-slate-800 text-slate-200 rounded-bl-sm border border-slate-700'}
+                  : `bg-slate-800 ${getMessageColorClass(msg.content)} rounded-bl-sm border border-slate-700`}
               `}>
                 {msg.content}
                 {msg.isLoaded && (

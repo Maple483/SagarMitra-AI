@@ -252,7 +252,7 @@ class MaritimeAStarPathfinder:
 
                 # Lazy Temporal Arrival Time Calculation
                 step_time_h = step_dist / self.speed_kmh
-                n_arrival_time = t0 + timedelta(hours=elapsed_h + step_time_h)
+                n_arrival_time = t0 + timedelta(hours=float(elapsed_h + step_time_h))
 
                 # Cost Coefficient C(n', t_arrival)
                 cost_coeff = self._get_dynamic_cost(nr, nc, n_arrival_time, hazards)

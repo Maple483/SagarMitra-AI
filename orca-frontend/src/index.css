@@ -3,3 +3,28 @@
 .dark-map {
   filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
+
+/* Resizable Chat Sidebar */
+.resizable-sidebar {
+    resize: horizontal;
+    overflow: auto;
+    min-width: 320px;
+    max-width: 600px; /* Prevents it from overlapping the whole map */
+}
+
+/* AI Chat Message Status Colors */
+.chat-safe { 
+    color: #4ade80; /* Light Green */
+}
+.chat-warning { 
+    color: #facc15; /* Yellow */
+}
+.chat-hazard { 
+    color: #f87171; /* Red */
+}
+.chat-error { 
+    color: #9ca3af; /* Gray for network/AI errors */
+}
+.chat-normal {
+    color: #f8fafc; /* Standard white/light gray for normal text */
+}
