@@ -35,7 +35,10 @@ class AgentState(TypedDict):
     target_time_start: Optional[str]
     target_time_end: Optional[str]
     relative_time_expr: Optional[str]
-    
+
+    # --- ADD THIS LINE ---
+    zoning_alerts: Optional[List[str]]         # Injected directly from main.py
+
     # Intent-Based Routing variables (Compound intents supported)
     query_intents: List[str]                   # ["pfz_search", "border_check", "weather_info"]
     required_agents: List[str]                 # ["weather", "ocean", "geofence"]
@@ -1149,6 +1152,11 @@ def consensus_explainer_node(state: AgentState):
     action = state.get("routing_action", "no_routing")
     confidence = state.get("decision_confidence", 1.0)
     
+    # --- NEW: Retrieve Zoning Alerts ---
+    zoning_alerts = state.get("zoning_alerts", [])
+    zoning_context = "\n".join(zoning_alerts) if zoning_alerts else "None"
+    # -----------------------------------
+
     # Extract nearest PFZ advisory details from ocean report
     ocean_rep = state.get("ocean_report", {})
     nearest_pfz_data = "None"
@@ -1229,17 +1237,19 @@ def consensus_explainer_node(state: AgentState):
             "- Routing Action: {routing_action}\n"
             "- Decision Confidence Score: {confidence}\n"
             "- Data Mode: {data_mode_summary}\n"
-            "- Nearest PFZ: {nearest_pfz_data}\n\n"
+            "- Nearest PFZ: {nearest_pfz_data}\n"
+            "- Active Zoning Alerts: {zoning_alerts}\n\n" # <-- Added Zoning Alerts to Template
             "Instructions:\n"
             "1. Clearly state the safety recommendation and the primary reason based on the Primary Reason(s) provided.\n"
-            "2. When discussing waves, swell, or sea conditions, explicitly state BOTH the Total Wave Height (e.g., 2.44 m total wave height) AND the Swell Height (e.g., 2.0 m swell) from the evidence log so fishermen clearly understand both sea conditions.\n"
-            "3. If there is an active Cyclone, Gale, or severe weather warning, highlight the storm details and immediate advisory action without cluttering with unneeded border distances.\n"
-            "4. If near or across a boundary (e.g. IMBL or EEZ limit), state the single relevant border distance rounded to 1 decimal place.\n"
-            "5. If asking about Potential Fishing Zones (PFZs), explain the nearest PFZ using the coast name, direction, and distance.\n"
-            "6. Keep the entire response strictly under 2 clear, helpful sentences. Do NOT exceed 2 sentences.\n"
-            "7. Do NOT use emojis of any kind.\n"
-            "8. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
-            "9. Do NOT output raw multi-digit decimals (e.g. use 138.9 km instead of 138.917 km). Use standard ASCII spaces and letters only."
+            "2. If there are Active Zoning Alerts, prioritize warning the user about them and advise them to alter course immediately.\n" # <-- Added instruction for Zoning
+            "3. When discussing waves, swell, or sea conditions, explicitly state BOTH the Total Wave Height (e.g., 2.44 m total wave height) AND the Swell Height (e.g., 2.0 m swell) from the evidence log so fishermen clearly understand both sea conditions.\n"
+            "4. If there is an active Cyclone, Gale, or severe weather warning, highlight the storm details and immediate advisory action without cluttering with unneeded border distances.\n"
+            "5. If near or across a boundary (e.g. IMBL or EEZ limit), state the single relevant border distance rounded to 1 decimal place.\n"
+            "6. If asking about Potential Fishing Zones (PFZs), explain the nearest PFZ using the coast name, direction, and distance.\n"
+            "7. Keep the entire response strictly under 2 clear, helpful sentences. Do NOT exceed 2 sentences.\n"
+            "8. Do NOT use emojis of any kind.\n"
+            "9. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "10. Do NOT output raw multi-digit decimals (e.g. use 138.9 km instead of 138.917 km). Use standard ASCII spaces and letters only."
         )
         
         try:
@@ -1255,7 +1265,8 @@ def consensus_explainer_node(state: AgentState):
                 "routing_action": action,
                 "confidence": confidence,
                 "data_mode_summary": data_mode_summary,
-                "nearest_pfz_data": nearest_pfz_data
+                "nearest_pfz_data": nearest_pfz_data,
+                "zoning_alerts": zoning_context  # <-- Pass the formatted alerts here
             })
             advice = response.content
             print("[DEBUG] Safety explainer LLM succeeded.")
@@ -1321,7 +1332,12 @@ def consensus_explainer_node(state: AgentState):
                         safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is safe, operating {dist_to_territorial_km} km from the territorial sea boundary."
                 else:
                     safety_advice = "Safety checks are currently degraded or offline due to partial data feeds."
-                    
+            
+            # --- NEW: Append Zoning Alerts to Offline Fallback ---
+            if zoning_alerts:
+                safety_advice += f" {zoning_context}"
+            # ----------------------------------------------------
+
             # Check for informational / explanation parts in compound query
             info_advice = ""
             q = user_query.lower()

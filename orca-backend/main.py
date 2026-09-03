@@ -20,6 +20,7 @@ from agents.orchestrator import app as agent_brain
 from agents.weather_service import weather_service
 from agents.weather_schema import RouteWeatherRequest, RouteWeatherResponse
 from marine_productivity import marine_productivity_router
+from agents.zoning_service import zoning_service
 
 app = FastAPI(title="SagarMitra AI Backend Gateway")
 app.include_router(marine_productivity_router)
@@ -475,7 +476,16 @@ async def handle_conversational_query(
             lat = twin_data["lat"]
             lon = twin_data["lon"]
             location_source = "DIGITAL_TWIN"
-            
+
+    # --- ADD THE LOGIC HERE ---
+    zoning_alerts = []
+    if lat and lon:
+        zone_check = zoning_service.check_position(lat, lon)
+        if zone_check["is_violation"]:
+            for v in zone_check["violations"]:
+                zoning_alerts.append(f"WARNING: Vessel is inside protected zone [{v['zone_type']}]: {v['name']}. {v['details']}")
+    # --------------------------
+
     location_required = "safe" in payload.message.lower() or "border" in payload.message.lower()
     if location_required and location_source == "UNAVAILABLE":
         return {
@@ -498,7 +508,8 @@ async def handle_conversational_query(
         "messages": [HumanMessage(content=english_query)],
         "vessel_id": vessel_id,
         "vessel_coords": {"lat": lat, "lon": lon} if lat else None,
-        "request_type": "query"
+        "request_type": "query",
+        "zoning_alerts": zoning_alerts
     }
     
     config = {"configurable": {"thread_id": f"vessel_{vessel_id}"}}
