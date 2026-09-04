@@ -77,21 +77,22 @@ class RouteService:
         if not context_text:
             return hazards
 
-        # Match e.g. "Active Wave alert (4.5m swells) at Lat 16.0, Lng 71.0"
-        wave_match = re.search(
-            r'Wave alert.*?([\d\.]+)\s*m.*?Lat\s*([\d\.-]+).*?Lng\s*([\d\.-]+)',
+        # Match e.g. "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0"
+        # or "High wave alert (4.5m swells) at Lat 15.5, Lng 71.0"
+        for wave_match in re.finditer(
+            r'Wave alert[^\n;]*?([\d\.]+)\s*m(?:[^\n;]*?radius\s*[:=]?\s*([\d\.]+)\s*km)?[^\n;]*?Lat\s*([\d\.-]+)[^\n;]*?Lng\s*([\d\.-]+)',
             context_text,
             re.IGNORECASE
-        )
-        if wave_match:
+        ):
             try:
                 swell_m = float(wave_match.group(1))
-                h_lat = float(wave_match.group(2))
-                h_lon = float(wave_match.group(3))
+                r_km = float(wave_match.group(2)) if wave_match.group(2) else 80.0
+                h_lat = float(wave_match.group(3))
+                h_lon = float(wave_match.group(4))
                 hazards.append(MaritimeHazard(
                     center_lat=h_lat,
                     center_lon=h_lon,
-                    radius_km=80.0,
+                    radius_km=r_km,
                     swell_height_m=swell_m,
                     hazard_type="wave_alert"
                 ))
@@ -230,6 +231,26 @@ class RouteService:
             elif seg.risk_level == "MEDIUM":
                 max_risk = "MEDIUM"
 
+        # Generate tactical advisory message if target or departure is inside hazard
+        advisory_msg: Optional[str] = None
+        target_inside_hazards = [
+            h for h in hazards
+            if haversine_km(target_lat, target_lon, h.center_lat, h.center_lon) < h.radius_km
+        ]
+        start_inside_hazards = [
+            h for h in hazards
+            if haversine_km(start_lat, start_lon, h.center_lat, h.center_lon) < h.radius_km
+        ]
+
+        if target_inside_hazards:
+            h_m = target_inside_hazards[0].swell_height_m
+            advisory_msg = f"TACTICAL ALERT: Destination is located inside active {h_m}m swell hazard zone. Route navigates via safe waters to the closest perimeter waypoint before conducting final direct approach into the alert zone."
+        elif start_inside_hazards:
+            h_m = start_inside_hazards[0].swell_height_m
+            advisory_msg = f"EVACUATION ROUTE: Departure coordinates are inside active {h_m}m swell hazard zone. Route navigates along the shortest vector directly out of the alert zone into safe waters."
+        elif min_clearance_nm > 0:
+            advisory_msg = f"Safe nautical route resolved avoiding active high wave alert zones with {min_clearance_nm} NM minimum clearance."
+
         return RouteResponse(
             status="SUCCESS",
             total_dist_km=total_km,
@@ -239,7 +260,8 @@ class RouteService:
             minimum_boundary_clearance_nm=12.0,
             max_risk_level=max_risk,
             waypoints=waypoints,
-            segments=segments
+            segments=segments,
+            message=advisory_msg
         )
 
 
