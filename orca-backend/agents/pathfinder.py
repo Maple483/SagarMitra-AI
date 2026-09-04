@@ -53,6 +53,7 @@ class MaritimeHazard:
         self.hazard_type = hazard_type
         self.valid_from = valid_from or datetime.utcnow() - timedelta(hours=1)
         self.valid_until = valid_until or datetime.utcnow() + timedelta(hours=48)
+        self.is_terminal_zone = False
 
     def is_active_at(self, query_time: datetime) -> bool:
         return self.valid_from <= query_time <= self.valid_until
@@ -69,13 +70,17 @@ class MaritimeHazard:
         if d >= self.radius_km:
             return 0.0
 
-        # Hard core for severe swell (>= 4.0m) within 50% radius
-        if self.swell_height_m >= 4.0 and d < (0.5 * self.radius_km):
+        # When neither start nor goal is inside this hazard, ANY point inside the hazard radius is strictly forbidden
+        if not getattr(self, 'is_terminal_zone', False) and self.swell_height_m >= 4.0:
             return float('inf')
 
-        # Quadratic soft penalty
+        # When start or goal is located inside this hazard (terminal zone),
+        # apply a steep distance penalty to force routing via safe waters up to the nearest perimeter entry/exit point
         normalized_d = d / max(1.0, self.radius_km)
-        weight = 10.0 if self.swell_height_m >= 4.0 else 4.0
+        if getattr(self, 'is_terminal_zone', False):
+            return 150.0 * (1.0 - normalized_d) + 50.0
+
+        weight = 30.0 if self.swell_height_m >= 4.0 else 4.0
         return weight * ((1.0 - normalized_d) ** 2)
 
 
@@ -171,6 +176,12 @@ class MaritimeAStarPathfinder:
         """
         hazards = hazards or []
         t0 = start_time or datetime.utcnow()
+
+        # Tag hazards where start or goal is located inside the zone
+        for h in hazards:
+            d_s = haversine_km(start_lat, start_lon, h.center_lat, h.center_lon)
+            d_g = haversine_km(goal_lat, goal_lon, h.center_lat, h.center_lon)
+            h.is_terminal_zone = (d_s < h.radius_km or d_g < h.radius_km)
 
         # 1. Snap start and goal to connected navigable water
         s_lat, s_lon, start_r, start_c = self.provider.snap_to_connected_navigable_water(start_lat, start_lon)
@@ -340,7 +351,20 @@ class MaritimeAStarPathfinder:
                     dist = haversine_km(p1[0], p1[1], p2[0], p2[1])
                     samples = max(4, int(math.ceil(dist / 2.5)))
                     pts = self._spherical_geodesic_interpolate(p1[0], p1[1], p2[0], p2[1], samples)
-                    if all(not self.provider.is_cell_impassable(*self.provider.coord_to_cell(lat, lon)) for lat, lon in pts):
+                    is_safe = True
+                    for lat, lon in pts:
+                        r, c = self.provider.coord_to_cell(lat, lon)
+                        if self.provider.is_cell_impassable(r, c) or any(math.isinf(h.get_penalty(lat, lon, start_time)) for h in hazards):
+                            is_safe = False
+                            break
+                        for h in hazards:
+                            if not getattr(h, 'is_terminal_zone', False) and h.is_active_at(start_time):
+                                if haversine_km(lat, lon, h.center_lat, h.center_lon) < h.radius_km:
+                                    is_safe = False
+                                    break
+                        if not is_safe:
+                            break
+                    if is_safe:
                         next_m = n
                         break
                 refined.append(smoothed[next_m])
@@ -388,6 +412,12 @@ class MaritimeAStarPathfinder:
             cost_c = self._get_dynamic_cost(sr, sc, sample_time, hazards)
             if math.isinf(cost_c):
                 return False
+
+            # Strict non-penetration invariant: shortcuts must never cut inside a non-terminal hazard
+            for h in hazards:
+                if not getattr(h, 'is_terminal_zone', False) and h.is_active_at(sample_time):
+                    if haversine_km(s_lat, s_lon, h.center_lat, h.center_lon) < h.radius_km:
+                        return False
 
             direct_cost += step_km * cost_c
 
