@@ -193,6 +193,13 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
             w = w_rep["data"]
             evidence.append({
                 "source": "weather",
+                "metric": "total_wave_height",
+                "value": w.get("total_wave_height", w.get("wave_height", 0.0)),
+                "unit": "meters",
+                "timestamp": w_rep.get("timestamp", "")
+            })
+            evidence.append({
+                "source": "weather",
                 "metric": "swell_height",
                 "value": w.get("swell_height", 0.0),
                 "unit": "meters",
@@ -205,17 +212,26 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
                 "unit": "km/h",
                 "timestamp": w_rep.get("timestamp", "")
             })
+            if "wind_speed_knots" in w:
+                evidence.append({
+                    "source": "weather",
+                    "metric": "wind_speed_knots",
+                    "value": w.get("wind_speed_knots", 0.0),
+                    "unit": "knots",
+                    "timestamp": w_rep.get("timestamp", "")
+                })
             
             swell = w.get("swell_height", 0.0)
+            wave = w.get("total_wave_height", swell)
             wind = w.get("wind_speed", 0.0)
-            if swell > 3.0 or wind > 45.0:
+            if wave > 3.0 or swell > 3.0 or wind > 45.0:
                 risk_level = "CRITICAL"
-                override_reasons.append("Severe weather conditions: high swells/winds exceed safety limits.")
+                override_reasons.append("Severe weather conditions: high waves/swells/winds exceed safety limits.")
                 weather_warning_requires_route = True
-            elif swell > 2.2 or wind > 35.0:
+            elif wave > 2.2 or swell > 2.2 or wind > 35.0:
                 if risk_level != "CRITICAL":
                     risk_level = "WARNING"
-                override_reasons.append("Caution: elevated swells/winds detected.")
+                override_reasons.append("Caution: elevated waves/swells/winds detected.")
                 weather_warning_requires_route = True
 
     # 2b. Evaluate active Map Hazards from system context
@@ -249,16 +265,16 @@ def evaluate_safety_rules(state: AgentState) -> Dict[str, Any]:
                 h_lon = float(h_lon_str)
                 
                 dist_to_hazard = get_haversine(lat, lon, h_lat, h_lon)
-                # Map wave alerts have a radius of 80 km
-                if dist_to_hazard <= 80000.0:
+                # Map wave alerts have an active warning radius of 250 km
+                if dist_to_hazard <= 250000.0:
                     if swell_h > 3.0:
                         risk_level = "CRITICAL"
-                        override_reasons.append(f"High wave hazard zone breach: vessel is inside the active warning area of a {swell_h}m swell region (radius 80km) centered at Lat {h_lat}, Lng {h_lon}.")
+                        override_reasons.append(f"High wave hazard zone breach: vessel is inside the active warning area of a {swell_h}m swell region centered at Lat {h_lat}, Lng {h_lon}.")
                         weather_warning_requires_route = True
                     elif swell_h > 2.2:
                         if risk_level != "CRITICAL":
                             risk_level = "WARNING"
-                        override_reasons.append(f"High wave hazard zone proximity: vessel is inside the warning area of a {swell_h}m swell region (radius 80km) centered at Lat {h_lat}, Lng {h_lon}.")
+                        override_reasons.append(f"High wave hazard zone proximity: vessel is inside the warning area of a {swell_h}m swell region centered at Lat {h_lat}, Lng {h_lon}.")
                         weather_warning_requires_route = True
             except Exception as ex:
                 print(f"[DEBUG] Error parsing map hazard: {ex}")
@@ -656,6 +672,21 @@ def router_node(state: AgentState):
             coords_dict = {"lat": coords.lat, "lon": coords.lon}
         elif isinstance(coords, dict):
             coords_dict = coords
+
+    # Auto-promote coordinate queries to full fishing_safety evaluation
+    if coords_dict:
+        if not intents or intents == ["informational"] or intents == ["unrelated"]:
+            intents = ["fishing_safety"]
+        elif "fishing_safety" not in intents and "general_safety" not in intents and "weather_info" not in intents:
+            intents.append("fishing_safety")
+        location_required = True
+        
+        # Re-derive required agents for coordinate evaluation
+        agents = derive_required_agents(intents, messages[-1].content)
+        status = {a: "RUNNING" for a in agents}
+        for default_a in ["weather", "ocean", "geofence"]:
+            if default_a not in status:
+                status[default_a] = "NOT_REQUIRED"
             
     # Set coordinates if resolved
     has_location = coords_dict or state.get("vessel_coords") or state.get("target_coords")
@@ -765,12 +796,19 @@ async def fetch_weather_report(state: AgentState) -> Dict[str, Any]:
         metadata = w_res.get("system_metadata", {})
         
         wind_kmh = float(telemetry.get("wind_speed_kmh", 20.0))
+        wind_kt = float(telemetry.get("wind_speed_knots", round(wind_kmh / 1.852, 1)))
+        wave_m = float(telemetry.get("wave_height_m", 2.0))
         swell_m = float(telemetry.get("swell_height_m", 1.5))
         source_name = metadata.get("data_source", "Open-Meteo Marine (Live Failover)")
         
         return {
             "weather_report": {
-                "data": {"wind_speed": wind_kmh, "swell_height": swell_m},
+                "data": {
+                    "wind_speed": wind_kmh,
+                    "wind_speed_knots": wind_kt,
+                    "total_wave_height": wave_m,
+                    "swell_height": swell_m
+                },
                 "source": source_name,
                 "data_mode": "live",
                 "timestamp": metadata.get("timestamp_utc", datetime.utcnow().isoformat() + "Z"),
@@ -785,7 +823,12 @@ async def fetch_weather_report(state: AgentState) -> Dict[str, Any]:
         return {
             "weather_report": {
                 "status": "failed",
-                "data": {"wind_speed": 22.0, "swell_height": 1.6},
+                "data": {
+                    "wind_speed": 22.0,
+                    "wind_speed_knots": 11.9,
+                    "total_wave_height": 2.0,
+                    "swell_height": 1.6
+                },
                 "error_code": "API_ERROR",
                 "data_mode": "fallback",
                 "source": "IMD Climatology Backup"
@@ -1189,13 +1232,14 @@ def consensus_explainer_node(state: AgentState):
             "- Nearest PFZ: {nearest_pfz_data}\n\n"
             "Instructions:\n"
             "1. Clearly state the safety recommendation and the primary reason based on the Primary Reason(s) provided.\n"
-            "2. If there is an active Cyclone, Gale, or severe weather warning, highlight the storm details and immediate advisory action without cluttering with unneeded border distances.\n"
-            "3. If near or across a boundary (e.g. IMBL or EEZ limit), state the single relevant border distance rounded to 1 decimal place.\n"
-            "4. If asking about Potential Fishing Zones (PFZs), explain the nearest PFZ using the coast name, direction, and distance.\n"
-            "5. Keep the entire response strictly under 2 clear, helpful sentences. Do NOT exceed 2 sentences.\n"
-            "6. Do NOT use emojis of any kind.\n"
-            "7. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
-            "8. Do NOT output raw multi-digit decimals (e.g. use 138.9 km instead of 138.917 km). Use standard ASCII spaces and letters only."
+            "2. When discussing waves, swell, or sea conditions, explicitly state BOTH the Total Wave Height (e.g., 2.44 m total wave height) AND the Swell Height (e.g., 2.0 m swell) from the evidence log so fishermen clearly understand both sea conditions.\n"
+            "3. If there is an active Cyclone, Gale, or severe weather warning, highlight the storm details and immediate advisory action without cluttering with unneeded border distances.\n"
+            "4. If near or across a boundary (e.g. IMBL or EEZ limit), state the single relevant border distance rounded to 1 decimal place.\n"
+            "5. If asking about Potential Fishing Zones (PFZs), explain the nearest PFZ using the coast name, direction, and distance.\n"
+            "6. Keep the entire response strictly under 2 clear, helpful sentences. Do NOT exceed 2 sentences.\n"
+            "7. Do NOT use emojis of any kind.\n"
+            "8. Do NOT use markdown formatting like bold asterisks (**), italics, headers, or bullet points.\n"
+            "9. Do NOT output raw multi-digit decimals (e.g. use 138.9 km instead of 138.917 km). Use standard ASCII spaces and letters only."
         )
         
         try:
@@ -1265,7 +1309,16 @@ def consensus_explainer_node(state: AgentState):
                         vessel_name = "coordinate t1"
                     elif "t2" in user_query.lower():
                         vessel_name = "coordinate t2"
-                    safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is safe, operating {dist_to_territorial_km} km from the territorial sea boundary."
+                    
+                    w_rep = state.get("weather_report") or {}
+                    w_data = w_rep.get("data") or {}
+                    if "weather_info" in state.get("query_intents", []) and w_data:
+                        wind_kt = w_data.get("wind_speed_knots", round(w_data.get("wind_speed", 0.0) / 1.852, 1))
+                        tot_wave = w_data.get("total_wave_height", 0.0)
+                        sw_h = w_data.get("swell_height", 0.0)
+                        safety_advice = f"Current conditions show wind speed of {wind_kt} kt with {tot_wave} m total wave height and {sw_h} m swell height, which is safe for fishing. No severe warnings are active."
+                    else:
+                        safety_advice = f"Environmental and spatial checks are normal. The {vessel_name} is safe, operating {dist_to_territorial_km} km from the territorial sea boundary."
                 else:
                     safety_advice = "Safety checks are currently degraded or offline due to partial data feeds."
                     
