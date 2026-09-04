@@ -52,6 +52,7 @@ export default function App() {
   const eezLayerRef = useRef<any>(null);
   const customMarkersLayerRef = useRef<any>(null);
   const cycloneLayerRef = useRef<any>(null);
+  const pfzLayerRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([
@@ -63,7 +64,8 @@ export default function App() {
     vessels: true,
     waves: false,
     eez: true, // Default to true now to highlight India
-    cyclones: true // IMD Live Cyclone & Gale Warnings
+    cyclones: true, // IMD Live Cyclone & Gale Warnings
+    pfz: true // INCOIS Potential Fishing Zones (PFZs)
   });
   
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
@@ -298,6 +300,53 @@ export default function App() {
         })
         .catch(err => console.warn('Could not fetch live cyclone alerts:', err));
 
+      // 5. INCOIS Potential Fishing Zones (PFZ) Layer
+      const pfzGrp = window.L.layerGroup();
+      pfzLayerRef.current = pfzGrp;
+
+      fetch('http://localhost:8000/api/pfz/active')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.zones) {
+            data.zones.forEach((pfz: any) => {
+              const pfzIcon = window.L.divIcon({
+                className: 'bg-transparent',
+                html: `
+                  <div class="relative flex items-center justify-center w-7 h-7 group cursor-pointer" title="${pfz.coast_name} PFZ">
+                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping"></span>
+                    <span class="relative inline-flex items-center justify-center rounded-full h-6 w-6 bg-emerald-600 border-2 border-emerald-200 text-white shadow-lg text-[11px] font-bold hover:scale-125 transition-transform">
+                      🐟
+                    </span>
+                  </div>
+                `,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+              });
+
+              const marker = window.L.marker([pfz.lat, pfz.lon], { icon: pfzIcon });
+
+              marker.bindPopup(`
+                <div class="p-1 min-w-[210px]">
+                  <div class="flex items-center gap-1.5 font-bold text-emerald-600 text-xs uppercase tracking-wider mb-1">
+                    <span>🐟 INCOIS Potential Fishing Zone</span>
+                  </div>
+                  <div class="text-sm font-bold text-slate-800">Coast of ${pfz.coast_name}</div>
+                  <div class="text-xs text-slate-600 mt-1">State: <b>${pfz.state}</b></div>
+                  <div class="text-xs text-slate-600">Direction & Bearing: <b>${pfz.direction} (${pfz.bearing_deg}°)</b></div>
+                  <div class="text-xs text-slate-600">Distance Offshore: <b>${pfz.distance_km_range} km</b></div>
+                  <div class="text-xs text-slate-600">Depth Range: <b>${pfz.depth_mtr_range} m</b></div>
+                  <div class="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 p-1 rounded mt-2">
+                    ${pfz.validity}
+                  </div>
+                </div>
+              `);
+
+              marker.addTo(pfzGrp);
+            });
+          }
+        })
+        .catch(err => console.warn('Could not load PFZ advisories:', err));
+
       // Store refs and add default layers
       vesselLayerRef.current = vesselsGrp;
       waveLayerRef.current = wavesGrp;
@@ -306,6 +355,7 @@ export default function App() {
       vesselsGrp.addTo(map);
       eezGrp.addTo(map);
       cyclonesGrp.addTo(map);
+      pfzGrp.addTo(map);
 
       mapRef.current = map;
       
@@ -356,6 +406,9 @@ export default function App() {
 
     if (layers.cyclones && cycloneLayerRef.current) mapRef.current.addLayer(cycloneLayerRef.current);
     else if (cycloneLayerRef.current) mapRef.current.removeLayer(cycloneLayerRef.current);
+
+    if (layers.pfz && pfzLayerRef.current) mapRef.current.addLayer(pfzLayerRef.current);
+    else if (pfzLayerRef.current) mapRef.current.removeLayer(pfzLayerRef.current);
   }, [layers]);
 
   // Sync Routes to Leaflet
@@ -1103,6 +1156,13 @@ contextStr += customMarkers.map(m => `"${m.alias}" is at Lat ${m.lat.toFixed(4)}
                   <Wind className="w-4 h-4 text-red-500" /> IMD Cyclones & Gales
                 </span>
                 <input type="checkbox" checked={layers.cyclones} onChange={() => toggleLayer('cyclones')} className="w-4 h-4 rounded border-slate-600 text-red-600 focus:ring-red-500 bg-slate-800" />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer group">
+                <span className="text-sm font-medium text-slate-200 group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                  <Fish className="w-4 h-4 text-emerald-400" /> Fishing Zones (PFZ)
+                </span>
+                <input type="checkbox" checked={layers.pfz} onChange={() => toggleLayer('pfz')} className="w-4 h-4 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 bg-slate-800" />
               </label>
             </div>
           )}

@@ -97,6 +97,22 @@ class TemplateNarrativeCompiler:
 
         # 2. What the data shows
         data_points: List[str] = []
+
+        # Primary empirical association for the selected lag timing
+        if bundle.pearson_r is not None and bundle.level_nominal_p_value_iid_assumed is not None:
+            if bundle.lag_years.value > 0:
+                data_points.append(
+                    f"1-Year lagged pairing (N={bundle.n_valid} years, 2007–2011 env paired with 2008–2012 catch): "
+                    f"Observed recruitment-lag correlation was r = {bundle.pearson_r:.2f} (nominal p = {bundle.level_nominal_p_value_iid_assumed:.3f}). "
+                    f"This assesses whether ocean conditions during spawning preceded commercial landings 1 year later."
+                )
+            else:
+                data_points.append(
+                    f"Concurrent same-year pairing (N={bundle.n_valid} years, 2007–2012): "
+                    f"Observed same-year correlation was r = {bundle.pearson_r:.2f} (nominal p = {bundle.level_nominal_p_value_iid_assumed:.3f}). "
+                    f"This assesses whether ocean conditions in the harvest year coincided with immediate catch volume."
+                )
+
         if bundle.catch_2007 is not None and bundle.catch_2012 is not None:
             catch_delta = bundle.catch_2012 - bundle.catch_2007
             data_points.append(
@@ -126,11 +142,18 @@ class TemplateNarrativeCompiler:
             )
 
         # 3. Possible contributing factors (Hypotheses)
-        contributing_factors: List[str] = [
-            f"Thermal habitat alignment: Coastal upwelling and seasonal thermocline shoaling coincide with peak schooling periods.",
-            f"Trophic food-web timing: Plankton blooms following the southwest monsoon provide larval and juvenile foraging windows.",
-            f"Unobserved operational confounders: Fleet engine horsepower, motorized purse-seine deployment, and monsoonal fishing ban enforcement heavily govern landing volumes.",
-        ]
+        if bundle.lag_years.value > 0:
+            contributing_factors = [
+                f"Larval recruitment & spawning delay: Coastal {var_label} during spawning in year t coincided with early larval survival windows, with harvestable cohort biomass appearing in landings 1 year later (year t+1).",
+                f"Cohort year-class carryover: Favorable juvenile foraging conditions in the prior season are associated with stronger recruit classes landed in the subsequent calendar year.",
+                f"Unobserved operational confounders: Fleet engine capacity, motorized purse-seine trips, and monsoon ban timing operate alongside lagged environmental signals.",
+            ]
+        else:
+            contributing_factors = [
+                f"Immediate seasonal habitat alignment: Coastal {var_label} in year t coincided with adult schooling aggregation and inshore migration patterns within the active fishing season.",
+                f"Concurrent upwelling synchrony: Seasonal thermocline shoaling concentrated pelagic schools close to nearshore coastal waters during the harvest year.",
+                f"Unobserved operational confounders: Fleet engine capacity, motorized purse-seine trips, and monsoon ban timing operate alongside concurrent environmental signals.",
+            ]
 
         # Verify semantic linter across compiled text
         all_text = direct_answer + " " + " ".join(data_points) + " " + " ".join(contributing_factors)

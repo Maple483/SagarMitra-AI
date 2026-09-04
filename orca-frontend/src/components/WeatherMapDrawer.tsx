@@ -408,113 +408,149 @@ export const WeatherMapDrawer: React.FC<WeatherMapDrawerProps> = ({ isOpen, onCl
         {/* Tab 2: 72-Hour Forecast Time Slider */}
         {activeTab === 'forecast' && (
           <div className="space-y-4">
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-semibold text-cyan-300">Forecast Time Slider</span>
-                </div>
-                <span className="text-sm font-bold text-white font-mono">+{forecastHour} Hours</span>
-              </div>
-
-              <input
-                type="range"
-                min="0"
-                max="72"
-                step="3"
-                value={forecastHour}
-                onChange={(e) => setForecastHour(parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                >
-                  {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                  {isPlaying ? 'Pause' : 'Play Timeline'}
-                </button>
-                <span className="text-[11px] text-slate-400">Renders 1 frame at a time</span>
-              </div>
-            </div>
-
-            {/* Live Forecast Metric Breakdown for Selected Frame */}
             {(() => {
-              const selectedFrame = forecastData?.hourly_summary?.find((f: any) => f.hour_offset === forecastHour) || forecastData?.hourly_summary?.[0];
-              const isLand = 
+              const isOutsideEEZ =
+                forecastData?.reason === 'OUTSIDE_INDIAN_EEZ' ||
+                weather?.provenance?.marine_source === 'OUTSIDE_INDIAN_EEZ' ||
+                weather?.system_metadata?.data_source === 'OUTSIDE_INDIAN_EEZ';
+
+              const isLand =
+                forecastData?.reason === 'INLAND_LANDMASS' ||
                 weather?.provenance?.marine_source === 'LANDMASS_INLAND' || 
                 weather?.system_metadata?.data_source === 'LANDMASS_INLAND' ||
-                weather?.safety_assessment?.warning_level === 'LANDMASS' ||
-                weather?.waves?.wave_height_m === 0 ||
-                weather?.telemetry?.wave_height_m === 0;
+                weather?.safety_assessment?.warning_level === 'LANDMASS';
 
-              if (isLand) {
+              const isSuppressed = forecastData?.status === 'SUPPRESSED' || isLand || isOutsideEEZ || !forecastData?.hourly_summary?.length;
+
+              if (isSuppressed) {
                 return (
-                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 text-center">
-                    <span className="text-xs font-semibold text-slate-300 block">INLAND LANDMASS COORDINATES</span>
-                    <span className="text-xs text-slate-400">Marine forecast stream suppressed for inland coordinates</span>
+                  <div className="space-y-4">
+                    <div className="bg-slate-800/90 border border-amber-500/40 rounded-xl p-5 text-center space-y-3 shadow-lg">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                        {isOutsideEEZ ? (
+                          <ShieldAlert className="w-6 h-6 text-amber-400" />
+                        ) : (
+                          <MapPin className="w-6 h-6 text-amber-400" />
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-amber-300 block uppercase tracking-wide">
+                          {isOutsideEEZ ? 'OUTSIDE INDIAN EXCLUSIVE ECONOMIC ZONE' : 'INLAND LANDMASS COORDINATES'}
+                        </span>
+                        <p className="text-xs text-slate-300 mt-2 max-w-sm mx-auto leading-relaxed">
+                          {isOutsideEEZ
+                            ? '72-Hour marine prediction stream is strictly restricted to maritime coordinates within the Indian Exclusive Economic Zone (EEZ). Prediction engine is inactive for international or foreign waters.'
+                            : '72-Hour marine prediction stream is suppressed for inland landmass coordinates. Please select an offshore or coastal coordinate within the Indian EEZ.'}
+                        </p>
+                      </div>
+                      <div className="pt-2">
+                        <span className="inline-block px-3 py-1 bg-slate-900/80 border border-slate-700 rounded-full text-[11px] font-mono text-slate-400">
+                          Lat: {coords.lat.toFixed(4)}, Lon: {coords.lon.toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl text-center">
+                      <span className="text-xs text-slate-500 font-medium">
+                        No prediction stream calculated for non-navigable / restricted territory
+                      </span>
+                    </div>
                   </div>
                 );
               }
 
+              const selectedFrame = forecastData?.hourly_summary?.find((f: any) => f.hour_offset === forecastHour) || forecastData?.hourly_summary?.[0];
+
               return (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                      <Wind className="w-4 h-4 text-cyan-400" />
-                      <span>PREDICTED WIND</span>
+                <>
+                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-cyan-400" />
+                        <span className="text-xs font-semibold text-cyan-300">Forecast Time Slider</span>
+                      </div>
+                      <span className="text-sm font-bold text-white font-mono">+{forecastHour} Hours</span>
                     </div>
-                    <div className="text-xl font-bold text-white">
-                      {selectedFrame ? selectedFrame.wind_speed_kt : round(weather?.wind?.speed_kt || 12.0, 1)} <span className="text-xs font-normal text-slate-400">kt</span>
-                    </div>
-                    <div className="text-[11px] text-slate-400 mt-1">
-                      Frame: +{forecastHour}h | Direction: {weather?.wind?.direction_deg || 240}°
+
+                    <input
+                      type="range"
+                      min="0"
+                      max="72"
+                      step="3"
+                      value={forecastHour}
+                      onChange={(e) => setForecastHour(parseInt(e.target.value))}
+                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    />
+
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                      >
+                        {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        {isPlaying ? 'Pause' : 'Play Timeline'}
+                      </button>
+                      <span className="text-[11px] text-slate-400">Renders 1 frame at a time</span>
                     </div>
                   </div>
 
-                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                      <Waves className="w-4 h-4 text-blue-400" />
-                      <span>PREDICTED SWELL</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                        <Wind className="w-4 h-4 text-cyan-400" />
+                        <span>PREDICTED WIND</span>
+                      </div>
+                      <div className="text-xl font-bold text-white">
+                        {selectedFrame ? selectedFrame.wind_speed_kt : round(weather?.wind?.speed_kt || 12.0, 1)} <span className="text-xs font-normal text-slate-400">kt</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        Frame: +{forecastHour}h | Direction: {weather?.wind?.direction_deg || 240}°
+                      </div>
                     </div>
-                    <div className="text-xl font-bold text-white">
-                      {selectedFrame ? selectedFrame.wave_height_m : round(weather?.waves?.wave_height_m || 1.5, 2)} <span className="text-xs font-normal text-slate-400">m</span>
-                    </div>
-                    <div className="text-[11px] text-slate-400 mt-1">
-                      Period: {selectedFrame?.wave_period_s || 7.5}s | Swell: {round((selectedFrame?.wave_height_m || 1.5) * 0.8, 1)}m
+
+                    <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                        <Waves className="w-4 h-4 text-blue-400" />
+                        <span>PREDICTED SWELL</span>
+                      </div>
+                      <div className="text-xl font-bold text-white">
+                        {selectedFrame ? selectedFrame.wave_height_m : round(weather?.waves?.wave_height_m || 1.5, 2)} <span className="text-xs font-normal text-slate-400">m</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-1">
+                        Period: {selectedFrame?.wave_period_s || 7.5}s | Swell: {round((selectedFrame?.wave_height_m || 1.5) * 0.8, 1)}m
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* 3-Hourly Forecast Breakdown List */}
+                  <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 space-y-2">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block">72-Hour Prediction Stream</span>
+                    <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                      {forecastData?.hourly_summary?.map((step: any, idx: number) => (
+                        <div
+                          key={idx}
+                          onClick={() => setForecastHour(step.hour_offset)}
+                          className={`p-2 rounded border flex items-center justify-between text-xs cursor-pointer transition-colors ${
+                            forecastHour === step.hour_offset
+                              ? 'bg-cyan-950/80 border-cyan-400 text-cyan-300'
+                              : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-cyan-400 font-bold">+{step.hour_offset}h</span>
+                            <span className="text-[11px] text-slate-400">{step.timestamp_utc?.substring(11, 16)} UTC</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px]">
+                            <span>Wind: <strong className="text-white">{step.wind_speed_kt} kt</strong></span>
+                            <span>Swell: <strong className="text-white">{step.wave_height_m} m</strong></span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               );
             })()}
-
-            {/* 3-Hourly Forecast Breakdown List */}
-            <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 space-y-2">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block">72-Hour Prediction Stream</span>
-              <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-                {forecastData?.hourly_summary?.map((step: any, idx: number) => (
-                  <div
-                    key={idx}
-                    onClick={() => setForecastHour(step.hour_offset)}
-                    className={`p-2 rounded border flex items-center justify-between text-xs cursor-pointer transition-colors ${
-                      forecastHour === step.hour_offset
-                        ? 'bg-cyan-950/80 border-cyan-400 text-cyan-300'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-cyan-400 font-bold">+{step.hour_offset}h</span>
-                      <span className="text-[11px] text-slate-400">{step.timestamp_utc?.substring(11, 16)} UTC</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[11px]">
-                      <span>Wind: <strong className="text-white">{step.wind_speed_kt} kt</strong></span>
-                      <span>Swell: <strong className="text-white">{step.wave_height_m} m</strong></span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 

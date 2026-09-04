@@ -1,24 +1,29 @@
 import React, { useState } from 'react';
 import { TimeseriesData, EnvironmentalVariable } from './types';
-import { Info } from 'lucide-react';
+import { Info, Clock, Sparkles } from 'lucide-react';
 
 interface EnvironmentalTrendChartProps {
   timeseries: TimeseriesData;
   variable: EnvironmentalVariable;
   species: string;
+  lagYears?: number;
 }
 
 export const EnvironmentalTrendChart: React.FC<EnvironmentalTrendChartProps> = ({
   timeseries,
   variable,
   species,
+  lagYears = 1,
 }) => {
+  const [showLagShifted, setShowLagShifted] = useState<boolean>(false);
   const [hoveredPoint, setHoveredPoint] = useState<{
     year: number;
+    origEnvYear?: number;
     valCatch?: number;
     valEnv?: number;
     type: 'OBSERVED' | 'SCENARIO';
     x: number;
+    isShifted?: boolean;
   } | null>(null);
 
   const years = [
@@ -75,6 +80,16 @@ export const EnvironmentalTrendChart: React.FC<EnvironmentalTrendChartProps> = (
     .filter((y) => timeseries.environmental[y] !== undefined)
     .map((y) => ({ x: getX(y), y: getYEnv(timeseries.environmental[y]), year: y, val: timeseries.environmental[y] }));
 
+  const shiftedObsEnvPoints = timeseries.observed_years
+    .filter((y) => timeseries.environmental[y] !== undefined && y + 1 <= maxYear)
+    .map((y) => ({
+      x: getX(y + 1),
+      y: getYEnv(timeseries.environmental[y]),
+      origYear: y,
+      targetYear: y + 1,
+      val: timeseries.environmental[y],
+    }));
+
   const fullScenEnvPoints = [
     obsEnvPoints[obsEnvPoints.length - 1],
     ...scenEnvPoints,
@@ -97,21 +112,59 @@ export const EnvironmentalTrendChart: React.FC<EnvironmentalTrendChartProps> = (
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-300">
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2.5 w-5 bg-emerald-400 rounded-sm"></span>
-            Observed Landings (Solid)
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2.5 w-5 border border-dashed border-cyan-400 rounded-sm"></span>
-            Scenario Continuation (Dashed)
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-2.5 w-2.5 bg-amber-400 rotate-45"></span>
-            Historical Analysis Env
-          </span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Optional Lag-Shifted Curve Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowLagShifted((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold border transition cursor-pointer ${
+              showLagShifted
+                ? 'border-purple-500/60 bg-purple-500/20 text-purple-300 shadow-sm ring-1 ring-purple-500/30'
+                : 'border-slate-700 bg-slate-950/70 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+            }`}
+            title="Visually offsets the environmental curve 1 year forward (+1 yr) to inspect how spawning ocean conditions align directly with subsequent catch"
+          >
+            <Clock className="h-3 w-3 text-purple-400" />
+            <span>{showLagShifted ? 'Hide Lag-Shifted Curve' : 'Show Lag-Shifted Curve (+1 yr)'}</span>
+          </button>
+
+          <div className="flex flex-wrap items-center gap-3 text-[10px] text-slate-300 pl-2 border-l border-slate-800">
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2.5 w-5 bg-emerald-400 rounded-sm"></span>
+              Observed Landings (Solid)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2.5 w-5 border border-dashed border-cyan-400 rounded-sm"></span>
+              Scenario Continuation (Dashed)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2.5 w-2.5 bg-amber-400 rotate-45"></span>
+              Historical Env
+            </span>
+            {showLagShifted && (
+              <span className="flex items-center gap-1 text-purple-300 font-semibold">
+                <span className="inline-block h-1 w-4 border-t-2 border-dashed border-purple-400"></span>
+                +1-Yr Lagged Env (t→t+1)
+              </span>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Visual Alignment Explainer Banner */}
+      {showLagShifted && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-purple-500/30 bg-purple-950/30 px-3 py-2 text-xs text-purple-200">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-purple-400 shrink-0" />
+            <span>
+              <strong>Visual Lag Alignment Enabled:</strong> The environmental curve (purple dashed line) is shifted +1 calendar year forward. Ocean conditions of year <em>t</em> (e.g. 2007) now line up in the exact same vertical column as year <em>t+1</em> catch (e.g. 2008) so you can directly compare recruitment alignment.
+            </span>
+          </div>
+          <span className="rounded bg-purple-900/60 px-2 py-0.5 text-[10px] font-bold text-purple-300 shrink-0 ml-2 font-mono">
+            +1 yr offset
+          </span>
+        </div>
+      )}
 
       <div className="relative overflow-x-auto">
         {/* TOP: Landings Chart */}
@@ -203,6 +256,42 @@ export const EnvironmentalTrendChart: React.FC<EnvironmentalTrendChartProps> = (
             <path d={makePath(obsEnvPoints)} fill="none" stroke={envColor} strokeWidth="2.5" />
             <path d={makePath(fullScenEnvPoints)} fill="none" stroke="#06b6d4" strokeWidth="1.8" strokeDasharray="5 4" />
 
+            {/* Optional Lag-Shifted Curve (+1 yr offset) */}
+            {showLagShifted && (
+              <>
+                <path
+                  d={makePath(shiftedObsEnvPoints)}
+                  fill="none"
+                  stroke="#c084fc"
+                  strokeWidth="2.2"
+                  strokeDasharray="4 3"
+                />
+                {shiftedObsEnvPoints.map((p) => (
+                  <circle
+                    key={`shifted-${p.origYear}`}
+                    cx={p.x}
+                    cy={p.y}
+                    r="4.5"
+                    fill="#7e22ce"
+                    stroke="#e9d5ff"
+                    strokeWidth="1.5"
+                    className="cursor-pointer transition-all hover:scale-125"
+                    onMouseEnter={() =>
+                      setHoveredPoint({
+                        year: p.targetYear,
+                        origEnvYear: p.origYear,
+                        valEnv: p.val,
+                        type: 'OBSERVED',
+                        x: p.x,
+                        isShifted: true,
+                      })
+                    }
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                ))}
+              </>
+            )}
+
             {obsEnvPoints.map((p) => (
               <polygon
                 key={p.year}
@@ -264,28 +353,60 @@ export const EnvironmentalTrendChart: React.FC<EnvironmentalTrendChartProps> = (
               <span>Year {hoveredPoint.year}</span>
               <span
                 className={`rounded px-1.5 py-0.5 text-[9px] font-semibold ${
-                  hoveredPoint.type === 'OBSERVED'
+                  hoveredPoint.isShifted
+                    ? 'bg-purple-500/20 text-purple-300'
+                    : hoveredPoint.type === 'OBSERVED'
                     ? 'bg-emerald-500/20 text-emerald-300'
                     : 'bg-cyan-500/20 text-cyan-300'
                 }`}
               >
-                {hoveredPoint.type === 'OBSERVED' ? 'OBSERVED RECORD' : 'SCENARIO PROJECTION'}
+                {hoveredPoint.isShifted
+                  ? 'LAG-SHIFTED ALIGNMENT'
+                  : hoveredPoint.type === 'OBSERVED'
+                  ? 'OBSERVED RECORD'
+                  : 'SCENARIO PROJECTION'}
               </span>
             </div>
-            {timeseries.landings[hoveredPoint.year] !== undefined && (
-              <div className="text-[11px] text-slate-300">
-                Landings: <span className="font-bold text-emerald-400">{timeseries.landings[hoveredPoint.year].toLocaleString()} t</span>
+
+            {hoveredPoint.isShifted ? (
+              <div className="space-y-1 text-[11px] text-slate-300">
+                <div>
+                  Shifted {varLabel}:{' '}
+                  <span className="font-bold text-purple-300">
+                    {hoveredPoint.valEnv?.toFixed(2)} {varUnit}
+                  </span>{' '}
+                  <span className="text-[10px] text-purple-400 font-semibold">(from Year {hoveredPoint.origEnvYear})</span>
+                </div>
+                {timeseries.landings[hoveredPoint.year] !== undefined && (
+                  <div>
+                    Aligned Catch ({hoveredPoint.year}):{' '}
+                    <span className="font-bold text-emerald-400">
+                      {timeseries.landings[hoveredPoint.year].toLocaleString()} t
+                    </span>
+                  </div>
+                )}
+                <div className="text-[10px] text-slate-400 italic pt-1 border-t border-slate-800">
+                  Tests spawning conditions in {hoveredPoint.origEnvYear} against harvest in {hoveredPoint.year}.
+                </div>
               </div>
-            )}
-            {timeseries.environmental[hoveredPoint.year] !== undefined && (
-              <div className="text-[11px] text-slate-300">
-                {varLabel}: <span className="font-bold text-amber-400">{timeseries.environmental[hoveredPoint.year].toFixed(2)} {varUnit}</span>
-              </div>
-            )}
-            {hoveredPoint.year === 2026 && (
-              <div className="mt-1 text-[10px] font-bold text-cyan-400 border-t border-slate-800 pt-1">
-                ★ 2026 Synthetic Scenario Value
-              </div>
+            ) : (
+              <>
+                {timeseries.landings[hoveredPoint.year] !== undefined && (
+                  <div className="text-[11px] text-slate-300">
+                    Landings: <span className="font-bold text-emerald-400">{timeseries.landings[hoveredPoint.year].toLocaleString()} t</span>
+                  </div>
+                )}
+                {timeseries.environmental[hoveredPoint.year] !== undefined && (
+                  <div className="text-[11px] text-slate-300">
+                    {varLabel}: <span className="font-bold text-amber-400">{timeseries.environmental[hoveredPoint.year].toFixed(2)} {varUnit}</span>
+                  </div>
+                )}
+                {hoveredPoint.year === 2026 && (
+                  <div className="mt-1 text-[10px] font-bold text-cyan-400 border-t border-slate-800 pt-1">
+                    ★ 2026 Synthetic Scenario Value
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

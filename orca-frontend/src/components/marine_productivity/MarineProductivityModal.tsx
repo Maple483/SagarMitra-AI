@@ -288,6 +288,7 @@ export const MarineProductivityModal: React.FC<MarineProductivityModalProps> = (
                 timeseries={timeseries}
                 variable={selectedVariable}
                 species={selectedSpecies}
+                lagYears={selectedLag}
               />
 
               {/* Row 2: Explainable Analyst Card */}

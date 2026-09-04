@@ -1286,7 +1286,16 @@ def consensus_explainer_node(state: AgentState):
                     if pfz_info:
                         safety_advice = f"The nearest Potential Fishing Zone is {pfz_info['distance_to_vessel_km']} km away off {pfz_info['coast_name']}, {pfz_info['state']} in the {pfz_info['direction']} direction, with depth range {pfz_info['depth_mtr_range']} m."
                     else:
-                        safety_advice = "No potential fishing zones were identified in your immediate region today."
+                        coords = state.get("vessel_coords") or {}
+                        v_lat = float(coords.get("lat", 0.0))
+                        v_lon = float(coords.get("lon", 0.0))
+                        from agents.weather_service import weather_service
+                        if weather_service.is_on_landmass(v_lat, v_lon):
+                            safety_advice = "Potential Fishing Zones (PFZs) are strictly calculated for oceanic waters. Your current position is on an inland landmass."
+                        elif not weather_service.is_inside_indian_eez(v_lat, v_lon):
+                            safety_advice = "Potential Fishing Zones (PFZs) are strictly limited to the Indian Exclusive Economic Zone. Your current position is outside the Indian EEZ."
+                        else:
+                            safety_advice = "No active Potential Fishing Zones (PFZs) were identified in your immediate region today."
                 elif final_risk == "CRITICAL":
                     if any(k in overrides.lower() for k in ["restricted", "boundary", "breach", "imbl"]):
                         safety_advice = f"Your vessel has breached the restricted {nearest_boundary_name}. Turn back immediately."

@@ -443,6 +443,32 @@ async def get_cyclone_and_gale_alerts():
         "bulletins": imd_cyclone_service.get_active_cyclones()
     }
 
+@app.get("/api/pfz/nearest")
+async def get_nearest_pfz_endpoint(
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lon: float = Query(..., ge=-180.0, le=180.0),
+    max_radius_km: float = Query(350.0, ge=10.0, le=1000.0)
+):
+    """
+    Retrieves the nearest INCOIS Potential Fishing Zone (PFZ) advisory.
+    Strictly suppressed for inland landmasses and coordinates outside the Indian EEZ (no calculation).
+    """
+    from agents.pfz_loader import find_nearest_pfz_with_status
+    return find_nearest_pfz_with_status(lat, lon, max_radius_km=max_radius_km)
+
+@app.get("/api/pfz/active")
+async def get_active_pfz_zones():
+    """
+    Lists all active official INCOIS Potential Fishing Zones (PFZs) within the Indian EEZ.
+    """
+    from agents.pfz_loader import get_all_pfz_advisories
+    zones = get_all_pfz_advisories()
+    return {
+        "status": "SUCCESS",
+        "total_active_zones": len(zones),
+        "zones": zones
+    }
+
 @app.post("/api/query")
 async def handle_conversational_query(
     payload: TextQueryRequest,
@@ -620,9 +646,35 @@ async def get_weather_forecast(
     lon: float = Query(..., ge=-180.0, le=180.0),
     days: int = Query(3, ge=1, le=7)
 ):
-    """Retrieves multi-day hourly marine forecast streams with realistic diurnal oscillations."""
+    """
+    Retrieves multi-day hourly marine forecast streams with realistic diurnal oscillations.
+    Strictly suppressed for inland landmasses and coordinates outside the Indian EEZ (no calculation).
+    """
+    # 1. Verification of maritime sovereignty and landmass boundaries
+    is_outside_eez = not weather_service.is_inside_indian_eez(lat, lon)
+    is_land = weather_service.is_on_landmass(lat, lon)
+
+    # 2. Strict non-calculation guard: do not calculate anything for inland or outside EEZ coordinates
+    if is_land or is_outside_eez:
+        reason = "INLAND_LANDMASS" if is_land else "OUTSIDE_INDIAN_EEZ"
+        message = (
+            "Marine forecast stream suppressed: Selected coordinates are located on an inland landmass. Prediction engine inactive."
+            if is_land else
+            "Marine forecast stream suppressed: Selected coordinates are located outside the Indian Exclusive Economic Zone (EEZ). Prediction engine inactive."
+        )
+        return {
+            "status": "SUPPRESSED",
+            "reason": reason,
+            "message": message,
+            "latitude": lat,
+            "longitude": lon,
+            "forecast_days": days,
+            "current": None,
+            "hourly_summary": []
+        }
+
+    # 3. For valid maritime coordinates inside the Indian EEZ, compute marine forecast
     state = weather_service.fetch_live_weather(lat, lon)
-    is_land = state.provenance.marine_source == "LANDMASS_INLAND"
     base_wind = state.wind.speed_kt
     base_wave = state.waves.wave_height_m or 0.0
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -634,15 +686,15 @@ async def get_weather_forecast(
         diurnal_wave = math.sin(math.pi * h / 12.0) * 0.3
         
         pred_wind = round(max(5.0, base_wind + diurnal_wind), 1)
-        pred_wave = 0.0 if is_land else round(max(0.4, base_wave + diurnal_wave), 2)
+        pred_wave = round(max(0.4, base_wave + diurnal_wave), 2)
         
         summary.append({
             "hour_offset": h,
             "timestamp_utc": (now + datetime.timedelta(hours=h)).isoformat(),
             "wind_speed_kt": pred_wind,
             "wave_height_m": pred_wave,
-            "wave_period_s": 0.0 if is_land else 7.5,
-            "is_cross_sea": False if is_land else (state.is_cross_sea and pred_wave >= 1.2)
+            "wave_period_s": 7.5,
+            "is_cross_sea": state.is_cross_sea and pred_wave >= 1.2
         })
 
     return {
@@ -650,7 +702,7 @@ async def get_weather_forecast(
         "latitude": lat,
         "longitude": lon,
         "forecast_days": days,
-        "current": state.dict(),
+        "current": state.model_dump() if hasattr(state, "model_dump") else state.dict(),
         "hourly_summary": summary
     }
 

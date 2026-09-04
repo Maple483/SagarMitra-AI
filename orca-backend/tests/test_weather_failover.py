@@ -61,3 +61,73 @@ def test_cyclone_gale_hazard_route_avoidance():
     assert resp.total_dist_nm > 0
     # Minimum hazard clearance must be maintained
     assert resp.minimum_hazard_clearance_nm > 0
+
+
+def test_forecast_suppressed_for_inland_and_outside_eez():
+    """Verify 72-hour forecast calculation is strictly suppressed for inland and outside EEZ coordinates."""
+    from fastapi.testclient import TestClient
+    from main import app
+
+    client = TestClient(app)
+
+    # 1. Inland coordinate (Delhi)
+    r1 = client.get("/api/weather/forecast?lat=28.61&lon=77.20&days=3")
+    assert r1.status_code == 200
+    d1 = r1.json()
+    assert d1["status"] == "SUPPRESSED"
+    assert d1["reason"] == "INLAND_LANDMASS"
+    assert len(d1["hourly_summary"]) == 0
+    assert d1["current"] is None
+
+    # 2. Outside Indian EEZ coordinate (Equator)
+    r2 = client.get("/api/weather/forecast?lat=0.0&lon=75.0&days=3")
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert d2["status"] == "SUPPRESSED"
+    assert d2["reason"] == "OUTSIDE_INDIAN_EEZ"
+    assert len(d2["hourly_summary"]) == 0
+    assert d2["current"] is None
+
+    # 3. Valid Indian EEZ coastal waters (Offshore Mumbai)
+    r3 = client.get("/api/weather/forecast?lat=18.95&lon=72.50&days=3")
+    assert r3.status_code == 200
+    d3 = r3.json()
+    assert d3["status"] == "SUCCESS"
+    assert len(d3["hourly_summary"]) == 24
+
+
+def test_pfz_suppressed_for_inland_and_outside_eez():
+    """Verify PFZ advisory calculation is strictly suppressed for inland and outside EEZ coordinates."""
+    from fastapi.testclient import TestClient
+    from main import app
+    from agents.pfz_loader import find_nearest_pfz
+
+    client = TestClient(app)
+
+    # 1. Direct function checks
+    assert find_nearest_pfz(28.61, 77.20) is None  # Delhi inland
+    assert find_nearest_pfz(0.0, 75.0) is None     # Outside EEZ
+    assert find_nearest_pfz(18.95, 72.50) is not None  # Offshore Mumbai
+
+    # 2. Endpoint checks
+    r1 = client.get("/api/pfz/nearest?lat=28.61&lon=77.20")
+    assert r1.status_code == 200
+    d1 = r1.json()
+    assert d1["status"] == "SUPPRESSED"
+    assert d1["reason"] == "INLAND_LANDMASS"
+    assert d1["nearest_pfz"] is None
+
+    r2 = client.get("/api/pfz/nearest?lat=0.0&lon=75.0")
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert d2["status"] == "SUPPRESSED"
+    assert d2["reason"] == "OUTSIDE_INDIAN_EEZ"
+    assert d2["nearest_pfz"] is None
+
+    r3 = client.get("/api/pfz/nearest?lat=18.95&lon=72.50")
+    assert r3.status_code == 200
+    d3 = r3.json()
+    assert d3["status"] == "SUCCESS"
+    assert d3["nearest_pfz"]["coast_name"] == "Malabar Port"
+
+
