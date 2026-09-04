@@ -209,5 +209,21 @@ def test_terminal_hazard_zone_routing():
     assert resp.max_risk_level == "HIGH"
 
 
+def test_right_zone_bay_of_bengal_terminal_routing():
+    """Test 11: Route from Chennai into right wave alert preserves safe perimeter waypoints."""
+    rs = RouteService()
+    start = {"lat": 13.0, "lon": 80.3}
+    target = {"lat": 11.8, "lon": 82.2}
+    ctx = "Active Wave alert (4.5m swells, radius 180km) at Lat 15.5, Lng 71.0; Active Wave alert (3.2m swells, radius 160km) at Lat 11.5, Lng 81.5"
+    
+    resp = rs.calculate_safe_route(start, target, ctx)
+    assert resp.status == "SUCCESS"
+    assert len(resp.waypoints) >= 3, "Must retain perimeter waypoints outside the hazard"
+    # Ensure intermediate waypoints before final approach remain strictly outside the 160km circle
+    for wp in resp.waypoints[:-1]:
+        d = haversine_km(wp.lat, wp.lon, 11.5, 81.5)
+        assert d >= 160.0, f"Perimeter approach waypoint ({wp.lat}, {wp.lon}) prematurely entered circle (dist={d:.1f} km < 160 km)"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

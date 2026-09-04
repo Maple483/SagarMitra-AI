@@ -346,25 +346,7 @@ class MaritimeAStarPathfinder:
             while m < len(smoothed) - 1:
                 next_m = m + 1
                 for n in range(len(smoothed) - 1, m + 1, -1):
-                    p1 = smoothed[m]
-                    p2 = smoothed[n]
-                    dist = haversine_km(p1[0], p1[1], p2[0], p2[1])
-                    samples = max(4, int(math.ceil(dist / 2.5)))
-                    pts = self._spherical_geodesic_interpolate(p1[0], p1[1], p2[0], p2[1], samples)
-                    is_safe = True
-                    for lat, lon in pts:
-                        r, c = self.provider.coord_to_cell(lat, lon)
-                        if self.provider.is_cell_impassable(r, c) or any(math.isinf(h.get_penalty(lat, lon, start_time)) for h in hazards):
-                            is_safe = False
-                            break
-                        for h in hazards:
-                            if not getattr(h, 'is_terminal_zone', False) and h.is_active_at(start_time):
-                                if haversine_km(lat, lon, h.center_lat, h.center_lon) < h.radius_km:
-                                    is_safe = False
-                                    break
-                        if not is_safe:
-                            break
-                    if is_safe:
+                    if self._is_geodesic_shortcut_valid(smoothed, m, n, hazards, start_time):
                         next_m = n
                         break
                 refined.append(smoothed[next_m])
@@ -397,11 +379,40 @@ class MaritimeAStarPathfinder:
         # Sub-sample every ~3 km along the Great-Circle arc
         num_samples = max(4, int(math.ceil(direct_dist / 3.0)))
         sample_pts = self._spherical_geodesic_interpolate(p1[0], p1[1], p2[0], p2[1], num_samples)
+        step_km = direct_dist / float(num_samples - 1)
+        step_time_h = step_km / self.speed_kmh
+
+        # Strict hazard non-penetration and terminal zone approach invariants:
+        for h in hazards:
+            if h.is_active_at(start_time):
+                p1_dist = haversine_km(p1[0], p1[1], h.center_lat, h.center_lon)
+                p2_dist = haversine_km(p2[0], p2[1], h.center_lat, h.center_lon)
+
+                # Rule 1: If both endpoints of the shortcut are outside, NEVER penetrate the hazard radius
+                if p1_dist >= h.radius_km and p2_dist >= h.radius_km:
+                    for s_lat, s_lon in sample_pts:
+                        if haversine_km(s_lat, s_lon, h.center_lat, h.center_lon) < h.radius_km:
+                            return False
+
+                # Rule 2: If shortcut enters the hazard from outside (terminal zone approach),
+                # the shortcut must not enter prematurely and increase danger exposure compared to original sub-path
+                elif p1_dist >= h.radius_km and p2_dist < h.radius_km:
+                    sub_inside_dist = 0.0
+                    for idx in range(start_idx, end_idx):
+                        sp1 = raw_coords[idx]
+                        sp2 = raw_coords[idx + 1]
+                        if haversine_km(sp2[0], sp2[1], h.center_lat, h.center_lon) < h.radius_km:
+                            sub_inside_dist += haversine_km(sp1[0], sp1[1], sp2[0], sp2[1])
+
+                    direct_inside_dist = sum(
+                        step_km for s_lat, s_lon in sample_pts
+                        if haversine_km(s_lat, s_lon, h.center_lat, h.center_lon) < h.radius_km
+                    )
+                    if direct_inside_dist > max(1.0, sub_inside_dist * 1.15):
+                        return False
 
         # 1. Hard Obstacle & Dynamic Cost Integral Integration
         direct_cost = 0.0
-        step_km = direct_dist / float(num_samples - 1)
-        step_time_h = step_km / self.speed_kmh
 
         for k, (s_lat, s_lon) in enumerate(sample_pts):
             sr, sc = self.provider.coord_to_cell(s_lat, s_lon)
@@ -412,12 +423,6 @@ class MaritimeAStarPathfinder:
             cost_c = self._get_dynamic_cost(sr, sc, sample_time, hazards)
             if math.isinf(cost_c):
                 return False
-
-            # Strict non-penetration invariant: shortcuts must never cut inside a non-terminal hazard
-            for h in hazards:
-                if not getattr(h, 'is_terminal_zone', False) and h.is_active_at(sample_time):
-                    if haversine_km(s_lat, s_lon, h.center_lat, h.center_lon) < h.radius_km:
-                        return False
 
             direct_cost += step_km * cost_c
 
